@@ -266,6 +266,23 @@
         }
       }
     }
+    /* Música de la portada de Fábrica: el video arranca en silencio (los navegadores lo exigen) y el visitante la activa con el botón. */
+    var soundBtn = wrap && $('.sound-toggle', wrap);
+    if (soundBtn) {
+      var label = $('.sound-label', soundBtn);
+      var paintSound = function () {
+        var on = !v.muted;
+        soundBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
+        soundBtn.setAttribute('aria-label', on ? 'Silenciar la música del video' : 'Activar la música del video');
+        if (label) label.textContent = on ? 'Silenciar' : 'Activar música';
+      };
+      soundBtn.addEventListener('click', function () {
+        v.muted = !v.muted;
+        if (!v.muted) { v.volume = 0.9; if (v.paused) { paused = false; play(); } }
+        paintSound();
+      });
+      paintSound();
+    }
     /* Destello del botón al aparecer el mueble terminado: una vez por vuelta del video, solo mientras se reproduce. */
     var glintAt = parseFloat(v.dataset.glintAt);
     var cta = wrap && $('.hero-actions .btn', wrap);

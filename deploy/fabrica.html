@@ -52,6 +52,8 @@
     <symbol id="i-expand" viewBox="0 0 24 24"><path d="M4 9V4h5"/><path d="M20 9V4h-5"/><path d="M4 15v5h5"/><path d="M20 15v5h-5"/></symbol>
     <symbol id="i-play" viewBox="0 0 24 24"><path d="M8 5.5v13l11-6.5z"/></symbol>
     <symbol id="i-pause" viewBox="0 0 24 24"><path d="M8 5h3v14H8z"/><path d="M13 5h3v14h-3z"/></symbol>
+    <symbol id="i-vol" viewBox="0 0 24 24"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></symbol>
+    <symbol id="i-mute" viewBox="0 0 24 24"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="m16 9.5 5 5"/><path d="m21 9.5-5 5"/></symbol>
     <symbol id="i-star" viewBox="0 0 24 24"><path d="M12 2.8l2.78 5.9 6.42.84-4.7 4.46 1.2 6.4L12 17.2l-5.7 3.2 1.2-6.4-4.7-4.46 6.42-.84z"/></symbol>
   </defs>
 </svg>
@@ -101,8 +103,8 @@
         <source media="(max-width: 859px)" srcset="img/fabrica-poster-2-m.jpg">
         <img src="img/fabrica-poster-2.jpg" alt="" width="1280" height="720" fetchpriority="high">
       </picture>
-      <video class="hero-video" data-ambient data-glint-at="10.9" data-src-m="video/fabrica-hero-3-m.mp4" tabindex="-1" muted loop playsinline preload="auto" width="1280" height="720">
-        <source src="video/fabrica-hero-3.mp4" type="video/mp4">
+      <video class="hero-video" data-ambient data-glint-at="10.9" data-src-m="video/fabrica-hero-4-m.mp4" tabindex="-1" muted loop playsinline preload="auto" width="1280" height="720">
+        <source src="video/fabrica-hero-4.mp4" type="video/mp4">
       </video>
     </div>
   </div>
@@ -118,6 +120,7 @@
       <a class="link" href="visitanos.html#ubicacion">Visitar la fábrica <svg class="i" aria-hidden="true"><use href="#i-arrow"/></svg></a>
     </div>
   </div>
+  <button class="sound-toggle" type="button" aria-pressed="false" aria-label="Activar la música del video"><svg class="i i-mute" aria-hidden="true"><use href="#i-mute"/></svg><svg class="i i-vol" aria-hidden="true"><use href="#i-vol"/></svg><span class="sound-label">Activar música</span></button>
   <button class="sq vista-toggle" type="button" data-state="paused" aria-label="Reproducir video de portada"><svg class="i i--fill i-play" aria-hidden="true"><use href="#i-play"/></svg><svg class="i i--fill i-pause" aria-hidden="true"><use href="#i-pause"/></svg></button>
 </section>
 
