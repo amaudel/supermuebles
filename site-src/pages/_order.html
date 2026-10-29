@@ -1,0 +1,60 @@
+<section class="order" id="cotizar" aria-labelledby="cotizar-title">
+  <div class="order-copy">
+    <h2 class="h2" id="cotizar-title" data-r>{{order_title}}</h2>
+    <p class="lead" data-r>Con una foto del espacio y unas medidas aproximadas basta para empezar. Dinos qué te gustó y en qué ciudad estás, y una asesora te responde con opciones y cotización.</p>
+  </div>
+
+  <form class="order-form" id="quote-form" novalidate>
+    <fieldset data-r>
+      <legend>¿Qué quieres resolver?</legend>
+      <div class="opts" role="radiogroup">
+        <label class="opt"><input type="radio" name="tipo" value="Sala" checked><span>Sala</span></label>
+        <label class="opt"><input type="radio" name="tipo" value="Comedor"><span>Comedor</span></label>
+        <label class="opt"><input type="radio" name="tipo" value="Dormitorio"><span>Dormitorio</span></label>
+        <label class="opt"><input type="radio" name="tipo" value="Sala Relax"><span>Sala Relax</span></label>
+        <label class="opt"><input type="radio" name="tipo" value="Sofá cama"><span>Sofá cama</span></label>
+        <label class="opt"><input type="radio" name="tipo" value="Dormitorio infantil"><span>Infantil</span></label>
+        <label class="opt"><input type="radio" name="tipo" value="Pedido a medida"><span>A medida</span></label>
+      </div>
+    </fieldset>
+
+    <fieldset data-r>
+      <legend>Tono preferido</legend>
+      <div class="opts" role="radiogroup">
+        <label class="opt"><input type="radio" name="tono" value="Crema o marfil" data-tone="#e4dac6" checked><span><i style="--tone:#e4dac6"></i>Crema o marfil</span></label>
+        <label class="opt"><input type="radio" name="tono" value="Champagne" data-tone="#c9b79c"><span><i style="--tone:#c9b79c"></i>Champagne</span></label>
+        <label class="opt"><input type="radio" name="tono" value="Azul" data-tone="#1f3a7a"><span><i style="--tone:#1f3a7a"></i>Azul</span></label>
+        <label class="opt"><input type="radio" name="tono" value="Café o nogal" data-tone="#5b3a29"><span><i style="--tone:#5b3a29"></i>Café o nogal</span></label>
+        <label class="opt"><input type="radio" name="tono" value="Rosa" data-tone="#e3b7bd"><span><i style="--tone:#e3b7bd"></i>Rosa</span></label>
+        <label class="opt"><input type="radio" name="tono" value="Gris" data-tone="#9aa0a6"><span><i style="--tone:#9aa0a6"></i>Gris</span></label>
+        <label class="opt"><input type="radio" name="tono" value="Lo defino con la asesora" data-tone="#8d958f"><span><i style="--tone:#8d958f"></i>Lo defino con la asesora</span></label>
+      </div>
+      <p class="hint">Los tonos son de referencia. La asesora te confirma los colores y tapices disponibles.</p>
+    </fieldset>
+
+    <div class="fields" data-r>
+      <div class="field"><label for="q-name">Tu nombre</label><input id="q-name" name="nombre" type="text" autocomplete="name" placeholder="Ej. Juan Pérez" required></div>
+      <div class="field"><label for="q-phone">Teléfono (opcional)</label><input id="q-phone" name="telefono" type="tel" autocomplete="tel" placeholder="Ej. 099 123 4567"></div>
+      <div class="field"><label for="q-city">Ciudad o sector (para consultar la entrega)</label><input id="q-city" name="ciudad" type="text" autocomplete="address-level2" placeholder="Ej. Cuenca, Guayaquil"></div>
+      <div class="field"><label for="q-model">Diseño que te gustó (opcional)</label><input id="q-model" name="modelo" type="text" placeholder="Ej. Sala Soft, Comedor Dubai"></div>
+      <div class="field field--full"><label for="q-size">Medidas aproximadas del espacio (opcional)</label><input id="q-size" name="medidas" type="text" placeholder="Ej. 3 m de ancho por 4 m de fondo"><p class="help">No tienen que ser definitivas. Nos ayudan a entender mejor tu espacio desde el primer contacto.</p></div>
+      <div class="field field--full"><label for="q-notes">Notas (opcional)</label><textarea id="q-notes" name="notas" rows="2" placeholder="Ej. Quiero una sala en tono claro para un departamento"></textarea></div>
+    </div>
+  </form>
+
+  <aside class="sheet" aria-label="Tu orden de trabajo" data-r>
+    <p class="sheet-title">Orden de trabajo</p>
+    <p class="sheet-sub">Supermuebles Cuenca</p>
+    <dl class="sheet-rows" aria-live="polite">
+      <div><dt>Cliente</dt><dd id="s-name" class="is-empty">Tu nombre</dd></div>
+      <div><dt>Mueble</dt><dd id="s-tipo">Sala</dd></div>
+      <div><dt>Diseño</dt><dd id="s-modelo" class="is-empty">Por definir</dd></div>
+      <div><dt>Tono</dt><dd id="s-tono"><i class="swatch" id="s-tone"></i><span id="s-tono-t">Crema o marfil</span></dd></div>
+      <div><dt>Ciudad</dt><dd id="s-ciudad" class="is-empty">Por definir</dd></div>
+      <div><dt>Medidas</dt><dd id="s-size" class="is-empty">Por definir</dd></div>
+      <div><dt>Notas</dt><dd id="s-notes" class="is-empty">Sin notas</dd></div>
+    </dl>
+    <button class="btn btn--block" type="submit" form="quote-form"><svg class="i" aria-hidden="true"><use href="#i-wa"/></svg><span>Solicitar cotización</span></button>
+    <p class="hint hint--sheet">Se abre WhatsApp con el mensaje ya escrito. Ahí puedes adjuntar una foto del espacio. No se envía nada hasta que tú lo envíes.</p>
+  </aside>
+</section>

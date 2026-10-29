@@ -1,0 +1,11 @@
+{
+  "$schema": "https://unpkg.com/wrangler/config-schema.json",
+  "name": "supermuebles-cuenca",
+  "compatibility_date": "2026-10-27",
+  "assets": {
+    "directory": "./deploy",
+    "not_found_handling": "404-page",
+    "html_handling": "auto-trailing-slash"
+  },
+  "observability": { "enabled": true }
+}

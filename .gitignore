@@ -1,0 +1,15 @@
+# Dependencias y cachés
+node_modules/
+__pycache__/
+*.pyc
+
+# Vínculos locales de despliegue (Vercel y Cloudflare)
+.vercel/
+.wrangler/
+
+# Carpeta de trabajo de una herramienta de diseño (no es parte del sitio)
+.taste-skill/
+
+# Sistema operativo
+Thumbs.db
+.DS_Store

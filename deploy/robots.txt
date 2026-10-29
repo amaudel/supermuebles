@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://supermuebles-cuenca.vercel.app/sitemap.xml

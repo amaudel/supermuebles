@@ -1,0 +1,72 @@
+
+<section class="page-head" aria-labelledby="pg-title">
+  <h1 class="display" id="pg-title">Visítanos en Cuenca y Guayaquil</h1>
+  <p class="lead">Fabricamos en Turi, Cuenca, y te esperamos también en nuestro showroom del Mall del Norte, en Guayaquil.</p>
+</section>
+
+{{include:location}}
+
+{{include:showroom}}
+
+{{include:quotes}}
+
+<section class="pics" aria-labelledby="pics-title">
+  <div class="pics-head">
+    <h2 class="h2" id="pics-title" data-r>Colecciones del catálogo</h2>
+    <a class="link" href="catalogo.html" data-r>Explorar diseños <svg class="i" aria-hidden="true"><use href="#i-arrow"/></svg></a>
+  </div>
+  <div class="cols-3" data-rg>
+    <img src="img/catalogo/sala-titanic.jpg" width="871" height="959" loading="lazy" alt="Sala Titanic con sofás grises y butaca azul" data-r>
+    <img src="img/catalogo/comedor-dubai.jpg" width="1155" height="1600" loading="lazy" alt="Comedor Dubai con mesa de piedra sinterizada" data-r>
+    <img src="img/catalogo/dorm-arabi.jpg" width="1406" height="1600" loading="lazy" alt="Dormitorio Arabi con cama capitoné" data-r>
+    <img src="img/catalogo/sala-francis.jpg" width="881" height="1079" loading="lazy" alt="Sala Francis con sofás gris perla y butacas mostaza" data-r>
+  </div>
+</section>
+
+<section class="order" id="agendar" aria-labelledby="agendar-title">
+  <div class="order-copy">
+    <h2 class="h2" id="agendar-title" data-r>Agenda tu visita</h2>
+    <p class="lead" data-r>Elige el local, el día y la hora. En Turi atendemos de lunes a sábado, y los domingos solo con cita previa. Te armamos el mensaje y una asesora confirma la visita por WhatsApp; en Guayaquil confirma también el horario del Mall.</p>
+  </div>
+
+  <form class="order-form" id="visit-form" novalidate>
+    <fieldset data-r>
+      <legend>Local</legend>
+      <div class="opts" role="radiogroup">
+        <label class="opt"><input type="radio" name="local" value="Turi, Cuenca" checked><span>Turi, Cuenca</span></label>
+        <label class="opt"><input type="radio" name="local" value="Mall del Norte, Guayaquil"><span>Mall del Norte, Guayaquil</span></label>
+      </div>
+    </fieldset>
+    <fieldset data-r>
+      <legend>Motivo</legend>
+      <div class="opts" role="radiogroup">
+        <label class="opt"><input type="radio" name="motivo" value="Ver muebles" checked><span>Ver muebles</span></label>
+        <label class="opt"><input type="radio" name="motivo" value="Pedido a medida"><span>Pedido a medida</span></label>
+        <label class="opt"><input type="radio" name="motivo" value="Elegir colores y tapices"><span>Elegir colores y tapices</span></label>
+      </div>
+    </fieldset>
+    <div class="fields" data-r>
+      <div class="field"><label for="v-name">Tu nombre</label><input id="v-name" name="nombre" type="text" autocomplete="name" placeholder="Ej. Juan Pérez" required></div>
+      <div class="field"><label for="v-phone">Teléfono (opcional)</label><input id="v-phone" name="telefono" type="tel" autocomplete="tel" placeholder="Ej. 099 123 4567"></div>
+      <div class="field"><label for="v-day">Día</label><select id="v-day" name="dia"><option>Lunes a viernes</option></select></div>
+      <div class="field"><label for="v-hour">Hora</label>
+        <select id="v-hour" name="hora">
+          <option>09:00</option>
+        </select></div>
+    </div>
+  </form>
+
+  <aside class="sheet" aria-label="Tu visita" data-r>
+    <p class="sheet-title">Visita</p>
+    <p class="sheet-sub">Supermuebles Cuenca</p>
+    <dl class="sheet-rows" aria-live="polite">
+      <div><dt>Nombre</dt><dd id="sv-name" class="is-empty">Tu nombre</dd></div>
+      <div><dt>Local</dt><dd id="sv-local">Turi, Cuenca</dd></div>
+      <div><dt>Motivo</dt><dd id="sv-motivo">Ver muebles</dd></div>
+      <div><dt>Día</dt><dd id="sv-dia">Lunes a viernes</dd></div>
+      <div><dt>Hora</dt><dd id="sv-hora">09:00</dd></div>
+    </dl>
+    <button class="btn btn--block" type="submit" form="visit-form"><svg class="i" aria-hidden="true"><use href="#i-wa"/></svg><span>Agendar por WhatsApp</span></button>
+    <p class="hint hint--sheet">Se abre WhatsApp con el mensaje ya escrito. La visita queda confirmada cuando la asesora te responda.</p>
+  </aside>
+</section>

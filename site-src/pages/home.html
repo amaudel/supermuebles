@@ -1,0 +1,176 @@
+
+<!-- ================= Portada ================= -->
+<section class="hero" id="hero" aria-labelledby="hero-title">
+  <div class="hero-bg" aria-hidden="true">
+    <div class="hero-stage">
+      <picture class="hero-poster">
+        <source media="(max-width: 859px)" srcset="img/hero-m-poster.jpg">
+        <img src="img/hero-poster.jpg" alt="" width="1600" height="1234" fetchpriority="high">
+      </picture>
+      <video class="hero-video" data-ambient data-src-m="video/hero-m.mp4" tabindex="-1" muted loop playsinline preload="auto" width="1600" height="1234">
+        <source src="video/hero.mp4" type="video/mp4">
+      </video>
+      <img class="hero-chair" src="img/hero-silla.webp" alt="" width="450" height="557">
+    </div>
+  </div>
+  <div class="hero-scrim" aria-hidden="true"></div>
+  <div class="hero-copy">
+    <h1 class="display" id="hero-title">
+      <span class="ln"><span>Muebles hechos</span></span>
+      <span class="ln"><span>para tu espacio</span></span>
+    </h1>
+    <p class="hero-lead">Diseñamos y fabricamos en Turi, Cuenca. Elige un diseño del catálogo o pídelo a medida, y ajusta con fábrica las medidas, el estilo y los acabados para tu hogar.</p>
+    <div class="hero-actions">
+      <a class="btn" href="[[wa:Hola Supermuebles Cuenca, quiero cotizar un mueble.]]" target="_blank" rel="noopener noreferrer"><svg class="i" aria-hidden="true"><use href="#i-wa"/></svg><span>Cotizar mi mueble</span></a>
+      <a class="link" href="catalogo.html">Ver el catálogo <svg class="i" aria-hidden="true"><use href="#i-arrow"/></svg></a>
+    </div>
+    <a class="hero-proof" href="https://maps.google.com/?cid=15893579638355452331" target="_blank" rel="noopener noreferrer">{{include:stars}}<span class="hero-proof-t"><strong>4,5</strong> · 28 opiniones en Google</span></a>
+  </div>
+  <button class="sq vista-toggle" type="button" data-state="paused" aria-label="Reproducir video de portada"><svg class="i i--fill i-play" aria-hidden="true"><use href="#i-play"/></svg><svg class="i i--fill i-pause" aria-hidden="true"><use href="#i-pause"/></svg></button>
+</section>
+
+<!-- ================= Por ambiente ================= -->
+<section class="showcase" id="muebles" aria-labelledby="muebles-title">
+  <div class="showcase-side">
+    <div>
+      <h2 class="h2" id="muebles-title" data-r>Elige tu ambiente</h2>
+      <a class="link" href="catalogo.html" data-r>Ver todo el catálogo <svg class="i" aria-hidden="true"><use href="#i-arrow"/></svg></a>
+      <div class="arrows" data-r>
+        <button class="sq" type="button" data-prev="#run-muebles" aria-label="Muebles anteriores"><svg class="i" aria-hidden="true"><use href="#i-left"/></svg></button>
+        <button class="sq" type="button" data-next="#run-muebles" aria-label="Más muebles"><svg class="i" aria-hidden="true"><use href="#i-arrow"/></svg></button>
+      </div>
+    </div>
+  </div>
+
+  <div class="run" id="run-muebles" tabindex="0" role="region" aria-label="Muebles por ambiente. Desliza para ver más.">
+    <ul class="frames" data-rg>
+      <li class="frame frame--lift" data-r="slide">
+        <a href="salas.html">
+          <figure><div class="frame-img"><img src="img/catalogo/sala-soft-l.jpg" width="1056" height="1382" loading="lazy" alt="Sala Soft: sofá seccional en L beige con pufs azul cobalto y mesa de centro de cristal"></div>
+          <figcaption><span class="nm">Ver salas</span><span class="ft">Seccionales y juegos</span></figcaption></figure>
+        </a>
+      </li>
+      <li class="frame" data-r="slide">
+        <a href="comedores.html">
+          <figure><div class="frame-img"><img src="img/catalogo/comedor-luxuri.jpg" width="1170" height="1274" loading="lazy" alt="Comedor Luxuri: mesa con tablero tipo mármol y pedestal de cedro oscuro, con seis sillas marfil"></div>
+          <figcaption><span class="nm">Ver comedores</span><span class="ft">De 6 a 8 puestos</span></figcaption></figure>
+        </a>
+      </li>
+      <li class="frame" data-r="slide">
+        <a href="dormitorios.html">
+          <figure><div class="frame-img"><img src="img/catalogo/dorm-miami.jpg" width="1238" height="1508" loading="lazy" alt="Cama Miami tapizada en cuerina capitoné con detalles en espejo metálico y mesas de noche"></div>
+          <figcaption><span class="nm">Ver dormitorios</span><span class="ft">Camas y veladores</span></figcaption></figure>
+        </a>
+      </li>
+      <li class="frame" data-r="slide">
+        <a href="salas.html#sala-relax">
+          <figure><div class="frame-img"><img src="img/catalogo/sala-relax.jpg" width="837" height="910" loading="lazy" alt="Sala Relax en cuero sintético marrón con sillones reclinables"></div>
+          <figcaption><span class="nm">Sala Relax</span><span class="ft">Reclinables eléctricos</span></figcaption></figure>
+        </a>
+      </li>
+      <li class="frame" data-r="slide">
+        <a href="salas.html#sofa-cama-nido">
+          <figure><div class="frame-img"><img src="img/catalogo/sofa-cama.jpg" width="1238" height="936" loading="lazy" alt="Sofá cama beige con cama nido deslizable"></div>
+          <figcaption><span class="nm">Sofá cama</span><span class="ft">Con cama nido</span></figcaption></figure>
+        </a>
+      </li>
+      <li class="frame" data-r="slide">
+        <a href="dormitorios.html#infantil">
+          <figure><div class="frame-img"><img src="img/catalogo/dorm-castillo.jpg" width="922" height="1136" loading="lazy" alt="Cama Castillo Rosa: litera blanca y rosa con cama nido y escalera con cajones"></div>
+          <figcaption><span class="nm">Dormitorios infantiles</span><span class="ft">Literas, cunas y camas</span></figcaption></figure>
+        </a>
+      </li>
+      <li class="frame" data-r="slide">
+        <a href="a-medida.html">
+          <figure><div class="frame-img"><img src="img/catalogo/s-juego-centro.jpg" width="666" height="603" loading="lazy" alt="Juego de mesas de centro de dos piezas con superficie de espejo y cuerpo acanalado en tono champagne"></div>
+          <figcaption><span class="nm">A medida</span><span class="ft">Tu idea, tu espacio</span></figcaption></figure>
+        </a>
+      </li>
+    </ul>
+  </div>
+</section>
+
+<!-- ================= Problema y solución ================= -->
+<section class="statement" aria-labelledby="problema-title">
+  <h2 class="h2" id="problema-title" data-r>Primero tu espacio. Luego el diseño.</h2>
+  <div class="statement-body" data-r>
+    <p class="lead">Un mueble puede verse perfecto en una foto y sentirse distinto cuando llega a tu sala.</p>
+    <p>Por eso empezamos por lo esencial: cómo usas el espacio, cuánto mide y qué necesitas resolver. Si un diseño te gusta pero necesitas otra medida, habla directo con nuestro equipo antes de decidir.</p>
+    <a class="link" href="a-medida.html">Quiero adaptar un diseño <svg class="i" aria-hidden="true"><use href="#i-arrow"/></svg></a>
+  </div>
+</section>
+
+{{include:boceto}}
+
+<!-- ================= Directo de fábrica ================= -->
+<section class="about" id="taller" aria-labelledby="taller-title">
+  <div class="about-head">
+    <h2 class="h2" id="taller-title" data-r>Directo de quienes lo fabrican</h2>
+    <p class="lead" data-r>Nuestra fábrica está en Turi, Cuenca. Aquí empieza cada mueble y aquí puedes hablar de medidas, opciones y detalles antes de decidir.</p>
+    <a class="link" href="fabrica.html" data-r>Conocer nuestra fábrica <svg class="i" aria-hidden="true"><use href="#i-arrow"/></svg></a>
+  </div>
+
+  <div class="about-photo" data-r="wipe">
+    <img src="img/catalogo/aerea.jpg" width="1800" height="1125" loading="lazy" alt="Sala vista desde arriba: sofá seccional beige, butaca azul, mesa de centro con almacenaje y alfombra azul">
+    <p class="about-note">Comprar directo a fábrica es una conversación más cercana con quienes entienden cómo se fabrica cada pieza. La sala Relax se vende en conjunto o por separado.</p>
+  </div>
+
+  <div class="about-side">
+    <dl class="facts" data-r>
+      <div><dt>En actividad desde</dt><dd>2008</dd></div>
+      <div><dt>Fábrica y local</dt><dd>Turi, Cuenca</dd></div>
+      <div><dt>Showroom</dt><dd>Mall del Norte, Guayaquil</dd></div>
+      <div><dt>Teléfono</dt><dd>(07) 403-9472 · 095 964 1962</dd></div>
+    </dl>
+  </div>
+</section>
+
+<!-- ================= Detalles (tríptico) ================= -->
+<section class="rise" id="oficio" aria-labelledby="oficio-title">
+  <div class="rise-stage">
+    <div class="rise-head">
+      <h2 class="h2" id="oficio-title">Detalles que se notan</h2>
+      <p class="rise-sub">Terciopelo, piedra tipo mármol y herrajes dorados. Mira cada modelo en el catálogo.</p>
+      <a class="link" href="catalogo.html">Explorar diseños <svg class="i" aria-hidden="true"><use href="#i-arrow"/></svg></a>
+    </div>
+    <div class="rise-photos">
+      <img class="rp rp--l" src="img/catalogo/d-patron.jpg" width="524" height="634" loading="lazy" alt="Silla del comedor Dubai: terciopelo azul por dentro y tela con patrón geométrico blanco por fuera">
+      <img class="rp rp--c" src="img/catalogo/dorm-venecia.jpg" width="1224" height="1600" loading="lazy" alt="Dormitorio Venecia: cama con cabecero tridimensional dorado y baúl tipo puff">
+      <img class="rp rp--r" src="img/catalogo/d-sitial.jpg" width="648" height="837" loading="lazy" alt="Sitial de terciopelo azul con respaldo acanalado y patas en tono champagne">
+    </div>
+  </div>
+</section>
+
+{{include:quotes}}
+
+<!-- ================= Respaldo y entrega ================= -->
+<section class="assure" aria-labelledby="respaldo-title">
+  <h2 class="h2" id="respaldo-title" data-r>Respaldo y entrega</h2>
+  <div class="assure-col" data-r>
+    <h3>Pregunta por la garantía antes de comprar</h3>
+    <p>Damos garantía de fábrica. Antes de comprar, pregunta qué cubre y por cuánto tiempo en el modelo que estás eligiendo, y cómo pedir atención si la necesitas.</p>
+    <a class="link" href="[[wa:Hola, quiero conocer las condiciones de garantía del modelo que vi en la web de Supermuebles Cuenca.]]" target="_blank" rel="noopener noreferrer">Consultar garantía <svg class="i" aria-hidden="true"><use href="#i-arrow"/></svg></a>
+  </div>
+  <div class="assure-col" data-r>
+    <h3>¿Estás fuera de Cuenca? Enviamos a todo el Ecuador</h3>
+    <p>Cuéntanos dónde debe llegar tu mueble y coordinamos el envío hasta tu casa. Antes de cerrar la compra revisamos contigo las condiciones.</p>
+    <a class="link" href="[[wa:Hola, quiero consultar la entrega de un mueble de Supermuebles Cuenca en mi ciudad.]]" target="_blank" rel="noopener noreferrer">Consultar entrega en mi ciudad <svg class="i" aria-hidden="true"><use href="#i-arrow"/></svg></a>
+  </div>
+</section>
+
+{{include:order}}
+
+<!-- ================= Visítanos (resumen) ================= -->
+<section class="visit" id="visitanos" aria-labelledby="visitanos-title">
+  <div class="visit-copy">
+    <h2 class="h2" id="visitanos-title" data-r>Conoce dónde empieza tu mueble</h2>
+    <p class="visit-text">Fabricamos en Turi, Cuenca, y te esperamos también en nuestro showroom del Mall del Norte, segundo piso, en Guayaquil.</p>
+  </div>
+  <img class="visit-photo" src="img/catalogo/visita-cuadrado.jpg" width="800" height="800" loading="lazy" alt="Comedor con mesa de mármol y sillas marfil, listo para recibir">
+  <div class="visit-links">
+    <p class="visit-q">¿Quieres verlos en persona?</p>
+    <a class="ulink" href="visitanos.html">Visitar la fábrica en Turi</a>
+    <a class="ulink" href="[[wa:Hola, quiero visitar un local de Supermuebles. ¿Me confirman horario?]]" target="_blank" rel="noopener noreferrer">Hablar por WhatsApp</a>
+    <p class="visit-meta">Turi: lunes a viernes, en la mañana y en la tarde. Sábados hasta las 14:00. Domingos, con cita previa.</p>
+  </div>
+</section>
