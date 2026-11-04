@@ -162,6 +162,7 @@ details.more summary{cursor:pointer;font-weight:700;min-height:44px;display:flex
 <header class="top">
   <div class="brand"><span class="mono" aria-hidden="true">SM</span><div><strong>Fichas de muebles</strong><small>Supermuebles Cuenca</small></div></div>
   <div class="acts">
+    <button class="btn ghost" id="bDescargar" type="button">Descargar todo</button>
     <button class="btn ghost" id="bCopiar" type="button">Copiar resumen</button>
     <button class="btn ghost" id="bSalir" type="button">Salir</button>
   </div>
@@ -613,6 +614,107 @@ $('#bCopiar').addEventListener('click', async () => {
     ta.remove();
   }
 });
+
+/* ---------- descargar todo: .zip con una carpeta por mueble, un CSV y un JSON ---------- */
+const CRC = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
+const crc32 = u8 => { let c = 0xFFFFFFFF; for (let i = 0; i < u8.length; i++) c = CRC[(c ^ u8[i]) & 255] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; };
+
+// ZIP sin compresión (las fotos ya son JPEG). Nombres en UTF-8 para que se vean bien las tildes.
+function armarZip(entradas) {
+  const te = new TextEncoder(), partes = [], central = [], d = new Date();
+  const hora = (d.getHours() << 11) | (d.getMinutes() << 5) | (d.getSeconds() >> 1);
+  const fecha = ((d.getFullYear() - 1980) << 9) | ((d.getMonth() + 1) << 5) | d.getDate();
+  let pos = 0;
+  for (const e of entradas) {
+    const nombre = te.encode(e.nombre), crc = crc32(e.datos), n = e.datos.length;
+    const h = new DataView(new ArrayBuffer(30));
+    h.setUint32(0, 0x04034b50, true); h.setUint16(4, 20, true); h.setUint16(6, 0x0800, true); h.setUint16(8, 0, true);
+    h.setUint16(10, hora, true); h.setUint16(12, fecha, true); h.setUint32(14, crc, true); h.setUint32(18, n, true); h.setUint32(22, n, true);
+    h.setUint16(26, nombre.length, true); h.setUint16(28, 0, true);
+    partes.push(h.buffer, nombre, e.datos);
+    const c = new DataView(new ArrayBuffer(46));
+    c.setUint32(0, 0x02014b50, true); c.setUint16(4, 20, true); c.setUint16(6, 20, true); c.setUint16(8, 0x0800, true); c.setUint16(10, 0, true);
+    c.setUint16(12, hora, true); c.setUint16(14, fecha, true); c.setUint32(16, crc, true); c.setUint32(20, n, true); c.setUint32(24, n, true);
+    c.setUint16(28, nombre.length, true); c.setUint32(42, pos, true);
+    central.push(c.buffer, nombre);
+    pos += 30 + nombre.length + n;
+  }
+  const tam = central.reduce((s, b) => s + b.byteLength, 0);
+  const f = new DataView(new ArrayBuffer(22));
+  f.setUint32(0, 0x06054b50, true); f.setUint16(8, entradas.length, true); f.setUint16(10, entradas.length, true); f.setUint32(12, tam, true); f.setUint32(16, pos, true);
+  return new Blob([...partes, ...central, f.buffer], {type: 'application/zip'});
+}
+
+// Nombre de carpeta válido en Windows y sin repetirse.
+function carpetaDe(f, usados) {
+  let base = (f.nombre || '').replace(/[<>:"\/\\|?*\u0000-\u001f]/g, ' ').replace(/\s+/g, ' ').trim().replace(/[. ]+$/, '').slice(0, 80) || 'Sin nombre';
+  let c = base, i = 2;
+  while (usados.has(c.toLowerCase())) c = `${base} (${i++})`;
+  usados.add(c.toLowerCase());
+  return c;
+}
+
+// Excel abre el CSV en columnas separadas por «;». Se neutralizan celdas que empiecen como fórmula.
+const celda = v => {
+  let s = String(v ?? '');
+  if (/^[=+\-@]/.test(s) && isNaN(Number(s.replace(',', '.')))) s = "'" + s;
+  return /[;"\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+};
+function csvDe(fichas, carpetas) {
+  const cab = ['Nombre', 'Tipo', 'Descripción', 'Destacado', 'Qué trae', 'Opción de medida', 'Ancho (cm)', 'Fondo (cm)', 'Alto (cm)', 'Precio con IVA (USD)',
+    'Maderas y acabados', 'Telas', 'Fabricación', 'Cómo se consigue', 'Piezas por separado', 'Se adapta', 'Cómo llega', 'Caja ancho (cm)', 'Caja fondo (cm)', 'Caja alto (cm)', 'Peso (kg)', 'Notas', 'Fotos', 'Carpeta', 'Ficha completa'];
+  const cat = v => (CATS.find(c => c[0] === v) || [0, ''])[1];
+  const op = a => a.filter(x => x.nombre.trim()).map(x => x.nombre.trim() + (num(x.extra) ? ` (+${x.extra} USD)` : '')).join(', ');
+  const si = b => (b ? 'Sí' : 'No');
+  const filas = [cab];
+  fichas.forEach((f, i) => {
+    const medidas = f.medidas.filter(m => m.nombre || m.ancho || m.fondo || m.alto || m.precio);
+    for (const m of medidas.length ? medidas : [blankMedida()]) {
+      filas.push([f.nombre, cat(f.categoria), f.descripcion, si(f.destacado), f.incluye.filter(x => x.trim()).join(', '),
+        m.nombre, m.ancho, m.fondo, m.alto, m.precio, op(f.maderas), op(f.telas),
+        f.fabricacion.valor ? `${f.fabricacion.valor} ${f.fabricacion.unidad === 'dias' ? 'días' : 'semanas'}` : '',
+        f.disponibilidad === 'stock' ? 'Hay unidades listas' : f.disponibilidad === 'pedido' ? 'Bajo pedido' : '',
+        si(f.separado), si(f.adaptable), f.llegada === 'armado' ? 'Armado' : f.llegada === 'desarmado' ? 'Desarmado' : '',
+        f.embalaje.ancho, f.embalaje.fondo, f.embalaje.alto, f.embalaje.peso, f.notas, f.fotos.length, carpetas[i] || '', estado(f).ok ? 'Sí' : 'No']);
+    }
+  });
+  return '﻿' + filas.map(r => r.map(celda).join(';')).join('\r\n') + '\r\n';
+}
+
+async function descargarTodo() {
+  if (sucios.size) return aviso('Espera un momento: todavía se están guardando cambios.');
+  const b = $('#bDescargar'), txt = b.textContent;
+  b.disabled = true; b.textContent = 'Preparando…';
+  try {
+    const r = await llamar('/fichas');
+    if (!r.ok) throw new Error('lista');
+    const fichas = r.datos.fichas.map(completar), usados = new Set(), te = new TextEncoder();
+    const carpetas = fichas.map(f => (f.fotos.length ? carpetaDe(f, usados) : ''));
+    const tareas = [];
+    fichas.forEach((f, i) => f.fotos.forEach((id, k) => tareas.push({id, nombre: `${carpetas[i]}/${k + 1}${k === 0 ? '-principal' : ''}.jpg`})));
+    const entradas = new Array(tareas.length);
+    let hechas = 0;
+    for (let i = 0; i < tareas.length; i += 4) {
+      await Promise.all(tareas.slice(i, i + 4).map(async (t, j) => {
+        const x = await fetch(fotoUrl(t.id), {credentials: 'same-origin'});
+        if (!x.ok) throw new Error('foto');
+        entradas[i + j] = {nombre: t.nombre, datos: new Uint8Array(await x.arrayBuffer())};
+        b.textContent = `Descargando ${++hechas} de ${tareas.length}…`;
+      }));
+    }
+    const hoy = new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+    const datos = fichas.map((f, i) => ({...datosDe(f), id: f.id, carpeta: carpetas[i], archivos: carpetas[i] ? tareas.filter(t => t.nombre.startsWith(carpetas[i] + '/')).map(t => t.nombre.slice(carpetas[i].length + 1)) : []}));
+    entradas.push({nombre: 'fichas.csv', datos: te.encode(csvDe(fichas, carpetas))});
+    entradas.push({nombre: 'fichas.json', datos: te.encode(JSON.stringify({exportado: new Date().toISOString(), fichas: datos}, null, 2))});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(armarZip(entradas)); a.download = `fichas-supermuebles-${hoy}.zip`;
+    document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 10000);
+    aviso(`Listo: ${fichas.length} fichas y ${tareas.length} fotos.`);
+  } catch (_) {
+    aviso('No se pudo preparar la descarga. Revisa tu conexión y vuelve a intentar.');
+  } finally { b.disabled = false; b.textContent = txt; }
+}
+$('#bDescargar').addEventListener('click', descargarTodo);
 
 /* ---------- entrada con código, carga y arranque ---------- */
 function mostrarLogin(msg) {
