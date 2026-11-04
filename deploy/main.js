@@ -171,6 +171,7 @@
     var userPaused = false;
     var full = $('#boceto-full');
     var cap = $('#boceto-cap');
+    if (cap) cap.dataset.t = cap.textContent;
     /* En pantallas chicas se carga la versión liviana (menos de 1 MB) */
     if (window.matchMedia('(max-width: 859px)').matches) vid.src = 'video/boceto-a-sofa-m.mp4';
     var saver = navigator.connection && navigator.connection.saveData;
@@ -192,7 +193,18 @@
       var cur = -1;
       chaps.forEach(function (b, i) { if (vid.currentTime + 0.2 >= parseFloat(b.dataset.t)) cur = i; });
       chaps.forEach(function (b, i) { if (i === Math.max(cur, 0)) b.setAttribute('aria-current', 'true'); else b.removeAttribute('aria-current'); });
-      if (cap) { var t = chaps[Math.max(cur, 0)].dataset.cap; if (cap.textContent !== t) cap.textContent = t; }
+      if (cap) {
+        var t = chaps[Math.max(cur, 0)].dataset.cap;
+        /* La frase cambia con un fundido corto en vez de saltar */
+        if (cap.dataset.t !== t) {
+          cap.dataset.t = t;
+          if (reduce) cap.textContent = t;
+          else {
+            cap.classList.add('is-out');
+            setTimeout(function () { cap.textContent = cap.dataset.t; cap.classList.remove('is-out'); }, 120);
+          }
+        }
+      }
     });
     if (full) {
       full.addEventListener('click', function () {
@@ -420,12 +432,22 @@
     };
 
     form.addEventListener('input', function () { nameInput.setCustomValidity(''); nameInput.classList.remove('is-bad'); update(); });
-    form.addEventListener('change', update);
+    /* La hoja marca con un movimiento corto el dato que se acaba de elegir */
+    var flash = function (id) {
+      var el = document.getElementById(id);
+      el.classList.remove('is-flash'); void el.offsetWidth; el.classList.add('is-flash');
+    };
+    form.addEventListener('change', function (e) {
+      update();
+      if (e.target.name === 'tipo') flash('s-tipo');
+      else if (e.target.name === 'tono') flash('s-tono');
+    });
     form.addEventListener('submit', function (e) {
       e.preventDefault();
       if (!nameInput.value.trim()) {
         nameInput.classList.add('is-bad');
         nameInput.setCustomValidity('Escribe tu nombre para que la asesora sepa a quién responder.');
+        nameInput.classList.remove('is-shake'); void nameInput.offsetWidth; nameInput.classList.add('is-shake');
         nameInput.reportValidity();
         nameInput.focus();
         return;
@@ -587,6 +609,7 @@
       if (!vName.value.trim()) {
         vName.classList.add('is-bad');
         vName.setCustomValidity('Escribe tu nombre para que la asesora sepa a quién esperar.');
+        vName.classList.remove('is-shake'); void vName.offsetWidth; vName.classList.add('is-shake');
         vName.reportValidity();
         vName.focus();
         return;
