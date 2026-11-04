@@ -432,6 +432,62 @@
     };
 
     form.addEventListener('input', function () { nameInput.setCustomValidity(''); nameInput.classList.remove('is-bad'); update(); });
+    /* Vista del mueble: dibuja el tipo elegido con el tono elegido. Mientras nadie elige nada, recorre los siete tipos como ejemplo. */
+    var fpanel = $('.fig-panel', form);
+    if (fpanel) {
+      var fstage = $('.fig-stage', fpanel);
+      var fname = $('.fig-name', fpanel), fmode = $('.fig-mode', fpanel), ftone = $('.fig-tone-t', fpanel), fsw = $('.fig-sw', fpanel);
+      var KINDS = [['Sala', 'sala', 'Sala'], ['Comedor', 'comedor', 'Comedor'], ['Dormitorio', 'dormitorio', 'Dormitorio'], ['Sala Relax', 'relax', 'Sala Relax'],
+                   ['Sofá cama', 'sofacama', 'Sofá cama'], ['Dormitorio infantil', 'infantil', 'Dormitorio infantil'], ['Pedido a medida', 'medida', 'A medida']];
+      var figs = {};
+      $$('.fig', fstage).forEach(function (f) {
+        figs[f.dataset.fig] = f;
+        $$('.s, .ln', f).forEach(function (s, i) { s.setAttribute('pathLength', '1'); s.style.setProperty('--k', i); });
+      });
+      var tonos = $$('input[name="tono"]', form).filter(function (r) { return r.dataset.tone && r.value.indexOf('Lo defino') !== 0; });
+      var fsaver = navigator.connection && navigator.connection.saveData;
+      var fcur = '';
+      var fpaint = function (kind, tone, example) {
+        if (kind[1] !== fcur) {
+          var old = figs[fcur];
+          if (old) old.classList.remove('is-on');
+          var f = figs[kind[1]];
+          f.classList.remove('is-draw'); void f.offsetWidth;
+          if (!reduce) f.classList.add('is-draw');
+          f.classList.add('is-on');
+          fcur = kind[1];
+          fname.textContent = kind[2];
+        }
+        fstage.style.setProperty('--tone', tone.dataset.tone);
+        fsw.style.setProperty('--tone', tone.dataset.tone);
+        ftone.textContent = tone.value;
+        fmode.textContent = example ? 'Vista de ejemplo' : 'Tu selección';
+      };
+      var fselected = function () {
+        var t = pick('tipo').value, k = KINDS.filter(function (x) { return x[0] === t; })[0] || KINDS[0];
+        fpaint(k, pick('tono'), false);
+      };
+      fselected();
+
+      var fstep = 0, ftimer = null, ftouched = false, fvisible = false;
+      var fframe = function () { fpaint(KINDS[fstep % KINDS.length], tonos[fstep % tonos.length], true); fstep++; };
+      var frefresh = function () {
+        var run = !reduce && !fsaver && !ftouched && fvisible && !document.hidden;
+        if (run && !ftimer) { fframe(); ftimer = setInterval(fframe, 2600); }
+        else if (!run && ftimer) { clearInterval(ftimer); ftimer = null; }
+      };
+      var ftouch = function (e) {
+        if (e.target.name !== 'tipo' && e.target.name !== 'tono') return;
+        ftouched = true; frefresh(); fselected();
+      };
+      /* click además de change: tocar la opción que ya estaba marcada no dispara change */
+      form.addEventListener('change', ftouch);
+      form.addEventListener('click', ftouch);
+      document.addEventListener('visibilitychange', frefresh);
+      if ('IntersectionObserver' in window) {
+        new IntersectionObserver(function (en) { fvisible = en[0].isIntersecting; frefresh(); }, { threshold: 0.3 }).observe(fpanel);
+      }
+    }
     /* La hoja marca con un movimiento corto el dato que se acaba de elegir */
     var flash = function (id) {
       var el = document.getElementById(id);
