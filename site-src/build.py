@@ -48,7 +48,7 @@ BUSINESS = '''{
 
 CRUMBS = {
     'catalogo.html': 'Catálogo', 'salas.html': 'Salas', 'comedores.html': 'Comedores', 'dormitorios.html': 'Dormitorios',
-    'a-medida.html': 'A medida', 'fabrica.html': 'Fábrica', 'visitanos.html': 'Visítanos', 'privacidad.html': 'Privacidad',
+    'a-medida.html': 'A medida', 'visitanos.html': 'Visítanos', 'privacidad.html': 'Privacidad',
 }
 UNDER_CATALOG = {'salas.html', 'comedores.html', 'dormitorios.html'}
 
@@ -65,7 +65,7 @@ def breadcrumb(fname):
 PAGES = [
     # archivo, cuerpo, clave de menú, título, descripción, extras
     ('index.html', 'home.html', 'home',
-     'Muebles en Cuenca a Medida | Supermuebles Cuenca',
+     'Fábrica de Muebles en Cuenca a Medida | Supermuebles Cuenca',
      'Hecho en Cuenca para tu casa. Salas, comedores y dormitorios fabricados en Turi, a tu medida. Cotiza directo con fábrica por WhatsApp.',
      {'business': True, 'preload': True, 'order_title': 'Cuéntanos qué necesitas'}),
     ('catalogo.html', 'catalogo.html', 'catalogo',
@@ -92,10 +92,6 @@ PAGES = [
      'Proyectos | Supermuebles Cuenca',
      'Proyectos de Supermuebles Cuenca: qué necesitaba el cliente y qué se fabricó.',
      {'noindex': True}),
-    ('fabrica.html', 'fabrica.html', 'fabrica',
-     'Fábrica de Muebles en Turi, Cuenca | Supermuebles',
-     'Conoce Supermuebles Cuenca: fábrica en Turi desde 2008, colecciones completas y compra directa. Visítanos o conversa con nuestro equipo.',
-     {}),
     ('privacidad.html', 'privacidad.html', 'privacidad',
      'Privacidad | Supermuebles Cuenca',
      'Qué datos usa el sitio de Supermuebles Cuenca, para qué se usan y cómo pedirnos acceso, corrección o eliminación.',
@@ -180,7 +176,7 @@ for fname, body, key, title, desc, ex in PAGES:
     if fname in CRUMBS:
         scripts.append(ld(breadcrumb(fname)))
     html = html.replace('{{jsonld}}', '\n'.join(scripts))
-    html = html.replace('{{preload}}', '<link rel="preload" as="image" href="img/hero-poster.jpg" media="(min-width: 860px)" fetchpriority="high"><link rel="preload" as="image" href="img/hero-m-poster.jpg" media="(max-width: 859px)" fetchpriority="high">' if ex.get('preload') else '')
+    html = html.replace('{{preload}}', '<link rel="preload" as="image" href="img/fabrica-poster-2.jpg" media="(min-width: 860px)" fetchpriority="high"><link rel="preload" as="image" href="img/fabrica-poster-2-m.jpg" media="(max-width: 859px)" fetchpriority="high">' if ex.get('preload') else '')
     # mensaje general de WhatsApp
     html = html.replace('[[wa:Hola Supermuebles Cuenca, quiero cotizar un mueble.]]', '[[wa:%s]]' % GENERAL_MSG)
     html = re.sub(r'<a href="([^"]+)" data-page="%s"' % re.escape(key), r'<a href="\1" aria-current="page"', html)

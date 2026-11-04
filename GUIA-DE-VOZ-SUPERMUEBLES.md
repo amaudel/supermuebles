@@ -56,9 +56,9 @@ El dueño quiere posicionar esta frase como la firma de la marca. Reglas:
 
 - **Se escribe exactamente así:** «Hecho en Cuenca para tu casa». Mayúscula solo en la H y sin punto final cuando va sola. No se cambia por «hogar», «tu espacio» ni «hecho a mano en Cuenca».
 - **Qué dice y por qué se puede decir:** fabricamos en Turi, Cuenca (dato verificado) y vendemos para la casa del cliente. Solo se usa en piezas de la marca; si algún día se vende algo que no se fabrica en Cuenca, ese producto no lleva el lema.
-- **Dónde va:** en el pie de todas las páginas del sitio, como firma grande; en la descripción de la portada para buscadores; en la biografía de Facebook, Instagram y TikTok; y como cierre de las publicaciones largas y de los mensajes de presentación por WhatsApp.
-- **Dónde no va:** como titular de una página (cada página tiene el suyo), dos veces en el mismo bloque, ni dentro de una frase como si fuera texto corrido.
-- **Cómo convive con los titulares:** el lema es la firma y los titulares dicen qué se ofrece. La portada dice «Muebles hechos para tu espacio», que repite el mismo ritmo. Mientras el lema no sea el titular, no se escribe encima del titular de la portada.
+- **Dónde va:** en el pie de todas las páginas del sitio, como firma grande; como título de la sección «02 · Muebles» de la portada (junto a la imagen de la silla); en la descripción de la portada para buscadores; en la biografía de Facebook, Instagram y TikTok; y como cierre de las publicaciones largas y de los mensajes de presentación por WhatsApp.
+- **Dónde no va:** como titular principal (h1) de una página (cada página tiene el suyo), dos veces en el mismo bloque, ni dentro de una frase como si fuera texto corrido.
+- **Cómo convive con los titulares:** el lema es la firma y los titulares dicen qué se ofrece. La portada dice «Fábrica de muebles en Turi, Cuenca» (es lo que busca la gente en Google) y el lema queda como título de la sección «Muebles», sin competir con el h1.
 - **Letra:** Instrument Serif cursiva, solo para el lema (archivo `deploy/fonts/instrument-serif-italic-latin.woff2`). El resto del sitio sigue en Archivo. En piezas de redes o impresos se usa una serif cursiva de trazo contrastado equivalente.
 - **Cómo se pronuncia en voz alta:** completo y sin apuro, al final de un video o de un audio.
 

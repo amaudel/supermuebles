@@ -1,0 +1,6 @@
+{
+  "redirects": [
+    { "source": "/fabrica.html", "destination": "/", "permanent": true },
+    { "source": "/fabrica", "destination": "/", "permanent": true }
+  ]
+}

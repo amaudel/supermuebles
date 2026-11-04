@@ -214,7 +214,7 @@
 
   /* ---------- Video de portada en bucle con pausa ---------- */
   $$('video[data-ambient]').forEach(function (v) {
-    var wrap = v.closest('.hero');
+    var wrap = v.closest('.hero, .clip');
     var btn = wrap && $('.vista-toggle', wrap);
     var paused = false;
     var saver = navigator.connection && navigator.connection.saveData;
@@ -266,23 +266,6 @@
         }
       }
     }
-    /* Música de la portada de Fábrica: el video arranca en silencio (los navegadores lo exigen) y el visitante la activa con el botón. */
-    var soundBtn = wrap && $('.sound-toggle', wrap);
-    if (soundBtn) {
-      var label = $('.sound-label', soundBtn);
-      var paintSound = function () {
-        var on = !v.muted;
-        soundBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
-        soundBtn.setAttribute('aria-label', on ? 'Silenciar la música del video' : 'Activar la música del video');
-        if (label) label.textContent = on ? 'Silenciar' : 'Activar música';
-      };
-      soundBtn.addEventListener('click', function () {
-        v.muted = !v.muted;
-        if (!v.muted) { v.volume = 0.9; if (v.paused) { paused = false; play(); } }
-        paintSound();
-      });
-      paintSound();
-    }
     /* Destello del botón al aparecer el mueble terminado: una vez por vuelta del video, solo mientras se reproduce. */
     var glintAt = parseFloat(v.dataset.glintAt);
     var cta = wrap && $('.hero-actions .btn', wrap);
@@ -311,6 +294,24 @@
     }
     sync();
   });
+
+  /* ---------- Índice lateral de la portada: marca el capítulo que se está viendo ---------- */
+  var rail = $('.rail');
+  if (rail) {
+    var railLinks = $$('a[data-sec]', rail);
+    var railSecs = railLinks.map(function (a) { return document.getElementById(a.dataset.sec); });
+    var railTick = false;
+    var railMark = function () {
+      var line = window.innerHeight * 0.4, cur = -1;
+      railSecs.forEach(function (s, i) { if (s && s.getBoundingClientRect().top <= line) cur = i; });
+      railLinks.forEach(function (a, i) { if (i === cur) a.setAttribute('aria-current', 'true'); else a.removeAttribute('aria-current'); });
+      railTick = false;
+    };
+    var railQueue = function () { if (!railTick) { railTick = true; requestAnimationFrame(railMark); } };
+    window.addEventListener('scroll', railQueue, { passive: true });
+    window.addEventListener('resize', railQueue);
+    railMark();
+  }
 
   /* ---------- Tríptico que sube con el scroll ---------- */
   var rise = $('.rise');
