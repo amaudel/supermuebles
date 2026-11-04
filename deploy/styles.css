@@ -935,6 +935,7 @@ input, textarea { caret-color: var(--accent); }
 .order .sec-label b, .footer .sec-label b { color: var(--accent-light); }
 .showcase-side .sec-label { margin-bottom: 1.1rem; }
 .assure .sec-label { grid-column: 1 / -1; margin-bottom: -1.5rem; }
+@media (max-width: 859px) { .assure .sec-label { margin-bottom: 1rem; } }
 
 /* ---------- 02 · Muebles: la imagen a un lado y el lema al otro ---------- */
 .intro {

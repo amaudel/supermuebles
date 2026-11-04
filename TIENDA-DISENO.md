@@ -178,6 +178,17 @@ Ninguno bloquea construir. Sí bloquean abrir la tienda al público.
 
 Las fases 0 a 3 se pueden construir ya, porque no dependen de ninguno de los pendientes.
 
+### Fase 0, primera parte: captura de fichas (4 nov 2026)
+
+El dueño llena las fichas de producto en `/fichas/` (misma página del sitio, sin enlaces desde ninguna parte, `noindex`). Los datos se guardan en Cloudflare para convertirlos después en `products`, `option_groups` y `options`.
+
+- Página: `deploy/fichas/index.html`. Acceso con un código compartido; el Worker lo comprueba y entrega una cookie firmada (30 días, `HttpOnly`, `Secure`, `SameSite=Strict`). El código es el secreto `FICHAS_CODE`; cambiarlo cierra todas las sesiones.
+- API: `tienda/worker/index.ts`, solo bajo `/fichas-api/*` (`run_worker_first`). **Sin base de datos**: la cuenta de Cloudflare llegó al máximo de 10 bases D1 del plan gratuito, así que todo vive en el bucket R2 `supermuebles-fichas-fotos` (privado): `datos/fichas.json` (todas las fichas en un documento), `fotos/<id>.jpg` (con el metadato `ficha`) y `datos/intentos.json`. Los cambios al documento usan escritura condicional por etag con reintentos, así dos guardados a la vez no se pierden. Cada ficha lleva `rev`: si dos personas editan la misma, la segunda recibe 409 y elige qué conservar. Borrar una ficha es lógico (`deletedAt`). Máximo 20 códigos fallidos cada 10 minutos entre todos.
+- Cuando se construyan pedidos y pagos (fases 1 a 3) sí hará falta D1: habrá que liberar una base o pasar al plan Workers de pago. Las fichas se migrarán entonces a `products`.
+- Con el dominio de Vercel: `deploy/vercel.json` reenvía `/fichas-api/*` al Worker, así el navegador siempre habla con el mismo dominio.
+- Pruebas: `tienda/test/smoke.test.mjs` (11 pruebas contra un Worker en marcha con `npm run dev`).
+- Los 19 modelos del catálogo se cargan solos la primera vez que se abre (`tienda/worker/seed.ts`).
+
 ## 13. Cómo se prueba
 
 - Pruebas automáticas del Worker con Miniflare (D1 y R2 simulados): cálculo de totales, idempotencia, transiciones válidas e inválidas, límites de comprobante.

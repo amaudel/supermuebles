@@ -13,3 +13,6 @@ __pycache__/
 # Sistema operativo
 Thumbs.db
 .DS_Store
+
+# Secretos locales de Wrangler
+.dev.vars

@@ -1,0 +1,14 @@
+{
+  "name": "supermuebles-tienda",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev --config ../wrangler.jsonc --local",
+    "test": "node --test test/smoke.test.mjs"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20261104.1",
+    "typescript": "^7.0.2",
+    "wrangler": "^4"
+  }
+}

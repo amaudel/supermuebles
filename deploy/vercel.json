@@ -2,5 +2,11 @@
   "redirects": [
     { "source": "/fabrica.html", "destination": "/", "permanent": true },
     { "source": "/fabrica", "destination": "/", "permanent": true }
+  ],
+  "rewrites": [
+    { "source": "/fichas-api/:path*", "destination": "https://supermuebles-cuenca.andresdelgado1984.workers.dev/fichas-api/:path*" }
+  ],
+  "headers": [
+    { "source": "/fichas/:path*", "headers": [ { "key": "X-Robots-Tag", "value": "noindex, nofollow" } ] }
   ]
 }
