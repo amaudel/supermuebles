@@ -176,7 +176,7 @@ for fname, body, key, title, desc, ex in PAGES:
     if fname in CRUMBS:
         scripts.append(ld(breadcrumb(fname)))
     html = html.replace('{{jsonld}}', '\n'.join(scripts))
-    html = html.replace('{{preload}}', '<link rel="preload" as="image" href="img/fabrica-poster-2.jpg" media="(min-width: 860px)" fetchpriority="high"><link rel="preload" as="image" href="img/fabrica-poster-2-m.jpg" media="(max-width: 859px)" fetchpriority="high">' if ex.get('preload') else '')
+    html = html.replace('{{preload}}', '<link rel="preload" as="image" href="img/fabrica-poster-3.jpg" media="(min-width: 860px)" fetchpriority="high"><link rel="preload" as="image" href="img/fabrica-poster-3-m.jpg" media="(max-width: 859px)" fetchpriority="high">' if ex.get('preload') else '')
     # mensaje general de WhatsApp
     html = html.replace('[[wa:Hola Supermuebles Cuenca, quiero cotizar un mueble.]]', '[[wa:%s]]' % GENERAL_MSG)
     html = re.sub(r'<a href="([^"]+)" data-page="%s"' % re.escape(key), r'<a href="\1" aria-current="page"', html)
