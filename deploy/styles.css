@@ -1067,3 +1067,29 @@ input, textarea { caret-color: var(--accent); }
   .field input.is-shake { animation: none; }
   .process-cap, .process-cap.is-out { transition: none; }
 }
+
+/* ==========================================================================
+   Portada más corta (10 nov 2026): Proceso y Cómo trabajamos van juntos,
+   ambientes en carrusel en celular y el resumen del pedido solo en pantallas grandes
+   ========================================================================== */
+.about-sub { grid-column: 1 / -1; margin-top: clamp(3rem, 6vw, 4.5rem); font-size: var(--lead); font-weight: 500; line-height: 1.2; }
+.pillar-list--about { grid-column: 1 / -1; margin-top: 1.5rem; }
+#proceso .about-side { grid-column: 1 / -1; margin-top: 2.5rem; }
+.pillar-list--about .pillar img { aspect-ratio: 1 / 1; }
+@media (max-width: 859px) {
+  .pillar-list--about { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.75rem var(--gap); }
+  .pillar-list--about .pillar img { aspect-ratio: 1 / 1; margin-bottom: 0.75rem; }
+  /* ambientes: carrusel deslizable en lugar de siete fotos grandes una debajo de otra */
+  .showcase .run { overflow-x: auto; scroll-snap-type: x mandatory; scroll-padding-inline: var(--m); }
+  .showcase .frames { display: flex; width: max-content; gap: 0.75rem; padding: 0 var(--m); }
+  .showcase .frame, .showcase .frame:nth-child(n), .showcase .frame--lift { width: 72vw; max-width: 20rem; margin: 0; }
+  .showcase .frame-img { height: auto; aspect-ratio: 4 / 5; }
+  .showcase .frame-img img { width: 100%; height: 100%; object-fit: cover; }
+  /* pedido: en celular se envía igual, sin repetir los datos en la orden de trabajo */
+  .sheet-title, .sheet-sub, .sheet-rows { display: none; }
+  .sheet { padding: 0; background: none; }
+  .order .sheet .hint--sheet { color: inherit; }
+}
+@media (min-width: 600px) and (max-width: 859px) {
+  .showcase .frame--lift .frame-img { height: auto; }
+}
