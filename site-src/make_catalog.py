@@ -120,6 +120,7 @@ cat = '''
     <a href="comedores.html">Ver solo comedores</a>
     <a href="dormitorios.html">Ver solo dormitorios</a>
   </nav>
+  <button class="filters-toggle" id="filters-toggle" type="button" aria-expanded="false" aria-controls="filters">Filtrar modelos</button>
   <form class="filters" id="filters" aria-label="Filtrar modelos" onsubmit="return false">
     %s
     %s

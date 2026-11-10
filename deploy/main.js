@@ -558,6 +558,19 @@
       $$('[data-filter="' + key + '"]').forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.value === value)); });
     };
 
+    /* En celular los filtros empiezan plegados; el botón dice cuántos hay activos */
+    var ftog = $('#filters-toggle');
+    var flabel = function () {
+      var n = Object.keys(state).filter(function (k) { return state[k] !== 'todos'; }).length;
+      var open = $('#filters').classList.contains('open');
+      ftog.textContent = open ? 'Ocultar filtros' : (n ? 'Filtrar modelos (' + n + ')' : 'Filtrar modelos');
+    };
+    if (ftog) ftog.addEventListener('click', function () {
+      var open = $('#filters').classList.toggle('open');
+      ftog.setAttribute('aria-expanded', String(open));
+      flabel();
+    });
+
     $('#filters').addEventListener('click', function (e) {
       var b = e.target.closest('[data-filter]');
       if (!b) return;
