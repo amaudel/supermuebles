@@ -320,6 +320,14 @@ input, textarea { caret-color: var(--accent); }
 .hero--fab .hero-scrim { background: linear-gradient(to bottom, rgba(9, 16, 22, 0.5) 0, rgba(9, 16, 22, 0) 9rem), linear-gradient(to top, rgba(9, 16, 22, 0.75) 0, rgba(9, 16, 22, 0) 13rem); } /* taste-skill-ignore */
 .hero--fab .hero-copy { padding-top: 0; }
 .hero--fab .hero-actions { margin-top: 0; }
+/* En celular el video se ve entero (16:9) bajo el encabezado, y los botones van debajo */
+@media (max-width: 859px) {
+  .hero.hero--fab { display: block; min-height: 0; padding-top: var(--bar-h); }
+  .hero--fab .hero-bg { position: relative; inset: auto; z-index: 0; height: 56.25vw; }
+  .hero--fab .hero-scrim { display: none; }
+  .hero--fab .hero-copy { padding: 1.5rem var(--m) 2rem; }
+  .hero.hero--fab .vista-toggle { top: auto; bottom: 2rem; }
+}
 
 @media (max-width: 859px) {
   .hero-copy { max-width: none; padding: calc(var(--bar-h) + 1.75rem) var(--m) calc(4.5rem + 1.75rem); }
