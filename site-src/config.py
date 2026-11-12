@@ -2,7 +2,7 @@
 SITE = 'https://supermuebles-cuenca.vercel.app'
 WHATSAPP = '593999880023'
 WHATSAPP2 = '593959641962'  # segundo número de la fábrica (celular y WhatsApp)
-LASTMOD = '2026-10-26'
+LASTMOD = '2026-11-12'
 
 # Mensaje general de WhatsApp (el de cada modelo incluye el nombre y el enlace)
 GENERAL_MSG = ('Hola, vi un mueble en la web de Supermuebles Cuenca y quiero cotizarlo. '

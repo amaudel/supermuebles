@@ -3,7 +3,8 @@
 # Uso (desde la carpeta site-src):
 #   python make_catalog.py   (si cambias los modelos)
 #   python build.py
-import os, re, urllib.parse
+import os, re, json, urllib.parse
+import html as html_mod
 from config import SITE, WHATSAPP, WHATSAPP2, LASTMOD, GENERAL_MSG, LOCATION, ANALYTICS
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
@@ -49,6 +50,7 @@ BUSINESS = '''{
 CRUMBS = {
     'catalogo.html': 'Catálogo', 'salas.html': 'Salas', 'comedores.html': 'Comedores', 'dormitorios.html': 'Dormitorios',
     'a-medida.html': 'A medida', 'visitanos.html': 'Visítanos', 'privacidad.html': 'Privacidad',
+    'guayaquil.html': 'Muebles en Guayaquil',
 }
 UNDER_CATALOG = {'salas.html', 'comedores.html', 'dormitorios.html'}
 
@@ -100,6 +102,10 @@ PAGES = [
      'Página no encontrada | Supermuebles Cuenca',
      'La página que buscas no existe. Vuelve al inicio o explora el catálogo de Supermuebles Cuenca.',
      {'noindex': True}),
+    ('guayaquil.html', 'guayaquil.html', 'guayaquil',
+     'Muebles en Guayaquil | Showroom Mall del Norte | Supermuebles',
+     'Muebles fabricados en Cuenca con showroom en el Mall del Norte, Guayaquil. Salas, comedores y dormitorios con envío a tu casa. Cotiza por WhatsApp.',
+     {}),
     ('visitanos.html', 'visitanos.html', 'visitanos',
      'Visítanos en Cuenca y Guayaquil | Supermuebles Cuenca',
      'Locales de Supermuebles: Turi, Cuenca (sector San Pedro) y Mall del Norte, Guayaquil. Horario, cómo llegar y agenda tu visita por WhatsApp.',
@@ -151,6 +157,31 @@ def loc_fill(s, fname=''):
     return re.sub(r'\{\{loc:(\w+)\}\}', lambda m: vals[m.group(1)], s)
 
 
+def faq_ld(content):
+    """Datos de preguntas frecuentes para buscadores, sacados del mismo texto que ve la persona."""
+    m = re.search(r'<section class="faq".*?</section>', content, re.S)
+    if not m:
+        return None
+    txt = lambda h: json.dumps(html_mod.unescape(re.sub(r'\s+', ' ', re.sub(r'<[^>]+>', '', h)).strip()), ensure_ascii=False)
+    qa = re.findall(r'<summary><span>(.*?)</span>.*?</summary>\s*<p>(.*?)</p>', m.group(0), re.S)
+    els = ',\n    '.join('{"@type": "Question", "name": %s, "acceptedAnswer": {"@type": "Answer", "text": %s}}' % (txt(q), txt(a)) for q, a in qa)
+    return '{\n  "@context": "https://schema.org",\n  "@type": "FAQPage",\n  "mainEntity": [\n    %s\n  ]\n}' % els
+
+
+def webp_srcset(html):
+    """Agrega a cada foto sus versiones WebP por ancho (las crea make_images.py). El JPG queda de respaldo."""
+    def one(m):
+        base, w = m.group(2), int(m.group(3))
+        name = os.path.basename(base)
+        found = sorted(int(f[len(name) + 1:-5]) for f in os.listdir(os.path.join(OUT, os.path.dirname(base)))
+                       if f.startswith(name + '-') and f.endswith('.webp') and f[len(name) + 1:-5].isdigit())
+        if not found:
+            return m.group(0)
+        sizes = '(max-width: 859px) 92vw, 60vw' if w >= 1500 else '(max-width: 599px) 92vw, (max-width: 1023px) 46vw, 33vw'
+        return '%s srcset="%s" sizes="%s"' % (m.group(0), ', '.join('%s-%d.webp %dw' % (base, x, x) for x in found), sizes)
+    return re.sub(r'(<img src="(img/[^"]+)\.jpg" width="(\d+)")', one, html)
+
+
 def ld(obj):
     return '<script type="application/ld+json">\n%s\n</script>' % obj
 
@@ -175,6 +206,8 @@ for fname, body, key, title, desc, ex in PAGES:
         scripts.append(ld(BUSINESS))
     if fname in CRUMBS:
         scripts.append(ld(breadcrumb(fname)))
+    if faq_ld(content):
+        scripts.append(ld(faq_ld(content)))
     html = html.replace('{{jsonld}}', '\n'.join(scripts))
     html = html.replace('{{preload}}', '<link rel="preload" as="image" href="img/fabrica-poster-4.jpg" fetchpriority="high">' if ex.get('preload') else '')
     # mensaje general de WhatsApp
@@ -183,6 +216,7 @@ for fname, body, key, title, desc, ex in PAGES:
     html = re.sub(r' data-page="[^"]+"', '', html)
     html = re.sub(r'\[\[wa:(.*?)\]\]', lambda m: wa(m.group(1)), html)
     html = re.sub(r'\[\[wa2:(.*?)\]\]', lambda m: wa(m.group(1), WHATSAPP2), html)
+    html = webp_srcset(html)
     open(os.path.join(OUT, fname), 'w', encoding='utf8', newline='\n').write(html)
     print('built', fname, len(html))
 

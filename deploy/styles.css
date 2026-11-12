@@ -728,6 +728,8 @@ input, textarea { caret-color: var(--accent); }
 .footer p, .footer li { font-size: 1rem; line-height: 1.5; color: var(--field-soft); }
 .footer .f-head { color: var(--field-ink); font-weight: 600; }
 .footer li { padding-block: 0.15rem; }
+.footer li a, .footer p a { display: inline-flex; align-items: center; min-height: 2.75rem; }
+.footer li { padding-block: 0; }
 /* Lema de marca: firma grande al final de todas las páginas */
 .footer-lema .acento, .hero--fab .display .acento { color: var(--accent-light); }
 .footer .footer-lema { margin: clamp(3rem, 6vw, 5.5rem) 0 0; padding-bottom: clamp(2rem, 4vw, 3.5rem); font-family: "Instrument Serif", Georgia, "Times New Roman", serif; font-style: italic; font-weight: 400;
