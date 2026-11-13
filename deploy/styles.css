@@ -1095,3 +1095,7 @@ input, textarea { caret-color: var(--accent); }
 @media (min-width: 600px) and (max-width: 859px) {
   .showcase .frame--lift .frame-img { height: auto; }
 }
+/* Guayaquil: «Cómo comprar» en tres columnas iguales */
+@media (min-width: 860px) {
+  .assure--3 .assure-col:nth-of-type(n) { grid-column: span 4; }
+}
