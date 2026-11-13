@@ -1099,3 +1099,10 @@ input, textarea { caret-color: var(--accent); }
 @media (min-width: 860px) {
   .assure--3 .assure-col:nth-of-type(n) { grid-column: span 4; }
 }
+
+/* Enlace a la página de Guayaquil bajo el showroom */
+.loc-more { margin: 1.25rem 0 0; font-size: 0.95rem; }
+.loc-more .link { display: inline; }
+.loc-more .link .i { display: inline-block; width: 1.1em; height: 1.1em; vertical-align: -0.2em; margin-left: 0.25em; }
+@media (max-width: 859px) { .loc-more { text-align: center; } }
+.loc-more .nowrap { white-space: nowrap; }

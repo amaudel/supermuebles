@@ -105,7 +105,7 @@ PAGES = [
     ('guayaquil.html', 'guayaquil.html', 'guayaquil',
      'Muebles en Guayaquil | Showroom Mall del Norte | Supermuebles',
      'Muebles fabricados en Cuenca con showroom en el Mall del Norte, Guayaquil. Salas, comedores y dormitorios con envío a tu casa. Cotiza por WhatsApp.',
-     {}),
+     {'show_more': ''}),
     ('visitanos.html', 'visitanos.html', 'visitanos',
      'Visítanos en Cuenca y Guayaquil | Supermuebles Cuenca',
      'Locales de Supermuebles: Turi, Cuenca (sector San Pedro) y Mall del Norte, Guayaquil. Horario, cómo llegar y agenda tu visita por WhatsApp.',
@@ -124,10 +124,16 @@ def wa(text, number=WHATSAPP):
     return 'https://wa.me/%s?text=%s' % (number, urllib.parse.quote(text, safe=''))
 
 
+SHOW_MORE = ('<p class="loc-more"><a class="link" href="guayaquil.html">¿Vives en Guayaquil? Mira cómo comprar desde '
+             '<span class="nowrap">allá<svg class="i" aria-hidden="true"><use href="#i-arrow"/></svg></span></a></p>')
+
+
 def includes(s, ex):
     def one(m):
         part = read('pages', '_%s.html' % m.group(1))
-        return includes(part, ex).replace('{{order_title}}', ex.get('order_title', 'Cuéntanos qué necesitas'))
+        return (includes(part, ex)
+                .replace('{{order_title}}', ex.get('order_title', 'Cuéntanos qué necesitas'))
+                .replace('{{show_more}}', ex.get('show_more', SHOW_MORE)))
     return re.sub(r'\{\{include:(\w+)\}\}', one, s)
 
 
