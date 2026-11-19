@@ -1,0 +1,35 @@
+// Configuración SOLO para la rama `tienda` (carrito, pedidos y panel).
+// Publica en un Worker de pruebas aparte, con sus propios bucket y base de datos.
+// Nunca toca el Worker `supermuebles-cuenca` ni el bucket de fichas reales.
+// La configuración del sitio en vivo sigue en wrangler.jsonc y no se usa desde esta rama.
+{
+  "$schema": "https://unpkg.com/wrangler/config-schema.json",
+  "name": "supermuebles-tienda-pruebas",
+  "main": "tienda/worker/index.ts",
+  "compatibility_date": "2026-10-27",
+  "workers_dev": true,
+  "assets": {
+    "directory": "./deploy",
+    "binding": "ASSETS",
+    "not_found_handling": "404-page",
+    "html_handling": "auto-trailing-slash",
+    "run_worker_first": ["/fichas-api/*", "/api/*", "/admin/*"]
+  },
+  "r2_buckets": [
+    // Copia de pruebas: las fichas reales del dueño no se leen ni se escriben desde aquí.
+    { "binding": "FOTOS", "bucket_name": "supermuebles-pruebas-fichas" },
+    { "binding": "COMPROBANTES", "bucket_name": "supermuebles-pruebas-comprobantes" }
+  ],
+  "d1_databases": [
+    // En local (npm run dev) funciona sin crear nada en Cloudflare.
+    // Para publicar las pruebas hay que crear la base y poner aquí su id real:
+    // la cuenta tiene las 10 bases D1 del plan gratuito ocupadas.
+    {
+      "binding": "DB",
+      "database_name": "supermuebles-tienda-pruebas",
+      "database_id": "00000000-0000-0000-0000-000000000000",
+      "migrations_dir": "tienda/migrations"
+    }
+  ],
+  "observability": { "enabled": true }
+}

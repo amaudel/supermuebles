@@ -3,8 +3,10 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "wrangler dev --config ../wrangler.jsonc --local",
-    "test": "node --test test/smoke.test.mjs"
+    "dev": "wrangler dev --config ../wrangler.tienda.jsonc --local",
+    "db:migrar": "wrangler d1 migrations apply supermuebles-tienda-pruebas --config ../wrangler.tienda.jsonc --local",
+    "test": "node --test test/smoke.test.mjs",
+    "publicar:pruebas": "wrangler deploy --config ../wrangler.tienda.jsonc"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^5.20261104.1",

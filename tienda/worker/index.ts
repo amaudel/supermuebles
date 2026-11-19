@@ -13,6 +13,9 @@ export interface Env {
   ASSETS: Fetcher;
   FOTOS: R2Bucket;
   FICHAS_CODE: string; // código de acceso compartido (secreto del Worker)
+  // Solo existen en la rama `tienda` (wrangler.tienda.jsonc). El sitio en vivo no los tiene.
+  DB?: D1Database;
+  COMPROBANTES?: R2Bucket;
 }
 
 const COOKIE = 'sm_fichas';
