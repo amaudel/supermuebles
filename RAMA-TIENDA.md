@@ -68,9 +68,9 @@ Falta antes:
   - El cliente sube la foto o el PDF desde su enlace de seguimiento, solo cuando el pedido está «Por pagar» (`POST /api/pedidos/:token/comprobante`, código en `tienda/worker/comprobantes.ts`). Las fotos se reducen a 2000 px en el celular antes de subir; máximo 5 MB; el tipo se comprueba por los bytes del archivo (JPG, PNG, WEBP o PDF); 10 subidas por minuto por IP.
   - Se guarda en el bucket privado `COMPROBANTES` (sin URL pública), crea un pago «en revisión» por el abono o el total, y el pedido pasa a «Revisando tu pago».
   - Panel: tabla de comprobantes con «Ver comprobante» (solo con sesión, se abre aislado con `Content-Security-Policy: sandbox`). «Confirmar pago» lo marca verificado con quién y cuándo; «Rechazar pago» pide motivo, vuelve a «Por pagar» y el cliente ve que debe subirlo otra vez.
-  - Limpieza diaria (Cron `0 8 * * *`, 03:00 de Ecuador): borra los comprobantes de pedidos entregados o cancelados hace más de 90 días (`DIAS_CONSERVACION`, a confirmar con el dueño) y los intentos de entrada viejos.
+  - Limpieza diaria: la cuenta gratuita ya usa sus 5 tareas programadas (cron), así que corre al abrir el panel, como máximo una vez cada 24 horas; con un cupo libre se vuelve a poner el cron `0 8 * * *` (03:00 de Ecuador). Qué hace: borra los comprobantes de pedidos entregados o cancelados hace más de 90 días (`DIAS_CONSERVACION`, a confirmar con el dueño) y los intentos de entrada viejos.
   - Pruebas: `tienda/test/comprobantes.test.mjs` (4), 26 de 26 en total. En local `npm run dev` incluye `--test-scheduled` para probar la limpieza.
-  - Para la nube falta crear el bucket `supermuebles-pruebas-comprobantes`.
+  - Publicado el 19 nov 2026 en https://supermuebles-tienda-pruebas.andresdelgado1984.workers.dev (versión 82078845), con sus dos buckets creados. Faltan los secretos `ADMIN_CODE`, `FICHAS_CODE` y `TURNSTILE_SECRET`, y registrar los correos del panel.
 - [ ] Pruebas con Miniflare de totales, idempotencia, transiciones de estado y límites de comprobante.
 - [ ] Actualizar la página de privacidad antes de abrir la tienda.
 

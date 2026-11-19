@@ -2,7 +2,7 @@
 // Acceso: correo registrado en admin_users + código compartido del panel (secreto ADMIN_CODE).
 // La sesión es una cookie firmada que lleva el correo, así cada cambio queda registrado con quién lo hizo.
 import type { Env } from './index';
-import { verComprobante } from './comprobantes';
+import { verComprobante, limpiar } from './comprobantes';
 
 const COOKIE = 'sm_admin';
 const SESION_HORAS = 12;
@@ -255,6 +255,16 @@ async function guardarAjustes(request: Request, db: D1Database, u: Usuaria): Pro
   return json(await leerAjustes(db));
 }
 
+// Respaldo de la tarea diaria: el plan gratuito permite solo 5 tareas programadas por cuenta y ya están ocupadas.
+// Al abrir el panel se corre la limpieza si pasaron más de 24 horas desde la última.
+async function limpiezaDelDia(env: Env, db: D1Database): Promise<void> {
+  const r = await db.prepare("SELECT value_json FROM settings WHERE key = 'ultima_limpieza'").first<{ value_json: string }>();
+  const ultima = r ? Number(JSON.parse(r.value_json)) : 0;
+  if (Date.now() - ultima < 86400_000) return;
+  await db.prepare("INSERT INTO settings (key, value_json) VALUES ('ultima_limpieza', ?) ON CONFLICT(key) DO UPDATE SET value_json = excluded.value_json").bind(String(Date.now())).run();
+  try { await limpiar(env); } catch (e) { console.error('limpieza', e); }
+}
+
 /* ---------- rutas ---------- */
 
 export async function adminApi(request: Request, env: Env, url: URL): Promise<Response> {
@@ -271,7 +281,10 @@ export async function adminApi(request: Request, env: Env, url: URL): Promise<Re
   const u = await usuariaDeSesion(env, db, request);
   if (!u) return error('Tu sesión terminó. Vuelve a entrar.', 401);
 
-  if (p === '/yo' && m === 'GET') return json({ email: u.email, nombre: u.name, rol: u.role });
+  if (p === '/yo' && m === 'GET') {
+    await limpiezaDelDia(env, db);
+    return json({ email: u.email, nombre: u.name, rol: u.role });
+  }
   if (p === '/pedidos' && m === 'GET') return listarPedidos(db, url);
   let r = p.match(/^\/pedidos\/([0-9a-f-]{36})(\/[a-z]+)?$/);
   if (r) {

@@ -36,7 +36,9 @@
     { "name": "LIMITE_PEDIDOS", "namespace_id": "1001", "simple": { "limit": 10, "period": 60 } },
     { "name": "LIMITE_COMPROBANTES", "namespace_id": "1002", "simple": { "limit": 10, "period": 60 } }
   ],
-  // Limpieza diaria a las 03:00 de Ecuador (08:00 UTC): borra comprobantes vencidos.
-  "triggers": { "crons": ["0 8 * * *"] },
+  // Limpieza diaria: la cuenta gratuita ya usa sus 5 tareas programadas, así que no hay cron.
+  // La limpieza corre al abrir el panel, como máximo una vez cada 24 horas (admin.ts, limpiezaDelDia).
+  // Con plan de pago o un cupo libre, agregar: "triggers": { "crons": ["0 8 * * *"] }  (03:00 de Ecuador).
+  "triggers": { "crons": [] },
   "observability": { "enabled": true }
 }
