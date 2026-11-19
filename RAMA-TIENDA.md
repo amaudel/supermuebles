@@ -41,7 +41,7 @@ En local no hace falta crear nada en Cloudflare: D1 y R2 se simulan. El código 
 ## Para publicar las pruebas en Cloudflare (`npm run publicar:pruebas`)
 
 Falta antes:
-- **Una base D1.** La cuenta tiene ocupadas las 10 del plan gratuito. Hay que liberar una o pasar al plan Workers de pago. Después: `npx wrangler d1 create supermuebles-tienda-pruebas` y poner el id en `wrangler.tienda.jsonc`.
+- ~~Una base D1~~ **Hecho (19 nov 2026):** se borró la base vacía `pricelabs-revenue-db` y se creó `supermuebles-tienda-pruebas` (id en `wrangler.tienda.jsonc`) con el esquema y los 19 modelos sin precio, tienda apagada (`npm run db:migrar:nube`). Nunca aplicar ahí `solo-local-precios-de-prueba.sql`.
 - Crear los dos buckets de prueba: `npx wrangler r2 bucket create supermuebles-pruebas-fichas` y `... supermuebles-pruebas-comprobantes`.
 - El secreto `FICHAS_CODE` del Worker de pruebas (puede ser distinto del real).
 - Las llaves de Turnstile (fase 1) y Cloudflare Access para `/admin` (fase 2).

@@ -22,12 +22,12 @@
   ],
   "d1_databases": [
     // En local (npm run dev) funciona sin crear nada en Cloudflare.
-    // Para publicar las pruebas hay que crear la base y poner aquí su id real:
-    // la cuenta tiene las 10 bases D1 del plan gratuito ocupadas.
+    // Base de pruebas creada el 19 nov 2026 (cupo liberado al borrar pricelabs-revenue-db).
+    // Para el esquema en Cloudflare: npm run db:migrar:nube (desde tienda/).
     {
       "binding": "DB",
       "database_name": "supermuebles-tienda-pruebas",
-      "database_id": "00000000-0000-0000-0000-000000000000",
+      "database_id": "c3e2a088-7bb4-4f17-842b-c9071797ed66",
       "migrations_dir": "tienda/migrations"
     }
   ],
