@@ -139,8 +139,8 @@ main { padding: var(--m); max-width: 90rem; margin: 0 auto; }
   <form id="f-entrar" novalidate>
     <h1>Panel de pedidos</h1>
     <p>Entra con tu correo y el código del panel.</p>
-    <label>Correo<input type="email" name="email" autocomplete="username" required></label>
-    <label>Código del panel<input type="password" name="codigo" autocomplete="current-password" required></label>
+    <label>Correo<input type="email" name="email" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" required></label>
+    <label>Código del panel<input type="password" name="codigo" autocomplete="current-password" autocapitalize="none" autocorrect="off" spellcheck="false" required></label>
     <p class="msg msg--error" id="entrar-error" role="alert" hidden></p>
     <button class="btn" type="submit">Entrar</button>
   </form>

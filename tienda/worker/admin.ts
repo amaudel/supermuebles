@@ -57,8 +57,10 @@ async function entrar(request: Request, env: Env, db: D1Database): Promise<Respo
   let d: any = {};
   try { d = await request.json(); } catch { /* cuerpo vacío */ }
   const email = texto(d?.email, 160).toLowerCase();
-  const codigo = typeof d?.codigo === 'string' ? d.codigo.trim() : '';
-  const codigoOk = codigo.length > 0 && codigo.length < 100 && (await iguales(codigo, env.ADMIN_CODE!));
+  // Sin distinguir mayúsculas, espacios ni guiones: el teclado del celular pone mayúscula al inicio sin avisar.
+  const normal = (c: string) => c.toUpperCase().replace(/[^A-Z0-9]/g, '');
+  const codigo = typeof d?.codigo === 'string' ? normal(d.codigo) : '';
+  const codigoOk = codigo.length > 0 && codigo.length < 100 && (await iguales(codigo, normal(env.ADMIN_CODE!)));
   const u = email ? await db.prepare('SELECT id FROM admin_users WHERE email = ? AND active = 1').bind(email).first() : null;
   if (!codigoOk || !u) {
     await db.batch([
