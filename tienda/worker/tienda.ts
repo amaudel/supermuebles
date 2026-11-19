@@ -29,14 +29,44 @@ async function tiendaActiva(db: D1Database): Promise<boolean> {
 
 /* ---------- GET /api/productos ---------- */
 
-type Producto = { id: string; name: string; category: string; image: string | null; price_cents: number };
+type Producto = { id: string; name: string; category: string; description: string | null; image: string | null; price_cents: number; sold_separately: number };
+type Pieza = { id: string; product_id: string; name: string; qty_in_set: number; price_cents: number; width_cm: number | null; depth_cm: number | null; height_cm: number | null };
 
 async function productos(db: D1Database): Promise<Response> {
   if (!(await tiendaActiva(db))) return json({ activa: false, productos: [] });
-  const { results } = await db
-    .prepare('SELECT id, name, category, image, price_cents FROM products WHERE active = 1 AND price_cents IS NOT NULL ORDER BY sort, name')
-    .all<Producto>();
-  return json({ activa: true, productos: results });
+  const [prods, piezas] = await db.batch([
+    db.prepare('SELECT id, name, category, description, image, price_cents, sold_separately FROM products WHERE active = 1 AND price_cents IS NOT NULL ORDER BY sort, name'),
+    db.prepare('SELECT p.id, p.product_id, p.name, p.qty_in_set, p.price_cents, p.width_cm, p.depth_cm, p.height_cm FROM product_pieces p JOIN products o ON o.id = p.product_id WHERE o.active = 1 ORDER BY p.sort'),
+  ]);
+  const porProducto = new Map<string, Pieza[]>();
+  for (const x of piezas.results as Pieza[]) {
+    if (!porProducto.has(x.product_id)) porProducto.set(x.product_id, []);
+    porProducto.get(x.product_id)!.push(x);
+  }
+  return json({
+    activa: true,
+    productos: (prods.results as Producto[]).map(p => ({
+      ...p,
+      sold_separately: p.sold_separately === 1,
+      piezas: (porProducto.get(p.id) || []).map(x => ({
+        id: x.id, name: x.name, qty: x.qty_in_set, price_cents: x.price_cents,
+        medidas: [x.width_cm, x.depth_cm, x.height_cm].some(v => v) ? { ancho: x.width_cm, fondo: x.depth_cm, alto: x.height_cm } : null,
+      })),
+    })),
+  });
+}
+
+/* ---------- GET /api/fotos/:id (fotos de fichas usadas por modelos activos) ---------- */
+
+async function fotoPublica(env: Env, db: D1Database, id: string): Promise<Response> {
+  // Solo se entrega una foto si un modelo visible la usa; las demás fotos de las fichas siguen privadas.
+  const usada = await db.prepare('SELECT 1 FROM products WHERE active = 1 AND image = ?').bind('api/fotos/' + id).first();
+  const fuente = env.FICHAS_FUENTE ?? env.FOTOS;
+  const o = usada && fuente ? await fuente.get(`fotos/${id}.jpg`) : null;
+  if (!o) return error('No encontrada.', 404);
+  return new Response(o.body, {
+    headers: { 'Content-Type': 'image/jpeg', 'Cache-Control': 'public, max-age=86400', 'X-Content-Type-Options': 'nosniff', ETag: o.httpEtag },
+  });
 }
 
 /* ---------- POST /api/pedidos ---------- */
@@ -56,24 +86,25 @@ async function turnstileValido(env: Env, token: string, ip: string | null): Prom
   }
 }
 
-type Linea = { id: string; qty: number; nota: string };
+type Linea = { id: string; pieza: string; qty: number; nota: string };
 
 function leerLineas(v: unknown): Linea[] | string {
   if (!Array.isArray(v) || v.length === 0) return 'Tu pedido está vacío.';
   if (v.length > MAX_LINEAS) return `Un pedido puede tener hasta ${MAX_LINEAS} líneas.`;
-  // Une líneas iguales (mismo modelo y misma nota) sumando cantidades.
+  // Une líneas iguales (mismo modelo, misma pieza y misma nota) sumando cantidades.
   const unidas = new Map<string, Linea>();
   for (const x of v) {
     const id = texto((x as any)?.id, 80);
+    const pieza = texto((x as any)?.pieza, 80);
     const qty = Number((x as any)?.qty);
     const nota = textoLargo((x as any)?.nota, 300);
     if (!id || !Number.isInteger(qty) || qty < 1 || qty > MAX_CANTIDAD) return 'Revisa las cantidades del pedido.';
-    const k = id + '\u0000' + nota;
+    const k = id + '\u0000' + pieza + '\u0000' + nota;
     const prev = unidas.get(k);
     if (prev) {
       prev.qty += qty;
       if (prev.qty > MAX_CANTIDAD) return 'Revisa las cantidades del pedido.';
-    } else unidas.set(k, { id, qty, nota });
+    } else unidas.set(k, { id, pieza, qty, nota });
   }
   return [...unidas.values()];
 }
@@ -141,15 +172,25 @@ async function crearPedido(request: Request, env: Env, db: D1Database): Promise<
 
   // Precios y nombres salen de la base, nunca del navegador.
   const ids = [...new Set(lineas.map(l => l.id))];
-  const { results } = await db
-    .prepare(`SELECT id, name, price_cents FROM products WHERE active = 1 AND price_cents IS NOT NULL AND id IN (${ids.map(() => '?').join(',')})`)
-    .bind(...ids)
-    .all<{ id: string; name: string; price_cents: number }>();
-  const porId = new Map(results.map(p => [p.id, p]));
-  const faltan = lineas.filter(l => !porId.has(l.id));
-  if (faltan.length) return error('Uno de los modelos ya no está disponible para pedir en línea. Revisa tu pedido.', 409, 'items');
+  const marcas = ids.map(() => '?').join(',');
+  const [prods, piezas] = await db.batch([
+    db.prepare(`SELECT id, name, price_cents, sold_separately FROM products WHERE active = 1 AND price_cents IS NOT NULL AND id IN (${marcas})`).bind(...ids),
+    db.prepare(`SELECT id, product_id, name, price_cents FROM product_pieces WHERE product_id IN (${marcas})`).bind(...ids),
+  ]);
+  const porId = new Map((prods.results as { id: string; name: string; price_cents: number; sold_separately: number }[]).map(p => [p.id, p]));
+  const piezaPorId = new Map((piezas.results as { id: string; product_id: string; name: string; price_cents: number }[]).map(x => [x.id, x]));
+  // Cada línea es el juego completo o, si el modelo lo permite, una pieza suelta.
+  const precios: { nombre: string; unidad: number; opciones: string }[] = [];
+  for (const l of lineas) {
+    const p = porId.get(l.id);
+    if (!p) return error('Uno de los modelos ya no está disponible para pedir en línea. Revisa tu pedido.', 409, 'items');
+    if (!l.pieza) { precios.push({ nombre: p.name, unidad: p.price_cents, opciones: '[]' }); continue; }
+    const x = piezaPorId.get(l.pieza);
+    if (!x || x.product_id !== p.id || p.sold_separately !== 1) return error('Una de las piezas ya no se vende por separado. Revisa tu pedido.', 409, 'items');
+    precios.push({ nombre: `${p.name}: ${x.name}`, unidad: x.price_cents, opciones: JSON.stringify([{ pieza: x.id, nombre: x.name }]) });
+  }
 
-  const subtotal = lineas.reduce((s, l) => s + porId.get(l.id)!.price_cents * l.qty, 0);
+  const subtotal = lineas.reduce((s, l, i) => s + precios[i].unidad * l.qty, 0);
   const id = crypto.randomUUID();
   const token = hex(16); // 128 bits
   const t = ahora();
@@ -163,12 +204,11 @@ async function crearPedido(request: Request, env: Env, db: D1Database): Promise<
          VALUES (?, ?, ?, 'nuevo', 'pendiente', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       ).bind(id, codigo, token, cliente.nombre, cliente.telefono, cliente.email || null, cliente.cedula || null, cliente.ciudad, cliente.direccion,
         cliente.referencia || null, subtotal, notas || null, t, t, idem),
-      ...lineas.map(l => {
-        const p = porId.get(l.id)!;
-        return db.prepare(
+      ...lineas.map((l, i) =>
+        db.prepare(
           'INSERT INTO order_items (id, order_id, product_id, name_snapshot, unit_cents_snapshot, qty, options_json, note) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-        ).bind(crypto.randomUUID(), id, p.id, p.name, p.price_cents, l.qty, '[]', l.nota || null);
-      }),
+        ).bind(crypto.randomUUID(), id, l.id, precios[i].nombre, precios[i].unidad, l.qty, precios[i].opciones, l.nota || null),
+      ),
       db.prepare('INSERT INTO order_events (id, order_id, at, actor, type, detail_json) VALUES (?, ?, ?, ?, ?, ?)')
         .bind(crypto.randomUUID(), id, t, 'cliente', 'creado', JSON.stringify({ lineas: lineas.length, subtotal_cents: subtotal })),
     ];
@@ -234,6 +274,8 @@ export async function api(request: Request, env: Env, url: URL): Promise<Respons
   try {
     if (p === '/api/admin' || p.startsWith('/api/admin/')) return await adminApi(request, env, url);
     if (p === '/api/productos' && m === 'GET') return await productos(env.DB);
+    const f = p.match(/^\/api\/fotos\/([A-Za-z0-9_-]{1,40})$/);
+    if (f && m === 'GET') return await fotoPublica(env, env.DB, f[1]);
     if (p === '/api/pedidos' && m === 'POST') return await crearPedido(request, env, env.DB);
     const c = p.match(/^\/api\/pedidos\/([^/]+)\/comprobante$/);
     if (c && m === 'POST') {

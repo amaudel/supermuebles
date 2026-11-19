@@ -207,7 +207,7 @@ async function agregarNota(request: Request, db: D1Database, id: string, u: Usua
 /* ---------- productos ---------- */
 
 async function listarProductos(db: D1Database): Promise<Response> {
-  const { results } = await db.prepare('SELECT id, name, category, image, price_cents, active, sort FROM products ORDER BY sort, name').all();
+  const { results } = await db.prepare('SELECT p.id, p.name, p.category, p.image, p.price_cents, p.active, p.sort, p.ficha_id, p.sold_separately, (SELECT COUNT(*) FROM product_pieces x WHERE x.product_id = p.id) AS piezas FROM products p ORDER BY p.sort, p.name').all();
   return json({ productos: results });
 }
 
@@ -218,11 +218,143 @@ async function editarProducto(request: Request, db: D1Database, id: string, u: U
   if (typeof d?.active !== 'boolean') return error('Falta indicar si está activo.', 400);
   const antes = await db.prepare('SELECT price_cents, active FROM products WHERE id = ?').bind(id).first<{ price_cents: number | null; active: number }>();
   if (!antes) return error('No existe ese modelo.', 404);
+  // Un modelo con piezas tiene el precio del juego calculado: aquí solo se muestra u oculta.
+  const conPiezas = await db.prepare('SELECT 1 FROM product_pieces WHERE product_id = ? LIMIT 1').bind(id).first();
+  if (conPiezas && precio !== antes.price_cents) return error('Este modelo tiene piezas: su precio se cambia desde «Fichas».', 400);
   await db.batch([
     db.prepare('UPDATE products SET price_cents = ?, active = ? WHERE id = ?').bind(precio, d.active ? 1 : 0, id),
     registro(db, u.email, 'producto', { id, antes, despues: { price_cents: precio, active: d.active ? 1 : 0 } }),
   ]);
   return listarProductos(db);
+}
+
+/* ---------- fichas del dueño → tienda ---------- */
+
+type Ficha = {
+  id: string; rev: number; nombre: string; categoria: string; descripcion: string; separado: boolean; fotos: string[];
+  incluye: string[]; medidas: { nombre: string; ancho: string; fondo: string; alto: string; precio: string }[];
+};
+
+const slug = (t: string) => t.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 70);
+const numero = (v: unknown) => { const n = parseFloat(String(v ?? '').replace(',', '.')); return isFinite(n) && n > 0 ? n : null; };
+
+// Lee las fichas (solo lectura). En la rama de pruebas FICHAS_FUENTE apunta a las fichas reales del dueño.
+async function leerFichas(env: Env): Promise<Ficha[]> {
+  const fuente = env.FICHAS_FUENTE ?? env.FOTOS;
+  const o = await fuente.get('datos/fichas.json');
+  if (!o) return [];
+  const doc = (await o.json()) as { fichas: Record<string, { rev: number; position: number; deletedAt: string | null; data: any }> };
+  return Object.entries(doc.fichas || {})
+    .filter(([, f]) => !f.deletedAt)
+    .sort(([, a], [, b]) => a.position - b.position)
+    .map(([id, f]) => ({
+      id, rev: f.rev,
+      nombre: String(f.data?.nombre || '').trim(), categoria: String(f.data?.categoria || ''), descripcion: String(f.data?.descripcion || '').trim(),
+      separado: f.data?.separado === true, fotos: Array.isArray(f.data?.fotos) ? f.data.fotos.map(String) : [],
+      incluye: Array.isArray(f.data?.incluye) ? f.data.incluye.map(String) : [],
+      medidas: Array.isArray(f.data?.medidas) ? f.data.medidas : [],
+    }));
+}
+
+async function listarFichas(env: Env, db: D1Database): Promise<Response> {
+  const [fichas, { results }] = await Promise.all([
+    leerFichas(env),
+    db.prepare('SELECT id, name, ficha_id, ficha_rev FROM products').all<{ id: string; name: string; ficha_id: string | null; ficha_rev: number | null }>(),
+  ]);
+  const porFicha = new Map(results.filter(p => p.ficha_id).map(p => [p.ficha_id!, p]));
+  const porSlug = new Map(results.map(p => [slug(p.name), p]));
+  return json({
+    fichas: fichas.map(f => {
+      const v = porFicha.get(f.id);
+      const sugerido = v ? null : porSlug.get(slug(f.nombre)) || null;
+      return {
+        ...f,
+        producto: v ? { id: v.id, nombre: v.name, rev: v.ficha_rev } : null,
+        cambio: !!v && v.ficha_rev !== f.rev,
+        sugerido: sugerido && !sugerido.ficha_id ? { id: sugerido.id, nombre: sugerido.name } : null,
+      };
+    }),
+    productos: results.map(p => ({ id: p.id, nombre: p.name, ficha_id: p.ficha_id })),
+  });
+}
+
+async function fotoDeFicha(env: Env, id: string): Promise<Response> {
+  const o = await (env.FICHAS_FUENTE ?? env.FOTOS).get(`fotos/${id}.jpg`);
+  if (!o) return error('No encontrada.', 404);
+  return new Response(o.body, { headers: { 'Content-Type': 'image/jpeg', 'Cache-Control': 'private, max-age=3600', 'X-Content-Type-Options': 'nosniff' } });
+}
+
+const CATEGORIAS_TIENDA = ['salas', 'comedores', 'dormitorios', 'infantil', 'armarios', 'complementos', 'otro'];
+
+// Pasa una ficha a la tienda: crea el modelo o actualiza uno existente, con sus piezas revisadas en el panel.
+async function publicarFicha(request: Request, env: Env, db: D1Database, fichaId: string, u: Usuaria): Promise<Response> {
+  const ficha = (await leerFichas(env)).find(f => f.id === fichaId);
+  if (!ficha) return error('Esa ficha ya no existe.', 404);
+  const d: any = await request.json().catch(() => ({}));
+
+  const nombre = texto(d?.nombre, 120);
+  const categoria = CATEGORIAS_TIENDA.includes(d?.categoria) ? d.categoria : '';
+  const descripcion = textoLargo(d?.descripcion, 400);
+  if (nombre.length < 3) return error('Escribe el nombre del modelo.', 400);
+  if (!categoria) return error('Elige el tipo de mueble.', 400);
+  if (!Array.isArray(d?.piezas) || d.piezas.length === 0 || d.piezas.length > 20) return error('El modelo necesita al menos una pieza con precio.', 400);
+  const piezas: { nombre: string; cantidad: number; precio: number; ancho: number | null; fondo: number | null; alto: number | null }[] = [];
+  for (const x of d.piezas) {
+    const nombreP = texto(x?.nombre, 80);
+    const cantidad = Number(x?.cantidad);
+    const precio = centavos(x?.precio_cents);
+    if (nombreP.length < 2) return error('Cada pieza necesita un nombre.', 400);
+    if (!Number.isInteger(cantidad) || cantidad < 0 || cantidad > 50) return error(`Revisa la cantidad de «${nombreP}» en el juego.`, 400);
+    if (precio === undefined || precio === null || precio === 0) return error(`Falta el precio de «${nombreP}».`, 400);
+    piezas.push({ nombre: nombreP, cantidad, precio, ancho: numero(x?.ancho), fondo: numero(x?.fondo), alto: numero(x?.alto) });
+  }
+  const juego = piezas.reduce((s, x) => s + x.cantidad * x.precio, 0);
+  if (juego <= 0) return error('El juego completo tiene que llevar al menos una pieza (cantidad mayor que 0).', 400);
+  const separado = d?.separado === true;
+  const activo = d?.activo === true;
+
+  // ¿Modelo existente o nuevo?
+  let destino = texto(d?.producto, 80);
+  const otro = await db.prepare('SELECT id FROM products WHERE ficha_id = ?').bind(ficha.id).first<{ id: string }>();
+  if (otro && destino !== otro.id) return error('Esta ficha ya está en la tienda como otro modelo. Ábrela desde ese modelo.', 409);
+  const existe = destino && destino !== 'nuevo'
+    ? await db.prepare('SELECT id, image, ficha_id FROM products WHERE id = ?').bind(destino).first<{ id: string; image: string | null; ficha_id: string | null }>()
+    : null;
+  if (destino && destino !== 'nuevo' && !existe) return error('Ese modelo no existe.', 404);
+  if (existe?.ficha_id && existe.ficha_id !== ficha.id) return error('Ese modelo ya está unido a otra ficha.', 409);
+
+  let imagen = existe?.image ?? null;
+  if (d?.usar_foto_ficha === true || !imagen) imagen = ficha.fotos[0] ? 'api/fotos/' + ficha.fotos[0] : imagen;
+  if (!imagen) return error('El modelo no tiene foto: súbela primero en la ficha.', 400);
+
+  const stmts: D1PreparedStatement[] = [];
+  if (!existe) {
+    const base = slug(nombre) || 'modelo';
+    let id = base;
+    for (let i = 2; await db.prepare('SELECT 1 FROM products WHERE id = ?').bind(id).first(); i++) id = `${base}-${i}`;
+    const orden = await db.prepare('SELECT COALESCE(MAX(sort), 0) + 10 AS s FROM products').first<{ s: number }>();
+    destino = id;
+    stmts.push(db.prepare('INSERT INTO products (id, slug, name, category, description, image, price_cents, active, sort, ficha_id, ficha_rev, sold_separately) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
+      .bind(id, id, nombre, categoria, descripcion || null, imagen, juego, activo ? 1 : 0, orden?.s ?? 1000, ficha.id, ficha.rev, separado ? 1 : 0));
+  } else {
+    stmts.push(db.prepare('UPDATE products SET name = ?, category = ?, description = ?, image = ?, price_cents = ?, active = ?, ficha_id = ?, ficha_rev = ?, sold_separately = ? WHERE id = ?')
+      .bind(nombre, categoria, descripcion || null, imagen, juego, activo ? 1 : 0, ficha.id, ficha.rev, separado ? 1 : 0, destino));
+  }
+  stmts.push(db.prepare('DELETE FROM product_pieces WHERE product_id = ?').bind(destino));
+  piezas.forEach((x, i) => stmts.push(
+    db.prepare('INSERT INTO product_pieces (id, product_id, name, qty_in_set, price_cents, width_cm, depth_cm, height_cm, sort) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)')
+      .bind(crypto.randomUUID(), destino, x.nombre, x.cantidad, x.precio, x.ancho, x.fondo, x.alto, i),
+  ));
+  stmts.push(registro(db, u.email, 'ficha', { ficha: ficha.id, rev: ficha.rev, producto: destino, juego_cents: juego, piezas: piezas.length, activo, separado }));
+  await db.batch(stmts);
+  return json({ ok: true, producto: destino, juego_cents: juego });
+}
+
+async function verModelo(db: D1Database, id: string): Promise<Response> {
+  const p = await db.prepare('SELECT id, name, category, description, image, price_cents, active, ficha_id, ficha_rev, sold_separately FROM products WHERE id = ?').bind(id).first();
+  if (!p) return error('No existe ese modelo.', 404);
+  const { results } = await db.prepare('SELECT name AS nombre, qty_in_set AS cantidad, price_cents, width_cm AS ancho, depth_cm AS fondo, height_cm AS alto FROM product_pieces WHERE product_id = ? ORDER BY sort').bind(id).all();
+  return json({ modelo: p, piezas: results });
 }
 
 /* ---------- ajustes ---------- */
@@ -299,6 +431,13 @@ export async function adminApi(request: Request, env: Env, url: URL): Promise<Re
   r = p.match(/^\/pedidos\/([0-9a-f-]{36})\/comprobantes\/([0-9a-f-]{36})$/);
   if (r && m === 'GET') return verComprobante(env, db, r[1], r[2]);
   if (p === '/productos' && m === 'GET') return listarProductos(db);
+  if (p === '/fichas' && m === 'GET') return listarFichas(env, db);
+  let q = p.match(/^\/fichas\/foto\/([A-Za-z0-9_-]{1,40})$/);
+  if (q && m === 'GET') return fotoDeFicha(env, q[1]);
+  q = p.match(/^\/fichas\/([A-Za-z0-9_-]{1,40})\/publicar$/);
+  if (q && m === 'POST') return publicarFicha(request, env, db, q[1], u);
+  q = p.match(/^\/modelos\/([a-z0-9-]{1,80})$/);
+  if (q && m === 'GET') return verModelo(db, q[1]);
   r = p.match(/^\/productos\/([a-z0-9-]{1,80})$/);
   if (r && m === 'PUT') return editarProducto(request, db, r[1], u);
   if (p === '/ajustes' && m === 'GET') return json(await leerAjustes(db));

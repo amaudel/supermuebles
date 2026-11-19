@@ -125,7 +125,8 @@ main { padding: var(--m); max-width: 90rem; margin: 0 auto; }
 .ajustes { display: grid; gap: 1.5rem; max-width: 46rem; }
 .caja { background: var(--papel); padding: 1.5rem; display: grid; gap: 1rem; }
 .caja h2 { font-size: 1.25rem; font-weight: 500; }
-.dos { display: grid; grid-template-columns: 1fr 1fr; gap: .75rem; }
+.dos { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: .75rem; }
+.dos > *, .detalle > * { min-width: 0; }
 
 @media (max-width: 899px) {
   .split { grid-template-columns: 1fr; }
@@ -138,6 +139,16 @@ main { padding: var(--m); max-width: 90rem; margin: 0 auto; }
   .modelos td { border: 0; padding: 0; }
   .modelos td:first-child { grid-row: span 4; }
 }
+/* fichas */
+.ficha-fila { grid-template-columns: 3.5rem 1fr; align-items: center; }
+.ficha-fila img, .sin-foto { width: 3.5rem; height: 3.5rem; object-fit: cover; display: grid; place-items: center; background: var(--arena); color: var(--suave); font-size: .75rem; }
+.ficha-fila .cli { display: block; }
+.incluye { margin: 0; padding-left: 1.2rem; color: var(--suave); }
+.tabla-scroll { overflow-x: auto; }
+.piezas input { min-width: 5rem; }
+.piezas td:first-child input { min-width: 11rem; }
+.piezas td:nth-child(3) input { min-width: 7.5rem; }
+.juego { margin-top: .75rem; font-size: 1.125rem; }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
 </head>
@@ -167,6 +178,7 @@ main { padding: var(--m); max-width: 90rem; margin: 0 auto; }
     <nav class="tabs" role="tablist" aria-label="Secciones">
       <button type="button" role="tab" data-tab="pedidos" aria-selected="true">Pedidos</button>
       <button type="button" role="tab" data-tab="modelos" aria-selected="false">Modelos y precios</button>
+      <button type="button" role="tab" data-tab="fichas" aria-selected="false">Fichas</button>
       <button type="button" role="tab" data-tab="ajustes" aria-selected="false">Ajustes</button>
     </nav>
     <span class="quien" id="quien"></span>
@@ -213,6 +225,16 @@ main { padding: var(--m); max-width: 90rem; margin: 0 auto; }
         <thead><tr><th></th><th>Modelo</th><th>Precio (USD)</th><th>Visible en la tienda</th><th></th></tr></thead>
         <tbody id="modelos"></tbody>
       </table>
+    </section>
+
+    <!-- Fichas del dueño -->
+    <section id="tab-fichas" role="tabpanel" hidden>
+      <div class="cabeza">
+        <h1>Fichas</h1>
+        <p class="ayuda">Lo que el dueño llena en /fichas/. Revisa cada ficha y pásala a la tienda: el precio del juego completo se calcula con las piezas.</p>
+      </div>
+      <div class="lista" id="fichas-lista"></div>
+      <div id="ficha-editor"></div>
     </section>
 
     <!-- Ajustes -->
@@ -329,9 +351,10 @@ main { padding: var(--m); max-width: 90rem; margin: 0 auto; }
   $$('.tabs button').forEach(function (b) {
     b.addEventListener('click', function () {
       $$('.tabs button').forEach(function (x) { x.setAttribute('aria-selected', x === b ? 'true' : 'false'); });
-      ['pedidos', 'modelos', 'ajustes'].forEach(function (t) { $('#tab-' + t).hidden = t !== b.dataset.tab; });
+      ['pedidos', 'modelos', 'fichas', 'ajustes'].forEach(function (t) { $('#tab-' + t).hidden = t !== b.dataset.tab; });
       if (b.dataset.tab === 'pedidos') cargarPedidos();
       if (b.dataset.tab === 'modelos') cargarModelos();
+      if (b.dataset.tab === 'fichas') cargarFichas();
       if (b.dataset.tab === 'ajustes') cargarAjustes();
     });
   });
@@ -503,7 +526,8 @@ main { padding: var(--m); max-width: 90rem; margin: 0 auto; }
         return '<tr data-id="' + esc(m.id) + '">' +
           '<td>' + (m.image ? '<img src="/' + esc(m.image) + '" alt="" loading="lazy" width="56" height="56">' : '') + '</td>' +
           '<td><strong>' + esc(m.name) + '</strong><br><span class="ayuda">' + esc(m.category) + '</span></td>' +
-          '<td><input type="number" min="0" step="0.01" value="' + esc(aDolares(m.price_cents)) + '" placeholder="Sin precio" aria-label="Precio de ' + esc(m.name) + '"></td>' +
+          '<td><input type="number" min="0" step="0.01" value="' + esc(aDolares(m.price_cents)) + '" placeholder="Sin precio" aria-label="Precio de ' + esc(m.name) + '"' + (m.piezas ? ' readonly' : '') + '>' +
+          (m.piezas ? '<br><span class="ayuda">Juego de ' + m.piezas + (m.piezas === 1 ? ' pieza' : ' piezas') + (m.sold_separately ? ', también sueltas' : '') + '. Se cambia en «Fichas».</span>' : '') + '</td>' +
           '<td><label class="check"><input type="checkbox"' + (m.active ? ' checked' : '') + '> Visible</label></td>' +
           '<td><button class="btn btn--sec" type="button" data-guardar>Guardar</button></td></tr>';
       }).join('');
@@ -521,6 +545,126 @@ main { padding: var(--m); max-width: 90rem; margin: 0 auto; }
       .catch(function (x) { aviso(x.message, 'error'); })
       .then(function () { b.disabled = false; });
   });
+
+  /* ---------- fichas → tienda ---------- */
+  var CATS = [['salas', 'Salas'], ['comedores', 'Comedores'], ['dormitorios', 'Dormitorios'], ['infantil', 'Infantil'], ['armarios', 'Armarios'], ['complementos', 'Complementos'], ['otro', 'Otro']];
+  var fichasData = null;
+  function cargarFichas() {
+    $('#ficha-editor').innerHTML = '';
+    $('#fichas-lista').hidden = false;
+    return api('/fichas').then(function (d) {
+      fichasData = d;
+      if (!d.fichas.length) { $('#fichas-lista').innerHTML = '<p class="vacio">Todavía no hay fichas.</p>'; return; }
+      $('#fichas-lista').innerHTML = d.fichas.map(function (f) {
+        var precios = (f.medidas || []).filter(function (m) { return aCentavos(m.precio) > 0; }).length;
+        var estado = f.producto ? (f.cambio ? '<span class="chip chip--por_pagar">La ficha cambió</span>' : '<span class="chip chip--entregado">En la tienda</span>')
+          : '<span class="chip">No está en la tienda</span>';
+        return '<button class="fila ficha-fila" type="button" data-ficha="' + esc(f.id) + '">' +
+          (f.fotos[0] ? '<img src="/api/admin/fichas/foto/' + esc(f.fotos[0]) + '" alt="" width="56" height="56" loading="lazy">' : '<span class="sin-foto">sin foto</span>') +
+          '<span><span class="cod">' + esc(f.nombre || 'Sin nombre') + '</span> ' + estado +
+          '<span class="cli">' + (precios ? precios + (precios === 1 ? ' pieza con precio' : ' piezas con precio') : 'Sin precios todavía') +
+          (f.producto ? ' · en la tienda como «' + esc(f.producto.nombre) + '»' : f.sugerido ? ' · parece ser «' + esc(f.sugerido.nombre) + '»' : '') + '</span></span></button>';
+      }).join('');
+    }).catch(function (x) { aviso(x.message, 'error'); });
+  }
+  $('#fichas-lista').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-ficha]');
+    if (b) abrirFicha(b.dataset.ficha);
+  });
+
+  function filaPieza(x) {
+    return '<tr class="pieza">' +
+      '<td><input type="text" data-k="nombre" maxlength="80" value="' + esc(x.nombre) + '" aria-label="Pieza"></td>' +
+      '<td><input type="number" data-k="cantidad" min="0" max="50" step="1" value="' + esc(x.cantidad) + '" aria-label="Cantidad en el juego"></td>' +
+      '<td><input type="number" data-k="precio" min="0" step="0.01" value="' + esc(x.precio) + '" aria-label="Precio por pieza"></td>' +
+      '<td><input type="number" data-k="ancho" min="0" step="0.1" value="' + esc(x.ancho || '') + '" aria-label="Ancho cm"></td>' +
+      '<td><input type="number" data-k="fondo" min="0" step="0.1" value="' + esc(x.fondo || '') + '" aria-label="Fondo cm"></td>' +
+      '<td><input type="number" data-k="alto" min="0" step="0.1" value="' + esc(x.alto || '') + '" aria-label="Alto cm"></td>' +
+      '<td><button class="enlace" type="button" data-quitar-pieza>Quitar</button></td></tr>';
+  }
+
+  function abrirFicha(id) {
+    var f = fichasData.fichas.filter(function (x) { return x.id === id; })[0];
+    if (!f) return;
+    var destino = f.producto ? f.producto.id : f.sugerido ? f.sugerido.id : 'nuevo';
+    var previas = f.producto ? api('/modelos/' + f.producto.id).then(function (d) { return d.piezas; }) : Promise.resolve([]);
+    previas.then(function (antes) {
+      var cant = {};
+      antes.forEach(function (x) { cant[String(x.nombre).toLowerCase()] = x.cantidad; });
+      var piezas = (f.medidas || []).map(function (m, i) {
+        var n = String(m.nombre || '').trim() || 'Pieza ' + (i + 1);
+        return { nombre: n, cantidad: cant[n.toLowerCase()] != null ? cant[n.toLowerCase()] : 1, precio: aCentavos(m.precio) > 0 ? (aCentavos(m.precio) / 100).toFixed(2) : '', ancho: m.ancho, fondo: m.fondo, alto: m.alto };
+      });
+      var opciones = '<option value="nuevo">Modelo nuevo</option>' + fichasData.productos.filter(function (p) { return !p.ficha_id || p.ficha_id === f.id; }).map(function (p) {
+        return '<option value="' + esc(p.id) + '"' + (p.id === destino ? ' selected' : '') + '>' + esc(p.nombre) + '</option>';
+      }).join('');
+      $('#fichas-lista').hidden = true;
+      var ed = $('#ficha-editor');
+      ed.innerHTML =
+        '<form class="detalle" id="f-ficha" novalidate>' +
+        '<div><button class="enlace" type="button" data-volver-fichas>← Volver a las fichas</button>' +
+        '<h2>Pasar a la tienda: ' + esc(f.nombre) + '</h2>' +
+        '<p class="ayuda">Revisa lo que llenó el dueño. Nada se cambia en su ficha; esto solo arma el modelo de la tienda.</p></div>' +
+        (f.cambio ? '<p class="msg msg--error">El dueño cambió esta ficha después de la última vez. Revisa los precios y guarda para actualizar la tienda.</p>' : '') +
+        '<section class="dos"><label>¿En la tienda es…<select name="producto">' + opciones + '</select></label>' +
+        '<label>Tipo de mueble<select name="categoria">' + CATS.map(function (c) { return '<option value="' + c[0] + '"' + (c[0] === f.categoria ? ' selected' : '') + '>' + c[1] + '</option>'; }).join('') + '</select></label>' +
+        '<label>Nombre en la tienda<input type="text" name="nombre" maxlength="120" value="' + esc(f.nombre) + '"></label>' +
+        '<label>Descripción<input type="text" name="descripcion" maxlength="400" value="' + esc(f.descripcion) + '"></label></section>' +
+        (f.incluye.length ? '<section><h3>Lo que el dueño dice que incluye</h3><ul class="incluye">' + f.incluye.map(function (t) { return '<li>' + esc(t) + '</li>'; }).join('') + '</ul></section>' : '') +
+        '<section><h3>Piezas</h3><p class="ayuda">«Cantidad en el juego» es cuántas lleva el juego completo (por ejemplo, 6 sillas). Pon 0 si la pieza solo se vende suelta.</p>' +
+        '<div class="tabla-scroll"><table class="tabla piezas"><thead><tr><th>Pieza</th><th>Cantidad en el juego</th><th>Precio por pieza (USD)</th><th>Ancho cm</th><th>Fondo cm</th><th>Alto cm</th><th></th></tr></thead>' +
+        '<tbody id="piezas">' + piezas.map(filaPieza).join('') + '</tbody></table></div>' +
+        '<div class="acciones" style="margin-top:.5rem"><button class="btn btn--claro" type="button" data-agregar-pieza>Agregar pieza</button></div>' +
+        '<p class="juego">Precio del juego completo: <strong id="juego-total" class="num">—</strong></p></section>' +
+        '<section><label class="check"><input type="checkbox" name="separado"' + (f.separado ? ' checked' : '') + '> También se venden piezas sueltas</label>' +
+        '<p class="ayuda">En la ficha el dueño marcó: ' + (f.separado ? 'sí se vende por separado.' : 'no se vende por separado.') + '</p>' +
+        '<label class="check"><input type="checkbox" name="usar_foto_ficha"' + (f.fotos[0] ? (destino === 'nuevo' ? ' checked' : '') : ' disabled') + '> Usar la foto de la ficha' + (f.fotos[0] ? '' : ' (la ficha no tiene fotos)') + '</label>' +
+        '<label class="check"><input type="checkbox" name="activo"> Visible en la tienda</label>' +
+        '<p class="ayuda">Si no lo marcas, queda guardado pero oculto, para revisarlo antes.</p></section>' +
+        '<div class="acciones"><button class="btn" type="submit">Guardar en la tienda</button></div></form>';
+
+      var form = $('#f-ficha');
+      var total = function () {
+        var t = 0, ok = true;
+        $$('#piezas .pieza').forEach(function (tr) {
+          var c = Number($('[data-k=cantidad]', tr).value), pr = aCentavos($('[data-k=precio]', tr).value);
+          if (isNaN(pr) || pr == null) { ok = false; return; }
+          t += (isFinite(c) ? c : 0) * pr;
+        });
+        $('#juego-total').textContent = ok && t > 0 ? dinero(t) : 'falta algún precio';
+      };
+      total();
+      form.addEventListener('input', total);
+      form.addEventListener('click', function (e) {
+        if (e.target.closest('[data-quitar-pieza]')) { e.target.closest('tr').remove(); total(); }
+        if (e.target.closest('[data-agregar-pieza]')) { $('#piezas').insertAdjacentHTML('beforeend', filaPieza({ nombre: '', cantidad: 1, precio: '' })); total(); }
+        if (e.target.closest('[data-volver-fichas]')) cargarFichas();
+      });
+      form.elements.producto.addEventListener('change', function () {
+        var u = form.elements.usar_foto_ficha;
+        if (!u.disabled) u.checked = this.value === 'nuevo';
+      });
+      form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        var piezasOut = $$('#piezas .pieza').map(function (tr) {
+          var v = function (k) { return $('[data-k=' + k + ']', tr).value; };
+          return { nombre: v('nombre').trim(), cantidad: Number(v('cantidad')), precio_cents: aCentavos(v('precio')), ancho: v('ancho'), fondo: v('fondo'), alto: v('alto') };
+        });
+        if (piezasOut.some(function (x) { return x.precio_cents == null || isNaN(x.precio_cents); })) { aviso('Falta el precio de alguna pieza.', 'error'); return; }
+        var b = $('button[type=submit]', form);
+        b.disabled = true;
+        api('/fichas/' + f.id + '/publicar', { method: 'POST', body: {
+          producto: form.elements.producto.value, nombre: form.elements.nombre.value, categoria: form.elements.categoria.value,
+          descripcion: form.elements.descripcion.value, piezas: piezasOut, separado: form.elements.separado.checked,
+          usar_foto_ficha: form.elements.usar_foto_ficha.checked, activo: form.elements.activo.checked,
+        } })
+          .then(function (r) { aviso('Guardado en la tienda. Juego completo: ' + dinero(r.juego_cents) + (form.elements.activo.checked ? '.' : ' (oculto).')); cargarFichas(); })
+          .catch(function (x) { aviso(x.message, 'error'); })
+          .then(function () { b.disabled = false; });
+      });
+      window.scrollTo(0, 0);
+    }).catch(function (x) { aviso(x.message, 'error'); });
+  }
 
   /* ---------- ajustes ---------- */
   function cargarAjustes() {

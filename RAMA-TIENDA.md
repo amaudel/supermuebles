@@ -71,6 +71,15 @@ Falta antes:
   - Limpieza diaria: la cuenta gratuita ya usa sus 5 tareas programadas (cron), así que corre al abrir el panel, como máximo una vez cada 24 horas; con un cupo libre se vuelve a poner el cron `0 8 * * *` (03:00 de Ecuador). Qué hace: borra los comprobantes de pedidos entregados o cancelados hace más de 90 días (`DIAS_CONSERVACION`, a confirmar con el dueño) y los intentos de entrada viejos.
   - Pruebas: `tienda/test/comprobantes.test.mjs` (4), 26 de 26 en total. En local `npm run dev` incluye `--test-scheduled` para probar la limpieza.
   - Publicado el 19 nov 2026 en https://supermuebles-tienda-pruebas.andresdelgado1984.workers.dev (versión 82078845), con sus dos buckets creados. Faltan los secretos `ADMIN_CODE`, `FICHAS_CODE` y `TURNSTILE_SECRET`, y registrar los correos del panel.
+- [x] **Fichas → tienda, juego completo y piezas sueltas** (19 nov 2026, decisión del usuario: opción 3).
+  - Los 19 modelos actuales usan las fotos del catálogo. Los muebles nuevos se crean en `/fichas/` y se pasan a la tienda desde la pestaña «Fichas» del panel.
+  - Panel: lista las fichas del dueño (solo lectura) con su estado (no está en la tienda, en la tienda, la ficha cambió) y sugiere el modelo existente con el mismo nombre. Al abrir una se revisan nombre, tipo, descripción y piezas (precio por pieza de la ficha, «cantidad en el juego», medidas), si se venden piezas sueltas (viene de la ficha), si se usa la foto de la ficha y si queda visible. Entra oculto por defecto.
+  - Precio del juego completo = suma de cantidad × precio de cada pieza; en «Modelos y precios» ese precio queda bloqueado (se cambia desde «Fichas»).
+  - Sitio: el catálogo muestra el precio del juego, qué trae y, si el modelo lo permite, «O elige piezas sueltas». Los muebles nuevos que no están en el catálogo de la página se agregan como tarjetas. El pedido acepta juego completo o piezas; el servidor rechaza piezas de modelos que no se venden sueltos.
+  - Fotos de fichas: `GET /api/fotos/:id` solo entrega una foto si un modelo visible la usa.
+  - Datos: migración `0004_piezas.sql` (`product_pieces`, `products.ficha_id`, `ficha_rev`, `sold_separately`), aplicada también en la base de pruebas de Cloudflare.
+  - En la rama de pruebas, `FICHAS_FUENTE` apunta al bucket REAL de fichas (`supermuebles-fichas-fotos`) solo para leer. Al unir a `main` sobra: allí `FOTOS` ya es ese bucket.
+  - Pruebas: `tienda/test/fichas-tienda.test.mjs` (5), 31 de 31.
 - [ ] Pruebas con Miniflare de totales, idempotencia, transiciones de estado y límites de comprobante.
 - [ ] Actualizar la página de privacidad antes de abrir la tienda.
 

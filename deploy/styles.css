@@ -1212,3 +1212,10 @@ input, textarea { caret-color: var(--accent); }
 .seg-archivo input:focus-visible { outline: 2px solid var(--accent); outline-offset: 0; }
 .seg-pago .pedido-error { color: var(--accent-hover); background: rgba(169, 70, 51, 0.1); }
 .seg-subir .btn { justify-self: start; }
+.item-juego { font-size: var(--small); color: var(--muted); max-width: 30rem; }
+.item-piezas { width: 100%; max-width: 30rem; }
+.item-piezas summary { min-height: 2.75rem; display: flex; align-items: center; font-weight: 600; cursor: pointer; text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 0.3em; }
+.item-piezas ul { display: grid; border-top: 1px solid rgba(41, 62, 79, 0.2); }
+.item-piezas li { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; gap: 0.25rem 1rem; padding: 0.5rem 0; border-bottom: 1px solid rgba(41, 62, 79, 0.2); }
+.item-med { font-size: var(--small); color: var(--muted); }
+.item-pz-precio { font-weight: 600; font-variant-numeric: tabular-nums; }

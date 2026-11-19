@@ -18,7 +18,10 @@
   "r2_buckets": [
     // Copia de pruebas: las fichas reales del dueño no se leen ni se escriben desde aquí.
     { "binding": "FOTOS", "bucket_name": "supermuebles-pruebas-fichas" },
-    { "binding": "COMPROBANTES", "bucket_name": "supermuebles-pruebas-comprobantes" }
+    { "binding": "COMPROBANTES", "bucket_name": "supermuebles-pruebas-comprobantes" },
+    // Fichas REALES del dueño, solo para LEERLAS y pasarlas a la tienda desde el panel.
+    // El código de la tienda nunca escribe aquí (tienda/worker/admin.ts, leerFichas; tienda.ts, fotoPublica).
+    { "binding": "FICHAS_FUENTE", "bucket_name": "supermuebles-fichas-fotos" }
   ],
   "d1_databases": [
     // En local (npm run dev) funciona sin crear nada en Cloudflare.

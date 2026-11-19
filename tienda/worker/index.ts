@@ -18,6 +18,9 @@ export interface Env {
   // Solo existen en la rama `tienda` (wrangler.tienda.jsonc). El sitio en vivo no los tiene.
   DB?: D1Database;
   COMPROBANTES?: R2Bucket;
+  // Bucket de donde se LEEN las fichas del dueño para pasarlas a la tienda (en la rama de pruebas, las fichas reales).
+  // Si falta, se usa FOTOS. Nunca se escribe en él desde la tienda.
+  FICHAS_FUENTE?: R2Bucket;
   TURNSTILE_SECRET?: string;
   ADMIN_CODE?: string; // código del panel /admin/ (secreto del Worker)
   LIMITE_PEDIDOS?: RateLimit;

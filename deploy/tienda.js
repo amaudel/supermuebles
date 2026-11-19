@@ -67,13 +67,57 @@
     $$('[data-pedido-n]').forEach(function (s) { s.textContent = n; });
   }
 
-  var agregar = function (id) {
+  var agregar = function (id, pieza) {
+    pieza = pieza || '';
     var ls = lineas();
-    var l = ls.filter(function (x) { return x.id === id && !x.nota; })[0];
+    var l = ls.filter(function (x) { return x.id === id && (x.pieza || '') === pieza && !x.nota; })[0];
     if (l) l.qty = Math.min(MAX_CANTIDAD, l.qty + 1);
-    else ls.push({ id: id, qty: 1, nota: '' });
+    else ls.push({ id: id, pieza: pieza, qty: 1, nota: '' });
     fijarLineas(ls);
   };
+
+  // Nombre, precio y foto de una línea: el juego completo o una pieza suelta. null si ya no se puede pedir.
+  var infoLinea = function (cat, l) {
+    var p = cat.porId[l.id];
+    if (!p) return null;
+    var img = p.image ? '/' + String(p.image).replace(/^\/+/, '') : '';
+    if (!l.pieza) return { nombre: p.name + ((p.piezas || []).length ? ' (juego completo)' : ''), precio: p.price_cents, imagen: img };
+    if (!p.sold_separately) return null;
+    var x = (p.piezas || []).filter(function (y) { return y.id === l.pieza; })[0];
+    return x ? { nombre: p.name + ': ' + x.name, precio: x.price_cents, imagen: img } : null;
+  };
+
+  var medidas = function (m) {
+    if (!m) return '';
+    var v = [m.ancho, m.fondo, m.alto].filter(function (n) { return n; });
+    return v.length ? v.join(' × ') + ' cm' : '';
+  };
+
+  // Lo que trae el juego completo, en una línea: «1 × Sofá triple, 2 × Butaca».
+  var resumenJuego = function (p) {
+    return (p.piezas || []).filter(function (x) { return x.qty > 0; }).map(function (x) { return x.qty + ' × ' + x.name; }).join(', ');
+  };
+
+  // Muebles nuevos que vienen de las fichas y todavía no están en el catálogo de la página: se agregan como tarjetas.
+  function tarjetasNuevas(cat) {
+    var lista = $('.catalog');
+    if (!lista) return;
+    var pagina = (location.pathname.split('/').pop() || '').replace('.html', '');
+    var filtro = { salas: ['salas'], comedores: ['comedores'], dormitorios: ['dormitorios', 'infantil'] }[pagina];
+    Object.keys(cat.porId).forEach(function (id) {
+      var p = cat.porId[id];
+      if (document.getElementById(id) || !p.image) return;
+      if (filtro && filtro.indexOf(p.category) < 0) return;
+      var li = document.createElement('li');
+      li.className = 'item item--nuevo in';
+      li.id = id;
+      li.dataset.cat = p.category;
+      li.innerHTML = '<figure><div class="item-img"><img src="/' + esc(String(p.image).replace(/^\/+/, '')) + '" width="800" height="1000" loading="lazy" alt="' + esc(p.name) + '"></div>' +
+        '<figcaption><h2>' + esc(p.name) + '</h2>' + (p.description ? '<p>' + esc(p.description) + '</p>' : '') + '</figcaption></figure>' +
+        '<div class="item-cta"><a class="ulink" href="' + esc(wa('Hola, vi el modelo «' + p.name + '» en la web de Supermuebles Cuenca y quiero cotizarlo.')) + '" target="_blank" rel="noopener noreferrer">Cotizar este diseño</a></div>';
+      lista.appendChild(li);
+    });
+  }
 
   function botonesDelCatalogo(cat) {
     $$('.catalog .item[id]').forEach(function (li) {
@@ -97,6 +141,33 @@
       });
       li.insertBefore(precio, cta);
       cta.insertBefore(b, cta.firstChild);
+      var trae = resumenJuego(p);
+      if (trae) {
+        var t = document.createElement('p');
+        t.className = 'item-juego';
+        t.textContent = 'Juego completo: ' + trae + '.';
+        li.insertBefore(t, cta);
+      }
+      if (p.sold_separately && (p.piezas || []).length) {
+        var det = document.createElement('details');
+        det.className = 'item-piezas';
+        det.innerHTML = '<summary>O elige piezas sueltas</summary><ul>' + p.piezas.map(function (x) {
+          var m = medidas(x.medidas);
+          return '<li><span><strong>' + esc(x.name) + '</strong>' + (m ? '<br><span class="item-med">' + esc(m) + '</span>' : '') + '</span>' +
+            '<span class="item-pz-precio">' + dinero(x.price_cents) + '</span>' +
+            '<button class="ulink" type="button" data-pieza="' + esc(x.id) + '">Agregar</button></li>';
+        }).join('') + '</ul>';
+        det.addEventListener('click', function (e) {
+          var bt = e.target.closest('[data-pieza]');
+          if (!bt) return;
+          var x = p.piezas.filter(function (y) { return y.id === bt.dataset.pieza; })[0];
+          agregar(p.id, x.id);
+          bt.textContent = 'Agregada';
+          aviso(x.name + ' de ' + p.name + ' se agregó a tu pedido.');
+          setTimeout(function () { bt.textContent = 'Agregar'; }, 1800);
+        });
+        li.insertBefore(det, cta.nextSibling);
+      }
     });
   }
 
@@ -111,8 +182,8 @@
 
     // Quita del pedido lo que ya no se puede pedir (sin precio o desactivado).
     var ls = lineas();
-    var quitados = ls.filter(function (l) { return !cat.porId[l.id]; });
-    if (quitados.length) fijarLineas(ls.filter(function (l) { return cat.porId[l.id]; }));
+    var quitados = ls.filter(function (l) { return !infoLinea(cat, l); });
+    if (quitados.length) fijarLineas(ls.filter(function (l) { return infoLinea(cat, l); }));
 
     var lista = $('#lineas');
     var pintar = function () {
@@ -120,20 +191,20 @@
       if (!ls.length) { mostrar('pedido-vacio'); return; }
       mostrar('pedido-cuerpo');
       lista.innerHTML = ls.map(function (l, i) {
-        var p = cat.porId[l.id];
+        var p = infoLinea(cat, l);
         return '<li class="linea" data-i="' + i + '">' +
-          (p.image ? '<img class="linea-img" src="' + esc(p.image) + '" width="96" height="96" alt="">' : '<span class="linea-img"></span>') +
-          '<div class="linea-info"><p class="linea-nombre">' + esc(p.name) + '</p>' +
-          '<p class="linea-precio">' + dinero(p.price_cents) + ' c/u</p>' +
+          (p.imagen ? '<img class="linea-img" src="' + esc(p.imagen) + '" width="96" height="96" alt="">' : '<span class="linea-img"></span>') +
+          '<div class="linea-info"><p class="linea-nombre">' + esc(p.nombre) + '</p>' +
+          '<p class="linea-precio">' + dinero(p.precio) + ' c/u</p>' +
           '<label class="linea-nota"><span>Tela, color o medida (opcional)</span><input type="text" maxlength="300" value="' + esc(l.nota) + '" data-nota></label></div>' +
-          '<div class="linea-cant" role="group" aria-label="Cantidad de ' + esc(p.name) + '">' +
+          '<div class="linea-cant" role="group" aria-label="Cantidad de ' + esc(p.nombre) + '">' +
           '<button class="sq" type="button" data-menos aria-label="Uno menos"' + (l.qty <= 1 ? ' disabled' : '') + '><svg class="i" aria-hidden="true"><use href="#i-minus"/></svg></button>' +
           '<output aria-live="polite">' + l.qty + '</output>' +
           '<button class="sq" type="button" data-mas aria-label="Uno más"' + (l.qty >= MAX_CANTIDAD ? ' disabled' : '') + '><svg class="i" aria-hidden="true"><use href="#i-plus"/></svg></button></div>' +
-          '<p class="linea-total">' + dinero(p.price_cents * l.qty) + '</p>' +
+          '<p class="linea-total">' + dinero(p.precio * l.qty) + '</p>' +
           '<button class="ulink linea-quitar" type="button" data-quitar>Quitar</button></li>';
       }).join('');
-      var sub = ls.reduce(function (s, l) { return s + cat.porId[l.id].price_cents * l.qty; }, 0);
+      var sub = ls.reduce(function (s, l) { return s + infoLinea(cat, l).precio * l.qty; }, 0);
       $('#pedido-subtotal').textContent = dinero(sub);
       if (quitados.length) {
         error('Quitamos ' + quitados.length + (quitados.length === 1 ? ' mueble que ya no está' : ' muebles que ya no están') + ' disponible para pedir en línea.');
@@ -149,7 +220,7 @@
       if (!ls[i]) return;
       if (e.target.closest('[data-mas]')) ls[i].qty = Math.min(MAX_CANTIDAD, ls[i].qty + 1);
       else if (e.target.closest('[data-menos]')) ls[i].qty = Math.max(1, ls[i].qty - 1);
-      else if (e.target.closest('[data-quitar]')) { aviso(cat.porId[ls[i].id].name + ' se quitó del pedido.'); ls.splice(i, 1); }
+      else if (e.target.closest('[data-quitar]')) { aviso(infoLinea(cat, ls[i]).nombre + ' se quitó del pedido.'); ls.splice(i, 1); }
       else return;
       fijarLineas(ls);
       pintar();
@@ -233,7 +304,7 @@
         headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'tienda' },
         body: JSON.stringify({
           clave: clave, turnstile: tsToken, cliente: c, notas: (form.elements.notas.value || '').trim(),
-          items: ls.map(function (l) { return { id: l.id, qty: l.qty, nota: l.nota || '' }; }),
+          items: ls.map(function (l) { return { id: l.id, pieza: l.pieza || '', qty: l.qty, nota: l.nota || '' }; }),
         }),
       })
         .then(function (r) { return r.json().catch(function () { return {}; }).then(function (d) { return { ok: r.ok, d: d }; }); })
@@ -246,7 +317,7 @@
           }
           var enlace = 'seguimiento.html#' + res.d.token;
           var resumen = 'Hola Supermuebles Cuenca, envié el pedido ' + res.d.codigo + ' desde la web:\n' +
-            ls.map(function (l) { return '- ' + l.qty + ' × ' + cat.porId[l.id].name + (l.nota ? ' (' + l.nota + ')' : ''); }).join('\n') +
+            ls.map(function (l) { return '- ' + l.qty + ' × ' + infoLinea(cat, l).nombre + (l.nota ? ' (' + l.nota + ')' : ''); }).join('\n') +
             '\nCiudad: ' + c.ciudad + '\nMi nombre: ' + c.nombre;
           guardar(CLAVE_CARRITO, null);
           guardar(CLAVE_ENVIO, null);
@@ -392,7 +463,7 @@
   cargarCatalogo().then(function (cat) {
     tiendaActiva = cat.activa;
     pintarContador();
-    if (cat.activa && hayCatalogo) botonesDelCatalogo(cat);
+    if (cat.activa && hayCatalogo) { tarjetasNuevas(cat); botonesDelCatalogo(cat); }
     paginaPedido(cat);
   });
   window.addEventListener('storage', function (e) { if (e.key === CLAVE_CARRITO) pintarContador(); });
