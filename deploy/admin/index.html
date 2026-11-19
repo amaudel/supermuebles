@@ -587,8 +587,10 @@ main { padding: var(--m); max-width: 90rem; margin: 0 auto; }
     var f = fichasData.fichas.filter(function (x) { return x.id === id; })[0];
     if (!f) return;
     var destino = f.producto ? f.producto.id : f.sugerido ? f.sugerido.id : 'nuevo';
-    var previas = f.producto ? api('/modelos/' + f.producto.id).then(function (d) { return d.piezas; }) : Promise.resolve([]);
-    previas.then(function (antes) {
+    // Si ya está en la tienda, se conservan las decisiones del panel (cantidades, visible, venta suelta); el resto viene de la ficha.
+    var previas = f.producto ? api('/modelos/' + f.producto.id) : Promise.resolve({ piezas: [], modelo: null });
+    previas.then(function (prev) {
+      var antes = prev.piezas, actual = prev.modelo;
       var cant = {};
       antes.forEach(function (x) { cant[String(x.nombre).toLowerCase()] = x.cantidad; });
       var piezas = (f.medidas || []).map(function (m, i) {
@@ -616,10 +618,10 @@ main { padding: var(--m); max-width: 90rem; margin: 0 auto; }
         '<tbody id="piezas">' + piezas.map(filaPieza).join('') + '</tbody></table></div>' +
         '<div class="acciones" style="margin-top:.5rem"><button class="btn btn--claro" type="button" data-agregar-pieza>Agregar pieza</button></div>' +
         '<p class="juego">Precio del juego completo: <strong id="juego-total" class="num">—</strong></p></section>' +
-        '<section><label class="check"><input type="checkbox" name="separado"' + (f.separado ? ' checked' : '') + '> También se venden piezas sueltas</label>' +
+        '<section><label class="check"><input type="checkbox" name="separado"' + ((actual ? actual.sold_separately === 1 : f.separado) ? ' checked' : '') + '> También se venden piezas sueltas</label>' +
         '<p class="ayuda">En la ficha el dueño marcó: ' + (f.separado ? 'sí se vende por separado.' : 'no se vende por separado.') + '</p>' +
         '<label class="check"><input type="checkbox" name="usar_foto_ficha"' + (f.fotos[0] ? (destino === 'nuevo' ? ' checked' : '') : ' disabled') + '> Usar la foto de la ficha' + (f.fotos[0] ? '' : ' (la ficha no tiene fotos)') + '</label>' +
-        '<label class="check"><input type="checkbox" name="activo"> Visible en la tienda</label>' +
+        '<label class="check"><input type="checkbox" name="activo"' + (actual && actual.active === 1 ? ' checked' : '') + '> Visible en la tienda</label>' +
         '<p class="ayuda">Si no lo marcas, queda guardado pero oculto, para revisarlo antes.</p></section>' +
         '<div class="acciones"><button class="btn" type="submit">Guardar en la tienda</button></div></form>';
 
