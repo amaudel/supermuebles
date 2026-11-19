@@ -45,6 +45,14 @@ textarea { resize: vertical; min-height: 4.5rem; }
 input:focus, select:focus, textarea:focus { outline: 2px solid var(--terracota); outline-offset: 0; border-color: var(--terracota); }
 .check { display: flex; align-items: center; gap: .6rem; min-height: 2.75rem; color: var(--tinta); font-size: 1rem; }
 .check input { width: 1.25rem; height: 1.25rem; accent-color: var(--terracota); }
+.clave { position: relative; margin-top: -.7rem; }
+.clave input { padding-right: 3.25rem; }
+.ojo { position: absolute; top: 0; right: 0; width: 2.75rem; height: 100%; display: grid; place-items: center; border: 0; background: none; color: var(--suave); }
+.ojo svg { width: 1.35rem; height: 1.35rem; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.ojo .ojo-cerrado, .ojo[aria-pressed="true"] .ojo-abierto { display: none; }
+.ojo[aria-pressed="true"] .ojo-cerrado { display: block; }
+@media (hover: hover) and (pointer: fine) { .ojo:hover { color: var(--tinta); } }
+.entrada label[for="codigo"] { font-size: .875rem; color: var(--suave); }
 
 .msg { padding: .7rem 1rem; font-weight: 600; }
 .msg--error { background: #f6e1db; color: var(--error); }
@@ -140,7 +148,14 @@ main { padding: var(--m); max-width: 90rem; margin: 0 auto; }
     <h1>Panel de pedidos</h1>
     <p>Entra con tu correo y el código del panel.</p>
     <label>Correo<input type="email" name="email" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" required></label>
-    <label>Código del panel<input type="password" name="codigo" autocomplete="current-password" autocapitalize="none" autocorrect="off" spellcheck="false" required></label>
+    <label for="codigo">Código del panel</label>
+    <div class="clave">
+      <input type="password" id="codigo" name="codigo" autocomplete="current-password" autocapitalize="none" autocorrect="off" spellcheck="false" required>
+      <button type="button" class="ojo" id="ver-codigo" aria-label="Mostrar el código" aria-pressed="false">
+        <svg class="ojo-abierto" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg>
+        <svg class="ojo-cerrado" viewBox="0 0 24 24" aria-hidden="true"><path d="M10.6 5.1A10.4 10.4 0 0 1 12 5c6.4 0 10 7 10 7a17.6 17.6 0 0 1-2.6 3.5"/><path d="M6.6 6.6C3.8 8.4 2 12 2 12s3.6 7 10 7a9.8 9.8 0 0 0 5.4-1.6"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/><path d="m2 2 20 20"/></svg>
+      </button>
+    </div>
     <p class="msg msg--error" id="entrar-error" role="alert" hidden></p>
     <button class="btn" type="submit">Entrar</button>
   </form>
@@ -296,10 +311,17 @@ main { padding: var(--m); max-width: 90rem; margin: 0 auto; }
     var f = e.target, err = $('#entrar-error'), b = $('button', f);
     err.hidden = true; b.disabled = true;
     api('/entrar', { method: 'POST', body: { email: f.elements.email.value, codigo: f.elements.codigo.value } })
-      .then(function () { f.elements.codigo.value = ''; return api('/yo'); })
+      .then(function () { f.elements.codigo.value = ''; f.elements.codigo.type = 'password'; $('#ver-codigo').setAttribute('aria-pressed', 'false'); return api('/yo'); })
       .then(mostrarApp)
       .catch(function (x) { err.textContent = x.message; err.hidden = false; })
       .then(function () { b.disabled = false; });
+  });
+  $('#ver-codigo').addEventListener('click', function () {
+    var b = this, inp = $('#codigo'), ver = inp.type === 'password';
+    inp.type = ver ? 'text' : 'password';
+    b.setAttribute('aria-pressed', ver ? 'true' : 'false');
+    b.setAttribute('aria-label', ver ? 'Ocultar el código' : 'Mostrar el código');
+    inp.focus();
   });
   $('#salir').addEventListener('click', function () { api('/salir', { method: 'POST', body: {} }).catch(function () {}).then(mostrarEntrada); });
 
