@@ -290,7 +290,10 @@
       $('#seg-error').hidden = false;
     };
     if (!/^[a-f0-9]{32}$/.test(token)) { falla(); return; }
-    fetch('/api/pedidos/' + token, { headers: { Accept: 'application/json' } })
+    prepararSubida(token, function () { cargar(); });
+    cargar();
+    function cargar() {
+    return fetch('/api/pedidos/' + token, { headers: { Accept: 'application/json' }, cache: 'no-store' })
       .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, d: d }; }); })
       .then(function (res) {
         if (!res.ok) { falla(res.d.error); return; }
@@ -301,7 +304,8 @@
           $('#seg-lead').textContent = 'Este pedido fue cancelado. Si tienes dudas, escríbenos.';
           $('#seg-pasos').hidden = true;
         } else {
-          $('#seg-lead').textContent = idx >= 0 ? PASOS[idx][2] : 'Aquí ves en qué va tu pedido.';
+          $('#seg-lead').textContent = d.pago && d.pago.cuenta ? 'Ya está el total con el envío. Más abajo tienes la cuenta para transferir y dónde subir el comprobante.' :
+            idx >= 0 ? PASOS[idx][2] : 'Aquí ves en qué va tu pedido.';
           $('#seg-pasos').innerHTML = PASOS.map(function (p, i) {
             var cls = i < idx ? 'is-hecho' : i === idx ? 'is-actual' : '';
             return '<li class="' + cls + '"' + (i === idx ? ' aria-current="step"' : '') + '>' + esc(p[1]) + '</li>';
@@ -323,14 +327,61 @@
           if (c.identificacion) cuenta.push(['Cédula o RUC', c.identificacion]);
           cuenta.push(['Valor a transferir', dinero(d.abono_cents != null ? d.abono_cents : d.total_cents)]);
           $('#seg-cuenta').innerHTML = cuenta.map(function (f) { return '<div><dt>' + f[0] + '</dt><dd>' + esc(f[1]) + '</dd></div>'; }).join('');
-          $('#seg-instrucciones').textContent = d.pago.instrucciones || ('Envía el comprobante por WhatsApp con tu número de pedido ' + d.codigo + '.');
+          $('#seg-instrucciones').textContent = d.pago.instrucciones || 'Haz la transferencia y sube aquí la foto o el PDF del comprobante.';
+          $('#seg-rechazo').hidden = d.estado_pago !== 'rechazado';
           $('#seg-pago').hidden = false;
+        } else {
+          $('#seg-pago').hidden = true;
         }
         $('#seg-wa').href = wa('Hola Supermuebles Cuenca, tengo una consulta sobre mi pedido ' + d.codigo + '.');
         $('#seg-cargando').hidden = true;
         $('#seg-cuerpo').hidden = false;
       })
       .catch(function () { falla('No hay conexión. Revisa tu internet y vuelve a abrir el enlace.'); });
+    }
+  }
+
+  /* ---------- subir el comprobante ---------- */
+  var MAX_BYTES = 5000000;
+  // Las fotos del celular pesan mucho: se reducen a 2000 px en JPEG antes de subirlas. Los PDF van tal cual.
+  var reducir = function (archivo) {
+    if (!/^image\/(jpeg|png|webp)$/.test(archivo.type) || !window.createImageBitmap) return Promise.resolve(archivo);
+    return createImageBitmap(archivo).then(function (img) {
+      var k = Math.min(1, 2000 / Math.max(img.width, img.height));
+      if (k === 1 && archivo.size < 1500000) return archivo;
+      var c = document.createElement('canvas');
+      c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
+      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+      return new Promise(function (ok) { c.toBlob(function (b) { ok(b && b.size < archivo.size ? b : archivo); }, 'image/jpeg', 0.85); });
+    }).catch(function () { return archivo; });
+  };
+
+  function prepararSubida(token, alTerminar) {
+    var f = $('#seg-subir');
+    if (!f) return;
+    var err = $('#seg-subir-error'), btn = $('#seg-subir-btn'), input = $('#seg-file');
+    var mostrar = function (t) { err.textContent = t; err.hidden = !t; };
+    input.addEventListener('change', function () { mostrar(''); });
+    f.addEventListener('submit', function (e) {
+      e.preventDefault();
+      mostrar('');
+      var a = input.files && input.files[0];
+      if (!a) { mostrar('Elige la foto o el PDF del comprobante.'); input.focus(); return; }
+      if (!/^(image\/(jpeg|png|webp)|application\/pdf)$/.test(a.type)) { mostrar('Sube una foto (JPG, PNG o WEBP) o un PDF.'); return; }
+      btn.disabled = true; btn.textContent = 'Subiendo…';
+      reducir(a).then(function (cuerpo) {
+        if (cuerpo.size > MAX_BYTES) throw new Error('El archivo pesa más de 5 MB. Envía una foto más liviana o un PDF.');
+        return fetch('/api/pedidos/' + token + '/comprobante', {
+          method: 'POST',
+          headers: { 'Content-Type': cuerpo.type || 'application/octet-stream', 'X-Requested-With': 'tienda' },
+          body: cuerpo,
+        });
+      })
+        .then(function (r) { return r.json().catch(function () { return {}; }).then(function (d) { if (!r.ok) throw new Error(d.error || 'No pudimos subir el comprobante. Inténtalo de nuevo.'); }); })
+        .then(function () { f.reset(); aviso('Recibimos tu comprobante.'); alTerminar(); window.scrollTo(0, 0); })
+        .catch(function (x) { mostrar(x && x.message && x.message !== 'Failed to fetch' ? x.message : 'No hay conexión. Revisa tu internet y vuelve a intentarlo.'); })
+        .then(function () { btn.disabled = false; btn.textContent = 'Subir comprobante'; });
+    });
   }
 
   /* ---------- arranque ---------- */

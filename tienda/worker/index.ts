@@ -9,6 +9,7 @@
 // se vuelve a leer y se reintenta, así nunca se pisan dos guardados a la vez.
 import { SEED } from './seed';
 import { api } from './tienda';
+import { limpiar as limpiarTienda } from './comprobantes';
 
 export interface Env {
   ASSETS: Fetcher;
@@ -20,6 +21,7 @@ export interface Env {
   TURNSTILE_SECRET?: string;
   ADMIN_CODE?: string; // código del panel /admin/ (secreto del Worker)
   LIMITE_PEDIDOS?: RateLimit;
+  LIMITE_COMPROBANTES?: RateLimit;
 }
 
 const COOKIE = 'sm_fichas';
@@ -344,5 +346,9 @@ export default {
       console.error('fichas-api', e);
       return error('Error interno. Inténtalo de nuevo.', 500);
     }
+  },
+  // Limpieza diaria de la tienda (comprobantes vencidos e intentos viejos). Solo corre donde hay cron (rama tienda).
+  async scheduled(_ev: ScheduledController, env: Env, ctx: ExecutionContext): Promise<void> {
+    ctx.waitUntil(limpiarTienda(env));
   },
 } satisfies ExportedHandler<Env>;

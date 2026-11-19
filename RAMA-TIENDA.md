@@ -64,7 +64,13 @@ Falta antes:
   - Pruebas: `tienda/test/admin.test.mjs` (4), 22 de 22 en total.
   - Para la nube: `npx wrangler secret put ADMIN_CODE --config ../wrangler.tienda.jsonc` y registrar a cada persona: `npx wrangler d1 execute supermuebles-tienda-pruebas --config ../wrangler.tienda.jsonc --remote --command "INSERT INTO admin_users (id, email, name) VALUES ('<id>', '<correo>', '<nombre>')"`.
   - Pendiente: pasar las fichas que llena el dueño (R2) a `products` y las opciones (tela, color, medida) por modelo. Se hará cuando las fichas tengan datos confirmados. Cloudflare Access sigue siendo una opción para reemplazar el código compartido.
-- [ ] **Fase 3. Comprobantes.** Subida a R2 privado, verificar o rechazar con motivo, limpieza diaria con Cron.
+- [x] **Fase 3. Comprobantes** (19 nov 2026).
+  - El cliente sube la foto o el PDF desde su enlace de seguimiento, solo cuando el pedido está «Por pagar» (`POST /api/pedidos/:token/comprobante`, código en `tienda/worker/comprobantes.ts`). Las fotos se reducen a 2000 px en el celular antes de subir; máximo 5 MB; el tipo se comprueba por los bytes del archivo (JPG, PNG, WEBP o PDF); 10 subidas por minuto por IP.
+  - Se guarda en el bucket privado `COMPROBANTES` (sin URL pública), crea un pago «en revisión» por el abono o el total, y el pedido pasa a «Revisando tu pago».
+  - Panel: tabla de comprobantes con «Ver comprobante» (solo con sesión, se abre aislado con `Content-Security-Policy: sandbox`). «Confirmar pago» lo marca verificado con quién y cuándo; «Rechazar pago» pide motivo, vuelve a «Por pagar» y el cliente ve que debe subirlo otra vez.
+  - Limpieza diaria (Cron `0 8 * * *`, 03:00 de Ecuador): borra los comprobantes de pedidos entregados o cancelados hace más de 90 días (`DIAS_CONSERVACION`, a confirmar con el dueño) y los intentos de entrada viejos.
+  - Pruebas: `tienda/test/comprobantes.test.mjs` (4), 26 de 26 en total. En local `npm run dev` incluye `--test-scheduled` para probar la limpieza.
+  - Para la nube falta crear el bucket `supermuebles-pruebas-comprobantes`.
 - [ ] Pruebas con Miniflare de totales, idempotencia, transiciones de estado y límites de comprobante.
 - [ ] Actualizar la página de privacidad antes de abrir la tienda.
 

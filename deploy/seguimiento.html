@@ -112,6 +112,13 @@
         <h2 class="h3">Cómo pagar</h2>
         <dl class="pedido-totales" id="seg-cuenta"></dl>
         <p class="pedido-nota" id="seg-instrucciones"></p>
+        <p class="pedido-error" id="seg-rechazo" hidden>No pudimos verificar tu comprobante anterior. Revisa el valor y la cuenta, y vuelve a subirlo. Si tienes dudas, escríbenos.</p>
+        <form class="seg-subir" id="seg-subir" novalidate>
+          <label class="seg-archivo" for="seg-file"><span>Comprobante de la transferencia (foto o PDF, hasta 5 MB)</span>
+            <input id="seg-file" name="archivo" type="file" accept="image/jpeg,image/png,image/webp,application/pdf"></label>
+          <p class="pedido-error" id="seg-subir-error" role="alert" hidden></p>
+          <button class="btn" id="seg-subir-btn" type="submit">Subir comprobante</button>
+        </form>
       </div>
     </div>
     <div class="pedido-datos seg-ayuda">

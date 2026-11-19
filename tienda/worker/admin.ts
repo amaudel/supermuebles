@@ -2,6 +2,7 @@
 // Acceso: correo registrado en admin_users + código compartido del panel (secreto ADMIN_CODE).
 // La sesión es una cookie firmada que lleva el correo, así cada cambio queda registrado con quién lo hizo.
 import type { Env } from './index';
+import { verComprobante } from './comprobantes';
 
 const COOKIE = 'sm_admin';
 const SESION_HORAS = 12;
@@ -119,9 +120,10 @@ async function listarPedidos(db: D1Database, url: URL): Promise<Response> {
 async function verPedidoAdmin(db: D1Database, id: string): Promise<Response> {
   const o = await db.prepare('SELECT * FROM orders WHERE id = ?').bind(id).first<any>();
   if (!o) return error('No existe ese pedido.', 404);
-  const [items, eventos] = await db.batch([
+  const [items, eventos, pagos] = await db.batch([
     db.prepare('SELECT product_id, name_snapshot AS nombre, unit_cents_snapshot AS precio_cents, qty AS cantidad, note AS nota FROM order_items WHERE order_id = ? ORDER BY rowid').bind(id),
     db.prepare('SELECT at, actor, type AS tipo, detail_json FROM order_events WHERE order_id = ? ORDER BY at').bind(id),
+    db.prepare("SELECT p.id, p.method AS metodo, p.amount_cents AS monto_cents, p.status AS estado, p.proof_key IS NOT NULL AS tiene_archivo, p.verified_by AS verificado_por, p.verified_at AS verificado_en, e.at AS subido FROM payments p LEFT JOIN order_events e ON e.order_id = p.order_id AND e.type = 'comprobante' AND json_extract(e.detail_json, '$.pago') = p.id WHERE p.order_id = ? ORDER BY e.at").bind(id),
   ]);
   return json({
     pedido: {
@@ -132,6 +134,7 @@ async function verPedidoAdmin(db: D1Database, id: string): Promise<Response> {
     },
     lineas: items.results,
     eventos: (eventos.results as any[]).map(e => ({ at: e.at, actor: e.actor, tipo: e.tipo, detalle: JSON.parse(e.detail_json || '{}') })),
+    pagos: pagos.results,
     siguientes: TRANSICIONES[o.status] || [],
   });
 }
@@ -178,10 +181,13 @@ async function cambiarEstado(request: Request, db: D1Database, id: string, u: Us
   if (o.status === 'comprobante_recibido' && nuevo === 'por_pagar' && motivo.length < 3) return error('Escribe por qué se rechaza el pago.', 400);
 
   const pago = nuevo === 'confirmado' ? 'verificado' : nuevo === 'por_pagar' && o.status === 'comprobante_recibido' ? 'rechazado' : null;
+  const t = ahora();
   const r = await db.batch([
     db.prepare(`UPDATE orders SET status = ?, ${pago ? 'payment_status = ?, ' : ''}updated_at = ? WHERE id = ? AND status = ?`)
-      .bind(...(pago ? [nuevo, pago] : [nuevo]), ahora(), id, o.status),
+      .bind(...(pago ? [nuevo, pago] : [nuevo]), t, id, o.status),
     evento(db, id, u.email, 'estado', { de: o.status, a: nuevo, ...(motivo ? { motivo } : {}) }),
+    // El comprobante en revisión queda verificado o rechazado junto con el pedido.
+    ...(pago ? [db.prepare("UPDATE payments SET status = ?, verified_by = ?, verified_at = ? WHERE order_id = ? AND status = 'en_revision'").bind(pago, u.email, t, id)] : []),
   ]);
   if (!r[0].meta.changes) return error('El pedido cambió mientras lo editabas. Vuelve a abrirlo.', 409);
   return verPedidoAdmin(db, id);
@@ -275,6 +281,8 @@ export async function adminApi(request: Request, env: Env, url: URL): Promise<Re
     if (accion === '/estado' && m === 'POST') return cambiarEstado(request, db, id, u);
     if (accion === '/nota' && m === 'POST') return agregarNota(request, db, id, u);
   }
+  r = p.match(/^\/pedidos\/([0-9a-f-]{36})\/comprobantes\/([0-9a-f-]{36})$/);
+  if (r && m === 'GET') return verComprobante(env, db, r[1], r[2]);
   if (p === '/productos' && m === 'GET') return listarProductos(db);
   r = p.match(/^\/productos\/([a-z0-9-]{1,80})$/);
   if (r && m === 'PUT') return editarProducto(request, db, r[1], u);

@@ -388,6 +388,18 @@ main { padding: var(--m); max-width: 90rem; margin: 0 auto; }
         '<div><button class="btn btn--sec" type="submit">Guardar envío y total</button></div></form>' +
         '<p class="ayuda">El total se calcula solo: subtotal + envío − descuento.</p></section>' : '') +
 
+      ((d.pagos || []).length ?
+        '<section><h3>Comprobantes de pago</h3>' +
+        (p.estado === 'comprobante_recibido' ? '<p class="ayuda">Revisa en tu banco que el dinero llegó antes de confirmar el pago.</p>' : '') +
+        '<table class="tabla"><thead><tr><th>Subido</th><th class="der">Valor esperado</th><th>Estado</th><th></th></tr></thead><tbody>' +
+        d.pagos.slice().reverse().map(function (g) {
+          var est = { en_revision: 'En revisión', verificado: 'Verificado', rechazado: 'Rechazado' }[g.estado] || g.estado;
+          return '<tr><td>' + esc(g.subido ? fecha(g.subido) : '—') + '</td><td class="der">' + dinero(g.monto_cents) + '</td>' +
+            '<td>' + esc(est) + (g.verificado_por ? '<br><span class="ayuda">' + esc(g.verificado_por) + '</span>' : '') + '</td>' +
+            '<td>' + (g.tiene_archivo ? '<a href="/api/admin/pedidos/' + esc(p.id) + '/comprobantes/' + esc(g.id) + '" target="_blank" rel="noopener noreferrer">Ver comprobante</a>' : '<span class="ayuda">Borrado</span>') + '</td></tr>';
+        }).join('') +
+        '</tbody></table></section>' : '') +
+
       (d.siguientes.length ?
         '<section><h3>Siguiente paso</h3><div class="acciones">' +
         d.siguientes.map(function (s) {
@@ -410,7 +422,8 @@ main { padding: var(--m); max-width: 90rem; margin: 0 auto; }
         var t = ev.tipo === 'estado' ? 'Cambió de «' + (ESTADO[ev.detalle.de] || ev.detalle.de) + '» a «' + (ESTADO[ev.detalle.a] || ev.detalle.a) + '»' + (ev.detalle.motivo ? ': ' + ev.detalle.motivo : '') :
           ev.tipo === 'montos' ? 'Fijó envío ' + dinero(ev.detalle.envio_cents) + ' y total ' + dinero(ev.detalle.total_cents) + (ev.detalle.abono_cents != null ? ', abono ' + dinero(ev.detalle.abono_cents) : '') :
           ev.tipo === 'nota' ? ev.detalle.texto :
-          ev.tipo === 'creado' ? 'El cliente envió el pedido' : ev.tipo;
+          ev.tipo === 'creado' ? 'El cliente envió el pedido' :
+          ev.tipo === 'comprobante' ? 'El cliente subió un comprobante' : ev.tipo;
         return '<li><time>' + esc(fecha(ev.at)) + ' · ' + esc(ev.actor) + '</time><span>' + esc(t) + '</span></li>';
       }).join('') +
       '</ol></section></article>';

@@ -3,6 +3,7 @@
 // el pedido nace sin envío ni total final (los confirma la asesora), y nada funciona con la tienda apagada.
 import type { Env } from './index';
 import { adminApi, leerAjustes } from './admin';
+import { subirComprobante } from './comprobantes';
 
 const MAX_LINEAS = 20;
 const MAX_CANTIDAD = 20;
@@ -234,6 +235,11 @@ export async function api(request: Request, env: Env, url: URL): Promise<Respons
     if (p === '/api/admin' || p.startsWith('/api/admin/')) return await adminApi(request, env, url);
     if (p === '/api/productos' && m === 'GET') return await productos(env.DB);
     if (p === '/api/pedidos' && m === 'POST') return await crearPedido(request, env, env.DB);
+    const c = p.match(/^\/api\/pedidos\/([^/]+)\/comprobante$/);
+    if (c && m === 'POST') {
+      if (!TOKEN.test(c[1])) return error('No encontramos ese pedido. Revisa el enlace.', 404);
+      return await subirComprobante(request, env, env.DB, c[1]);
+    }
     const r = p.match(/^\/api\/pedidos\/([^/]+)$/);
     if (r && m === 'GET') {
       if (!TOKEN.test(r[1])) return error('No encontramos ese pedido. Revisa el enlace.', 404);

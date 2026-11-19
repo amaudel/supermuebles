@@ -1206,3 +1206,9 @@ input, textarea { caret-color: var(--accent); }
 .seg-pago[hidden] { display: none; }
 .seg-pago .pedido-totales { margin-top: 0; }
 .seg-pago .pedido-nota { color: var(--ink); }
+.seg-subir { display: grid; gap: 1rem; margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid rgba(41, 62, 79, 0.2); }
+.seg-archivo { display: grid; gap: 0.5rem; font-weight: 600; }
+.seg-archivo input { min-height: 2.75rem; padding: 0.5rem; background: #fff; border: 1px solid rgba(41, 62, 79, 0.35); font: inherit; font-size: 1rem; font-weight: 400; max-width: 100%; }
+.seg-archivo input:focus-visible { outline: 2px solid var(--accent); outline-offset: 0; }
+.seg-pago .pedido-error { color: var(--accent-hover); background: rgba(169, 70, 51, 0.1); }
+.seg-subir .btn { justify-self: start; }
