@@ -18,6 +18,7 @@ export interface Env {
   DB?: D1Database;
   COMPROBANTES?: R2Bucket;
   TURNSTILE_SECRET?: string;
+  ADMIN_CODE?: string; // código del panel /admin/ (secreto del Worker)
   LIMITE_PEDIDOS?: RateLimit;
 }
 

@@ -317,6 +317,15 @@
         filas.push(['Total', d.total_cents == null ? 'Por confirmar' : dinero(d.total_cents)]);
         if (d.abono_cents != null) filas.push(['Abono para empezar', dinero(d.abono_cents)]);
         $('#seg-totales').innerHTML = filas.map(function (f) { return '<div><dt>' + f[0] + '</dt><dd>' + f[1] + '</dd></div>'; }).join('');
+        if (d.pago && d.pago.cuenta) {
+          var c = d.pago.cuenta;
+          var cuenta = [['Banco', c.banco], ['Cuenta', (c.tipo ? c.tipo + ' ' : '') + c.numero], ['Titular', c.titular]];
+          if (c.identificacion) cuenta.push(['Cédula o RUC', c.identificacion]);
+          cuenta.push(['Valor a transferir', dinero(d.abono_cents != null ? d.abono_cents : d.total_cents)]);
+          $('#seg-cuenta').innerHTML = cuenta.map(function (f) { return '<div><dt>' + f[0] + '</dt><dd>' + esc(f[1]) + '</dd></div>'; }).join('');
+          $('#seg-instrucciones').textContent = d.pago.instrucciones || ('Envía el comprobante por WhatsApp con tu número de pedido ' + d.codigo + '.');
+          $('#seg-pago').hidden = false;
+        }
         $('#seg-wa').href = wa('Hola Supermuebles Cuenca, tengo una consulta sobre mi pedido ' + d.codigo + '.');
         $('#seg-cargando').hidden = true;
         $('#seg-cuerpo').hidden = false;

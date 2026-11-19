@@ -55,7 +55,15 @@ Falta antes:
   - Pruebas: `tienda/test/tienda.test.mjs` (6) + las 12 de fichas, 18 de 18 en local.
   - Cambio respecto al diseño: no hay panel lateral; el carrito vive en `pedido.html` y el seguimiento usa `seguimiento.html#<token>` en lugar de `/pedido/<código>`.
   - Antes de abrir: poner la llave real de Turnstile (`site-src/config.py` y el secreto `TURNSTILE_SECRET`).
-- [ ] **Fase 2. Panel `/admin`.** Pedidos (listar, ver, cambiar estado, fijar envío, total y abono, nota interna), productos (precio, activar, opciones) y ajustes (banco, abono, IVA). Pasar las fichas de R2 a `products`.
+- [x] **Fase 2. Panel `/admin/`** (19 nov 2026).
+  - Página `deploy/admin/index.html` (noindex, sin enlaces desde el sitio) y API `tienda/worker/admin.ts` bajo `/api/admin/*`.
+  - Entrada: correo registrado en la tabla `admin_users` + código del panel (secreto `ADMIN_CODE`). Sesión de 12 horas en cookie firmada que lleva el correo; si se desactiva a alguien, su sesión deja de servir al instante. Máximo 10 intentos fallidos cada 10 minutos entre todos.
+  - Pedidos: lista con filtro y búsqueda, detalle con todos los datos del cliente, fijar envío, descuento y abono (el total se calcula solo y solo se cambia antes de confirmar el pago), cambios de estado según la tabla de la sección 7 (cancelar y rechazar pago piden motivo; si otra persona lo cambió antes, avisa), notas internas, historial con quién hizo cada cosa y enlace del cliente.
+  - Modelos y precios: poner o quitar precio y mostrar u ocultar cada modelo. Ajustes: abrir o cerrar la tienda, cuenta para transferencias e indicaciones de pago. Esos cambios quedan en la tabla `admin_log`.
+  - El seguimiento del cliente muestra la cuenta y el valor a transferir solo cuando el pedido está «Por pagar».
+  - Pruebas: `tienda/test/admin.test.mjs` (4), 22 de 22 en total.
+  - Para la nube: `npx wrangler secret put ADMIN_CODE --config ../wrangler.tienda.jsonc` y registrar a cada persona: `npx wrangler d1 execute supermuebles-tienda-pruebas --config ../wrangler.tienda.jsonc --remote --command "INSERT INTO admin_users (id, email, name) VALUES ('<id>', '<correo>', '<nombre>')"`.
+  - Pendiente: pasar las fichas que llena el dueño (R2) a `products` y las opciones (tela, color, medida) por modelo. Se hará cuando las fichas tengan datos confirmados. Cloudflare Access sigue siendo una opción para reemplazar el código compartido.
 - [ ] **Fase 3. Comprobantes.** Subida a R2 privado, verificar o rechazar con motivo, limpieza diaria con Cron.
 - [ ] Pruebas con Miniflare de totales, idempotencia, transiciones de estado y límites de comprobante.
 - [ ] Actualizar la página de privacidad antes de abrir la tienda.

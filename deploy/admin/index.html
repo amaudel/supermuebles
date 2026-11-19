@@ -1,0 +1,516 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Panel de pedidos | Supermuebles Cuenca</title>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<style>
+@font-face { font-family: "Archivo"; font-style: normal; font-weight: 100 900; font-display: swap; src: url("/fonts/archivo-latin.woff2") format("woff2"); }
+:root {
+  --bg: #efeee9; --papel: #fbfaf6; --arena: #e2dac5; --tinta: #293e4f; --tinta-2: #1f2f3c; --suave: #4e5c69;
+  --linea: rgba(41, 62, 79, 0.2); --terracota: #a94633; --terracota-2: #8c3828; --ok: #2f6b4a; --error: #a3321f;
+  --m: clamp(1rem, 3vw, 2rem);
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--bg); color: var(--tinta); font: 16px/1.5 "Archivo", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+::selection { background: var(--tinta); color: var(--bg); }
+:focus-visible { outline: 2px solid var(--terracota); outline-offset: 2px; }
+[hidden] { display: none !important; }
+h1, h2, h3, p { margin: 0; }
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+.num { font-variant-numeric: tabular-nums; }
+
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: .5rem; min-height: 2.75rem; padding: 0 1.1rem; border: 0; border-radius: 0; background: var(--terracota); color: #fff; font-weight: 600; white-space: nowrap; transition: background-color .16s ease-out, transform .16s cubic-bezier(.23,1,.32,1); }
+.btn:active { transform: scale(.97); }
+.btn:disabled { opacity: .55; cursor: progress; transform: none; }
+.btn--sec { background: var(--tinta); }
+.btn--claro { background: #fff; color: var(--tinta); box-shadow: inset 0 0 0 1px var(--linea); }
+.btn--peligro { background: #fff; color: var(--error); box-shadow: inset 0 0 0 1px var(--error); }
+@media (hover: hover) and (pointer: fine) {
+  .btn:hover { background: var(--terracota-2); }
+  .btn--sec:hover { background: var(--tinta-2); }
+  .btn--claro:hover, .btn--peligro:hover { background: var(--arena); }
+}
+.enlace { background: none; border: 0; padding: 0; min-height: 2.75rem; color: var(--tinta); font-weight: 600; text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: .25em; }
+
+label { display: grid; gap: .3rem; font-size: .875rem; color: var(--suave); }
+input[type=text], input[type=email], input[type=password], input[type=number], input[type=search], select, textarea {
+  width: 100%; min-height: 2.75rem; padding: .55rem .75rem; border: 1px solid rgba(41, 62, 79, .35); border-radius: 0; background: #fff; color: var(--tinta); font-size: 1rem;
+}
+textarea { resize: vertical; min-height: 4.5rem; }
+input:focus, select:focus, textarea:focus { outline: 2px solid var(--terracota); outline-offset: 0; border-color: var(--terracota); }
+.check { display: flex; align-items: center; gap: .6rem; min-height: 2.75rem; color: var(--tinta); font-size: 1rem; }
+.check input { width: 1.25rem; height: 1.25rem; accent-color: var(--terracota); }
+
+.msg { padding: .7rem 1rem; font-weight: 600; }
+.msg--error { background: #f6e1db; color: var(--error); }
+.msg--ok { background: #dfece3; color: var(--ok); }
+
+/* entrada */
+.entrada { min-height: 100vh; display: grid; place-items: center; padding: var(--m); }
+.entrada form { width: 100%; max-width: 26rem; background: var(--papel); padding: 2rem; display: grid; gap: 1rem; box-shadow: 0 1px 2px rgba(41,62,79,.08), 0 8px 24px rgba(41,62,79,.08); }
+.entrada h1 { font-size: 1.5rem; font-weight: 500; }
+.entrada p { color: var(--suave); }
+
+/* barra */
+.barra { position: sticky; top: 0; z-index: 10; display: flex; flex-wrap: wrap; align-items: center; gap: .5rem 1.5rem; padding: .5rem var(--m); background: var(--tinta); color: var(--bg); }
+.barra strong { font-weight: 600; margin-right: auto; }
+.tabs { display: flex; gap: .25rem; }
+.tabs button { min-height: 2.75rem; padding: 0 .9rem; border: 0; background: transparent; color: var(--bg); font-weight: 600; }
+.tabs button[aria-selected="true"] { background: var(--bg); color: var(--tinta); }
+.barra .quien { font-size: .875rem; opacity: .85; }
+.barra .enlace { color: var(--bg); }
+
+main { padding: var(--m); max-width: 90rem; margin: 0 auto; }
+.cabeza { display: flex; flex-wrap: wrap; align-items: end; gap: .75rem 1rem; margin-bottom: 1.25rem; }
+.cabeza h1 { font-size: 1.75rem; font-weight: 500; margin-right: auto; }
+.cabeza label { min-width: 12rem; }
+
+/* lista de pedidos */
+.split { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: var(--m); align-items: start; }
+.lista { display: grid; background: var(--papel); }
+.fila { display: grid; grid-template-columns: auto 1fr auto; gap: .15rem 1rem; padding: .85rem 1rem; border: 0; border-bottom: 1px solid var(--linea); background: none; text-align: left; }
+.fila[aria-current="true"] { background: var(--arena); }
+@media (hover: hover) and (pointer: fine) { .fila:hover { background: #f1eee5; } }
+.fila .cod { font-weight: 700; font-variant-numeric: tabular-nums; }
+.fila .cli { color: var(--suave); grid-column: 1 / 3; font-size: .875rem; }
+.fila .tot { text-align: right; font-weight: 600; font-variant-numeric: tabular-nums; }
+.vacio { padding: 2rem 1rem; color: var(--suave); }
+
+.chip { display: inline-block; padding: .15rem .5rem; font-size: .8125rem; font-weight: 600; background: var(--arena); color: var(--tinta); }
+.chip--nuevo { background: var(--terracota); color: #fff; }
+.chip--por_pagar, .chip--comprobante_recibido { background: #f3dfb0; color: #5e3f07; }
+.chip--confirmado, .chip--en_fabricacion, .chip--listo, .chip--enviado { background: var(--tinta); color: var(--bg); }
+.chip--entregado { background: #dfece3; color: var(--ok); }
+.chip--cancelado { background: #e4e4e4; color: #555; }
+
+/* detalle */
+.detalle { background: var(--papel); padding: clamp(1rem, 2.5vw, 2rem); display: grid; gap: 1.75rem; }
+.detalle h2 { font-size: 1.5rem; font-weight: 500; display: flex; flex-wrap: wrap; align-items: center; gap: .5rem 1rem; }
+.detalle h3 { font-size: 1.0625rem; font-weight: 600; margin-bottom: .6rem; }
+.datos { display: grid; grid-template-columns: max-content 1fr; gap: .35rem 1rem; }
+.datos dt { color: var(--suave); }
+.datos dd { margin: 0; overflow-wrap: anywhere; }
+.detalle a { color: var(--tinta); font-weight: 600; text-underline-offset: .2em; }
+.tabla { width: 100%; border-collapse: collapse; }
+.tabla th, .tabla td { padding: .55rem .5rem; border-bottom: 1px solid var(--linea); text-align: left; vertical-align: top; }
+.tabla th { font-size: .8125rem; color: var(--suave); font-weight: 600; }
+.tabla .der { text-align: right; font-variant-numeric: tabular-nums; }
+.tabla tfoot td { font-weight: 600; border-bottom: 0; }
+.montos { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .75rem; align-items: end; }
+.acciones { display: flex; flex-wrap: wrap; gap: .5rem; }
+.motivo { display: grid; gap: .5rem; margin-top: .75rem; }
+.historia { display: grid; gap: .6rem; padding: 0; margin: 0; list-style: none; }
+.historia li { display: grid; gap: .1rem; padding-left: .9rem; border-left: 1px solid var(--linea); }
+.historia time { font-size: .8125rem; color: var(--suave); }
+.ayuda { font-size: .875rem; color: var(--suave); }
+
+/* modelos */
+.modelos td input[type=number] { max-width: 9rem; }
+.modelos img { width: 3.5rem; height: 3.5rem; object-fit: cover; display: block; background: var(--arena); }
+
+/* ajustes */
+.ajustes { display: grid; gap: 1.5rem; max-width: 46rem; }
+.caja { background: var(--papel); padding: 1.5rem; display: grid; gap: 1rem; }
+.caja h2 { font-size: 1.25rem; font-weight: 500; }
+.dos { display: grid; grid-template-columns: 1fr 1fr; gap: .75rem; }
+
+@media (max-width: 899px) {
+  .split { grid-template-columns: 1fr; }
+  .split.con-detalle .lista-col { display: none; }
+}
+@media (max-width: 599px) {
+  .montos, .dos { grid-template-columns: 1fr; }
+  .modelos thead { display: none; }
+  .modelos tr { display: grid; grid-template-columns: 3.5rem 1fr; gap: .25rem .75rem; padding: .75rem 0; border-bottom: 1px solid var(--linea); }
+  .modelos td { border: 0; padding: 0; }
+  .modelos td:first-child { grid-row: span 4; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+
+<section class="entrada" id="entrada" hidden>
+  <form id="f-entrar" novalidate>
+    <h1>Panel de pedidos</h1>
+    <p>Entra con tu correo y el código del panel.</p>
+    <label>Correo<input type="email" name="email" autocomplete="username" required></label>
+    <label>Código del panel<input type="password" name="codigo" autocomplete="current-password" required></label>
+    <p class="msg msg--error" id="entrar-error" role="alert" hidden></p>
+    <button class="btn" type="submit">Entrar</button>
+  </form>
+</section>
+
+<div id="app" hidden>
+  <header class="barra">
+    <strong>Supermuebles · Panel</strong>
+    <nav class="tabs" role="tablist" aria-label="Secciones">
+      <button type="button" role="tab" data-tab="pedidos" aria-selected="true">Pedidos</button>
+      <button type="button" role="tab" data-tab="modelos" aria-selected="false">Modelos y precios</button>
+      <button type="button" role="tab" data-tab="ajustes" aria-selected="false">Ajustes</button>
+    </nav>
+    <span class="quien" id="quien"></span>
+    <button class="enlace" type="button" id="salir">Salir</button>
+  </header>
+
+  <main>
+    <p class="msg" id="aviso" role="status" hidden></p>
+
+    <!-- Pedidos -->
+    <section id="tab-pedidos" role="tabpanel">
+      <div class="cabeza">
+        <h1>Pedidos</h1>
+        <label>Mostrar
+          <select id="filtro-estado">
+            <option value="abiertos">Abiertos (sin entregar ni cancelar)</option>
+            <option value="nuevo">Nuevos</option>
+            <option value="por_pagar">Por pagar</option>
+            <option value="comprobante_recibido">Revisar pago</option>
+            <option value="confirmado">Pago confirmado</option>
+            <option value="en_fabricacion">En fabricación</option>
+            <option value="listo">Listos para enviar</option>
+            <option value="enviado">Enviados</option>
+            <option value="entregado">Entregados</option>
+            <option value="cancelado">Cancelados</option>
+            <option value="">Todos</option>
+          </select>
+        </label>
+        <label>Buscar<input type="search" id="buscar" placeholder="Código, nombre, teléfono o ciudad"></label>
+      </div>
+      <div class="split" id="split">
+        <div class="lista-col"><div class="lista" id="lista"></div></div>
+        <div id="detalle-col"></div>
+      </div>
+    </section>
+
+    <!-- Modelos -->
+    <section id="tab-modelos" role="tabpanel" hidden>
+      <div class="cabeza">
+        <h1>Modelos y precios</h1>
+        <p class="ayuda">Un modelo sin precio no se puede pedir en línea: sigue con «Cotizar por WhatsApp». Pon solo precios que confirmó el dueño.</p>
+      </div>
+      <table class="tabla modelos">
+        <thead><tr><th></th><th>Modelo</th><th>Precio (USD)</th><th>Visible en la tienda</th><th></th></tr></thead>
+        <tbody id="modelos"></tbody>
+      </table>
+    </section>
+
+    <!-- Ajustes -->
+    <section id="tab-ajustes" role="tabpanel" hidden>
+      <div class="cabeza"><h1>Ajustes</h1></div>
+      <form class="ajustes" id="f-ajustes" novalidate>
+        <div class="caja">
+          <h2>Tienda en línea</h2>
+          <label class="check"><input type="checkbox" name="tienda_activa"> La tienda recibe pedidos</label>
+          <p class="ayuda">Al activarla, los modelos con precio muestran «Agregar al pedido» en el sitio. Apágala y todo vuelve a ser solo por WhatsApp.</p>
+        </div>
+        <div class="caja">
+          <h2>Cuenta para transferencias</h2>
+          <p class="ayuda">El cliente la ve en el enlace de su pedido solo cuando está «Por pagar».</p>
+          <div class="dos">
+            <label>Banco<input type="text" name="banco" maxlength="80"></label>
+            <label>Tipo de cuenta<select name="tipo"><option value="">Elegir</option><option>Ahorros</option><option>Corriente</option></select></label>
+            <label>Número de cuenta<input type="text" name="numero" maxlength="40" inputmode="numeric"></label>
+            <label>Titular<input type="text" name="titular" maxlength="120"></label>
+            <label>Cédula o RUC del titular<input type="text" name="identificacion" maxlength="20" inputmode="numeric"></label>
+          </div>
+          <label>Indicaciones para pagar (opcional)<textarea name="pago_instrucciones" maxlength="600" placeholder="Ej. Envía el comprobante por WhatsApp con tu número de pedido."></textarea></label>
+        </div>
+        <div><button class="btn" type="submit">Guardar ajustes</button></div>
+      </form>
+    </section>
+  </main>
+</div>
+
+<script>
+(function () {
+  'use strict';
+  var $ = function (s, r) { return (r || document).querySelector(s); };
+  var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
+  var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
+  var dinero = function (c) {
+    if (c == null) return '—';
+    try { return new Intl.NumberFormat('es-EC', { style: 'currency', currency: 'USD' }).format(c / 100); } catch (e) { return '$' + (c / 100).toFixed(2); }
+  };
+  var aCentavos = function (v) {
+    v = String(v || '').trim().replace(',', '.');
+    if (v === '') return null;
+    var n = Number(v);
+    return isFinite(n) && n >= 0 ? Math.round(n * 100) : NaN;
+  };
+  var aDolares = function (c) { return c == null ? '' : (c / 100).toFixed(2); };
+  var fecha = function (iso) { try { return new Date(iso).toLocaleString('es-EC', { dateStyle: 'medium', timeStyle: 'short' }); } catch (e) { return iso; } };
+
+  var ESTADO = {
+    nuevo: 'Nuevo', por_pagar: 'Por pagar', comprobante_recibido: 'Revisar pago', confirmado: 'Pago confirmado',
+    en_fabricacion: 'En fabricación', listo: 'Listo para enviar', enviado: 'Enviado', entregado: 'Entregado', cancelado: 'Cancelado',
+  };
+  // Texto del botón para pasar a cada estado.
+  var ACCION = {
+    por_pagar: 'Pasar a «Por pagar»', comprobante_recibido: 'Marcar comprobante recibido', confirmado: 'Confirmar pago',
+    nuevo: 'Volver a «Nuevo»', en_fabricacion: 'Empezar fabricación', listo: 'Marcar listo para enviar',
+    enviado: 'Marcar enviado', entregado: 'Marcar entregado', cancelado: 'Cancelar pedido',
+  };
+  var chip = function (e) { return '<span class="chip chip--' + esc(e) + '">' + esc(ESTADO[e] || e) + '</span>'; };
+
+  /* ---------- llamadas a la API ---------- */
+  var api = function (ruta, opt) {
+    opt = opt || {};
+    var h = { Accept: 'application/json' };
+    if (opt.body !== undefined) { h['Content-Type'] = 'application/json'; }
+    if (opt.method && opt.method !== 'GET') h['X-Requested-With'] = 'admin';
+    return fetch('/api/admin' + ruta, { method: opt.method || 'GET', headers: h, credentials: 'same-origin', body: opt.body !== undefined ? JSON.stringify(opt.body) : undefined })
+      .then(function (r) {
+        return r.json().catch(function () { return {}; }).then(function (d) {
+          if (r.status === 401 && ruta !== '/entrar') { mostrarEntrada(); throw new Error(d.error || 'Tu sesión terminó.'); }
+          if (!r.ok) throw new Error(d.error || 'Algo falló. Inténtalo de nuevo.');
+          return d;
+        });
+      });
+  };
+
+  var avisoT;
+  var aviso = function (t, tipo) {
+    var el = $('#aviso');
+    el.textContent = t;
+    el.className = 'msg msg--' + (tipo || 'ok');
+    el.hidden = false;
+    clearTimeout(avisoT);
+    avisoT = setTimeout(function () { el.hidden = true; }, tipo === 'error' ? 8000 : 3500);
+  };
+
+  /* ---------- entrar y salir ---------- */
+  function mostrarEntrada() { $('#app').hidden = true; $('#entrada').hidden = false; $('#f-entrar').elements.email.focus(); }
+  function mostrarApp(yo) {
+    $('#entrada').hidden = true; $('#app').hidden = false;
+    $('#quien').textContent = yo.nombre ? yo.nombre + ' · ' + yo.email : yo.email;
+    cargarPedidos();
+  }
+  $('#f-entrar').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var f = e.target, err = $('#entrar-error'), b = $('button', f);
+    err.hidden = true; b.disabled = true;
+    api('/entrar', { method: 'POST', body: { email: f.elements.email.value, codigo: f.elements.codigo.value } })
+      .then(function () { f.elements.codigo.value = ''; return api('/yo'); })
+      .then(mostrarApp)
+      .catch(function (x) { err.textContent = x.message; err.hidden = false; })
+      .then(function () { b.disabled = false; });
+  });
+  $('#salir').addEventListener('click', function () { api('/salir', { method: 'POST', body: {} }).catch(function () {}).then(mostrarEntrada); });
+
+  /* ---------- pestañas ---------- */
+  $$('.tabs button').forEach(function (b) {
+    b.addEventListener('click', function () {
+      $$('.tabs button').forEach(function (x) { x.setAttribute('aria-selected', x === b ? 'true' : 'false'); });
+      ['pedidos', 'modelos', 'ajustes'].forEach(function (t) { $('#tab-' + t).hidden = t !== b.dataset.tab; });
+      if (b.dataset.tab === 'pedidos') cargarPedidos();
+      if (b.dataset.tab === 'modelos') cargarModelos();
+      if (b.dataset.tab === 'ajustes') cargarAjustes();
+    });
+  });
+
+  /* ---------- pedidos ---------- */
+  var actual = null;
+  var buscarT;
+  function cargarPedidos() {
+    var q = '?estado=' + encodeURIComponent($('#filtro-estado').value) + '&q=' + encodeURIComponent($('#buscar').value.trim());
+    return api('/pedidos' + q).then(function (d) {
+      var l = $('#lista');
+      if (!d.pedidos.length) { l.innerHTML = '<p class="vacio">No hay pedidos con este filtro.</p>'; return; }
+      l.innerHTML = d.pedidos.map(function (p) {
+        return '<button class="fila" type="button" data-id="' + esc(p.id) + '"' + (actual === p.id ? ' aria-current="true"' : '') + '>' +
+          '<span class="cod">' + esc(p.codigo) + '</span>' + chip(p.estado) +
+          '<span class="tot">' + (p.total_cents != null ? dinero(p.total_cents) : dinero(p.subtotal_cents) + ' + envío') + '</span>' +
+          '<span class="cli">' + esc(p.nombre) + ' · ' + esc(p.ciudad) + ' · ' + esc(fecha(p.creado)) + '</span></button>';
+      }).join('');
+    }).catch(function (x) { aviso(x.message, 'error'); });
+  }
+  $('#filtro-estado').addEventListener('change', cargarPedidos);
+  $('#buscar').addEventListener('input', function () { clearTimeout(buscarT); buscarT = setTimeout(cargarPedidos, 300); });
+  $('#lista').addEventListener('click', function (e) {
+    var f = e.target.closest('.fila');
+    if (f) abrirPedido(f.dataset.id);
+  });
+
+  function abrirPedido(id) {
+    actual = id;
+    $$('.fila').forEach(function (f) { f.setAttribute('aria-current', f.dataset.id === id ? 'true' : 'false'); });
+    return api('/pedidos/' + id).then(pintarPedido).catch(function (x) { aviso(x.message, 'error'); });
+  }
+
+  function pintarPedido(d) {
+    var p = d.pedido;
+    var enlace = location.origin + '/seguimiento.html#' + p.token;
+    var tel = String(p.telefono || '').replace(/\D/g, '');
+    if (tel.length === 10 && tel[0] === '0') tel = '593' + tel.slice(1);
+    var editable = p.estado === 'nuevo' || p.estado === 'por_pagar';
+    var col = $('#detalle-col');
+    $('#split').classList.add('con-detalle');
+    col.innerHTML =
+      '<article class="detalle" aria-labelledby="det-titulo">' +
+      '<div><button class="enlace" type="button" data-volver>← Volver a la lista</button>' +
+      '<h2 id="det-titulo">Pedido ' + esc(p.codigo) + ' ' + chip(p.estado) + '</h2>' +
+      '<p class="ayuda">Recibido el ' + esc(fecha(p.creado)) + '</p></div>' +
+
+      '<section><h3>Cliente</h3><dl class="datos">' +
+      '<dt>Nombre</dt><dd>' + esc(p.nombre) + '</dd>' +
+      '<dt>WhatsApp</dt><dd><a href="https://wa.me/' + esc(tel) + '" target="_blank" rel="noopener noreferrer">' + esc(p.telefono) + '</a></dd>' +
+      (p.email ? '<dt>Correo</dt><dd>' + esc(p.email) + '</dd>' : '') +
+      (p.cedula ? '<dt>Cédula o RUC</dt><dd>' + esc(p.cedula) + '</dd>' : '') +
+      '<dt>Ciudad</dt><dd>' + esc(p.ciudad) + '</dd>' +
+      '<dt>Dirección</dt><dd>' + esc(p.direccion) + (p.referencia ? '<br><span class="ayuda">' + esc(p.referencia) + '</span>' : '') + '</dd>' +
+      (p.notas ? '<dt>Notas</dt><dd>' + esc(p.notas) + '</dd>' : '') +
+      '</dl></section>' +
+
+      '<section><h3>Muebles</h3><table class="tabla"><thead><tr><th>Modelo</th><th class="der">Cant.</th><th class="der">Precio</th><th class="der">Total</th></tr></thead><tbody>' +
+      d.lineas.map(function (l) {
+        return '<tr><td>' + esc(l.nombre) + (l.nota ? '<br><span class="ayuda">' + esc(l.nota) + '</span>' : '') + '</td><td class="der">' + esc(l.cantidad) +
+          '</td><td class="der">' + dinero(l.precio_cents) + '</td><td class="der">' + dinero(l.precio_cents * l.cantidad) + '</td></tr>';
+      }).join('') +
+      '</tbody><tfoot>' +
+      '<tr><td colspan="3">Subtotal</td><td class="der">' + dinero(p.subtotal_cents) + '</td></tr>' +
+      '<tr><td colspan="3">Envío</td><td class="der">' + (p.envio_cents == null ? 'Sin fijar' : dinero(p.envio_cents)) + '</td></tr>' +
+      (p.descuento_cents ? '<tr><td colspan="3">Descuento</td><td class="der">−' + dinero(p.descuento_cents) + '</td></tr>' : '') +
+      '<tr><td colspan="3">Total</td><td class="der">' + (p.total_cents == null ? 'Sin fijar' : dinero(p.total_cents)) + '</td></tr>' +
+      (p.abono_cents != null ? '<tr><td colspan="3">Abono para empezar</td><td class="der">' + dinero(p.abono_cents) + '</td></tr>' : '') +
+      '</tfoot></table></section>' +
+
+      (editable ?
+        '<section><h3>Envío y total</h3><form class="montos" data-montos novalidate>' +
+        '<label>Envío (USD)<input type="number" name="envio" min="0" step="0.01" value="' + esc(aDolares(p.envio_cents)) + '" required></label>' +
+        '<label>Descuento (USD)<input type="number" name="descuento" min="0" step="0.01" value="' + esc(aDolares(p.descuento_cents || 0)) + '"></label>' +
+        '<label>Abono (USD, opcional)<input type="number" name="abono" min="0" step="0.01" value="' + esc(aDolares(p.abono_cents)) + '"></label>' +
+        '<div><button class="btn btn--sec" type="submit">Guardar envío y total</button></div></form>' +
+        '<p class="ayuda">El total se calcula solo: subtotal + envío − descuento.</p></section>' : '') +
+
+      (d.siguientes.length ?
+        '<section><h3>Siguiente paso</h3><div class="acciones">' +
+        d.siguientes.map(function (s) {
+          var cls = s === 'cancelado' ? 'btn btn--peligro' : (s === 'nuevo' || (p.estado === 'comprobante_recibido' && s === 'por_pagar')) ? 'btn btn--claro' : 'btn';
+          var txt = p.estado === 'comprobante_recibido' && s === 'por_pagar' ? 'Rechazar pago' : ACCION[s] || s;
+          return '<button class="' + cls + '" type="button" data-estado="' + esc(s) + '">' + esc(txt) + '</button>';
+        }).join('') +
+        '</div><div class="motivo" data-motivo hidden><label>Motivo (lo verá el equipo)<textarea maxlength="500"></textarea></label>' +
+        '<div class="acciones"><button class="btn" type="button" data-confirmar>Confirmar</button><button class="enlace" type="button" data-cancelar-motivo>No, volver</button></div></div></section>' : '') +
+
+      '<section><h3>Enlace del cliente</h3><p class="ayuda">Envíalo al cliente si lo perdió. Quien tenga el enlace ve este pedido.</p>' +
+      '<div class="acciones"><button class="btn btn--claro" type="button" data-copiar>Copiar enlace</button>' +
+      '<a class="enlace" href="' + esc(enlace) + '" target="_blank" rel="noopener noreferrer">Abrir como cliente</a></div></section>' +
+
+      '<section><h3>Notas internas e historial</h3>' +
+      '<form data-nota novalidate><label>Nueva nota<textarea maxlength="1000" placeholder="Ej. Cliente pidió entrega en la tarde"></textarea></label>' +
+      '<div class="acciones" style="margin-top:.5rem"><button class="btn btn--sec" type="submit">Agregar nota</button></div></form>' +
+      '<ol class="historia" style="margin-top:1rem">' +
+      d.eventos.slice().reverse().map(function (ev) {
+        var t = ev.tipo === 'estado' ? 'Cambió de «' + (ESTADO[ev.detalle.de] || ev.detalle.de) + '» a «' + (ESTADO[ev.detalle.a] || ev.detalle.a) + '»' + (ev.detalle.motivo ? ': ' + ev.detalle.motivo : '') :
+          ev.tipo === 'montos' ? 'Fijó envío ' + dinero(ev.detalle.envio_cents) + ' y total ' + dinero(ev.detalle.total_cents) + (ev.detalle.abono_cents != null ? ', abono ' + dinero(ev.detalle.abono_cents) : '') :
+          ev.tipo === 'nota' ? ev.detalle.texto :
+          ev.tipo === 'creado' ? 'El cliente envió el pedido' : ev.tipo;
+        return '<li><time>' + esc(fecha(ev.at)) + ' · ' + esc(ev.actor) + '</time><span>' + esc(t) + '</span></li>';
+      }).join('') +
+      '</ol></section></article>';
+
+    // acciones del detalle
+    $('[data-volver]', col).addEventListener('click', function () { $('#split').classList.remove('con-detalle'); col.innerHTML = ''; actual = null; cargarPedidos(); });
+    var fm = $('[data-montos]', col);
+    if (fm) fm.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var env = aCentavos(fm.elements.envio.value), des = aCentavos(fm.elements.descuento.value) || 0, abo = aCentavos(fm.elements.abono.value);
+      if (env == null || isNaN(env)) { aviso('Escribe el costo de envío (0 si no tiene costo).', 'error'); fm.elements.envio.focus(); return; }
+      if (isNaN(des) || isNaN(abo)) { aviso('Revisa los valores.', 'error'); return; }
+      api('/pedidos/' + p.id + '/montos', { method: 'POST', body: { envio_cents: env, descuento_cents: des, abono_cents: abo } })
+        .then(function (d) { pintarPedido(d); cargarPedidos(); aviso('Envío y total guardados.'); })
+        .catch(function (x) { aviso(x.message, 'error'); });
+    });
+    var pendiente = null, caja = $('[data-motivo]', col);
+    var mover = function (estado, motivo) {
+      api('/pedidos/' + p.id + '/estado', { method: 'POST', body: { estado: estado, desde: p.estado, motivo: motivo || '' } })
+        .then(function (d) { pintarPedido(d); cargarPedidos(); aviso('Pedido ' + p.codigo + ': ' + (ESTADO[estado] || estado) + '.'); })
+        .catch(function (x) { aviso(x.message, 'error'); });
+    };
+    $$('[data-estado]', col).forEach(function (b) {
+      b.addEventListener('click', function () {
+        var s = b.dataset.estado;
+        var pideMotivo = s === 'cancelado' || (p.estado === 'comprobante_recibido' && s === 'por_pagar');
+        if (pideMotivo) { pendiente = s; caja.hidden = false; $('textarea', caja).focus(); return; }
+        mover(s);
+      });
+    });
+    if (caja) {
+      $('[data-confirmar]', caja).addEventListener('click', function () {
+        var t = $('textarea', caja).value.trim();
+        if (t.length < 3) { aviso('Escribe el motivo.', 'error'); return; }
+        mover(pendiente, t);
+      });
+      $('[data-cancelar-motivo]', caja).addEventListener('click', function () { caja.hidden = true; pendiente = null; });
+    }
+    $('[data-copiar]', col).addEventListener('click', function () {
+      (navigator.clipboard ? navigator.clipboard.writeText(enlace) : Promise.reject()).then(function () { aviso('Enlace copiado.'); }, function () { prompt('Copia el enlace:', enlace); });
+    });
+    var fn = $('[data-nota]', col);
+    fn.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var t = $('textarea', fn).value.trim();
+      if (t.length < 2) return;
+      api('/pedidos/' + p.id + '/nota', { method: 'POST', body: { texto: t } }).then(function (d) { pintarPedido(d); aviso('Nota agregada.'); }).catch(function (x) { aviso(x.message, 'error'); });
+    });
+  }
+
+  /* ---------- modelos ---------- */
+  function cargarModelos() {
+    api('/productos').then(function (d) {
+      $('#modelos').innerHTML = d.productos.map(function (m) {
+        return '<tr data-id="' + esc(m.id) + '">' +
+          '<td>' + (m.image ? '<img src="/' + esc(m.image) + '" alt="" loading="lazy" width="56" height="56">' : '') + '</td>' +
+          '<td><strong>' + esc(m.name) + '</strong><br><span class="ayuda">' + esc(m.category) + '</span></td>' +
+          '<td><input type="number" min="0" step="0.01" value="' + esc(aDolares(m.price_cents)) + '" placeholder="Sin precio" aria-label="Precio de ' + esc(m.name) + '"></td>' +
+          '<td><label class="check"><input type="checkbox"' + (m.active ? ' checked' : '') + '> Visible</label></td>' +
+          '<td><button class="btn btn--sec" type="button" data-guardar>Guardar</button></td></tr>';
+      }).join('');
+    }).catch(function (x) { aviso(x.message, 'error'); });
+  }
+  $('#modelos').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-guardar]');
+    if (!b) return;
+    var tr = b.closest('tr');
+    var precio = aCentavos($('input[type=number]', tr).value);
+    if (isNaN(precio)) { aviso('Revisa el precio.', 'error'); return; }
+    b.disabled = true;
+    api('/productos/' + tr.dataset.id, { method: 'PUT', body: { price_cents: precio, active: $('input[type=checkbox]', tr).checked } })
+      .then(function () { aviso('Guardado.'); })
+      .catch(function (x) { aviso(x.message, 'error'); })
+      .then(function () { b.disabled = false; });
+  });
+
+  /* ---------- ajustes ---------- */
+  function cargarAjustes() {
+    api('/ajustes').then(function (a) {
+      var f = $('#f-ajustes'), c = a.pago_banco || {};
+      f.elements.tienda_activa.checked = a.tienda_activa === true;
+      ['banco', 'tipo', 'numero', 'titular', 'identificacion'].forEach(function (k) { f.elements[k].value = c[k] || ''; });
+      f.elements.pago_instrucciones.value = a.pago_instrucciones || '';
+    }).catch(function (x) { aviso(x.message, 'error'); });
+  }
+  $('#f-ajustes').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var f = e.target, v = function (k) { return f.elements[k].value.trim(); };
+    var activa = f.elements.tienda_activa.checked;
+    api('/ajustes', { method: 'PUT', body: {
+      tienda_activa: activa,
+      pago_banco: { banco: v('banco'), tipo: v('tipo'), numero: v('numero'), titular: v('titular'), identificacion: v('identificacion') },
+      pago_instrucciones: v('pago_instrucciones'),
+    } }).then(function () { aviso(activa ? 'Guardado. La tienda recibe pedidos.' : 'Guardado. La tienda está apagada.'); })
+      .catch(function (x) { aviso(x.message, 'error'); });
+  });
+
+  /* ---------- arranque ---------- */
+  api('/yo').then(mostrarApp).catch(function () { mostrarEntrada(); });
+})();
+</script>
+</body>
+</html>

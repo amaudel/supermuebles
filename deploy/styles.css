@@ -1201,3 +1201,8 @@ input, textarea { caret-color: var(--accent); }
   .linea--fija { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "info total"; }
   .pedido-datos .fields { grid-template-columns: 1fr; }
 }
+
+.seg-pago { margin-top: 2.5rem; padding: 1.5rem; background: var(--surface); }
+.seg-pago[hidden] { display: none; }
+.seg-pago .pedido-totales { margin-top: 0; }
+.seg-pago .pedido-nota { color: var(--ink); }

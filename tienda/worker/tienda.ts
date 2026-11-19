@@ -2,6 +2,7 @@
 // Reglas (TIENDA-DISENO.md): el servidor recalcula todo y no cree ningún precio del navegador,
 // el pedido nace sin envío ni total final (los confirma la asesora), y nada funciona con la tienda apagada.
 import type { Env } from './index';
+import { adminApi, leerAjustes } from './admin';
 
 const MAX_LINEAS = 20;
 const MAX_CANTIDAD = 20;
@@ -213,7 +214,14 @@ async function verPedido(db: D1Database, token: string): Promise<Response> {
     descuento_cents: o.discount_cents,
     total_cents: o.total_cents,
     abono_cents: o.deposit_cents,
+    // Datos para transferir: solo cuando la asesora ya fijó el total y el pedido espera el pago.
+    pago: o.status === 'por_pagar' ? await datosDePago(db) : null,
   });
+}
+
+async function datosDePago(db: D1Database) {
+  const a = await leerAjustes(db);
+  return a.pago_banco ? { cuenta: a.pago_banco, instrucciones: a.pago_instrucciones || '' } : null;
 }
 
 /* ---------- rutas ---------- */
@@ -223,6 +231,7 @@ export async function api(request: Request, env: Env, url: URL): Promise<Respons
   const p = url.pathname.replace(/\/+$/, '');
   const m = request.method;
   try {
+    if (p === '/api/admin' || p.startsWith('/api/admin/')) return await adminApi(request, env, url);
     if (p === '/api/productos' && m === 'GET') return await productos(env.DB);
     if (p === '/api/pedidos' && m === 'POST') return await crearPedido(request, env, env.DB);
     const r = p.match(/^\/api\/pedidos\/([^/]+)$/);
