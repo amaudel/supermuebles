@@ -8,6 +8,7 @@
 // Los cambios al documento usan escritura condicional (etag): si otra petición escribió antes,
 // se vuelve a leer y se reintenta, así nunca se pisan dos guardados a la vez.
 import { SEED } from './seed';
+import { api } from './tienda';
 
 export interface Env {
   ASSETS: Fetcher;
@@ -16,6 +17,8 @@ export interface Env {
   // Solo existen en la rama `tienda` (wrangler.tienda.jsonc). El sitio en vivo no los tiene.
   DB?: D1Database;
   COMPROBANTES?: R2Bucket;
+  TURNSTILE_SECRET?: string;
+  LIMITE_PEDIDOS?: RateLimit;
 }
 
 const COOKIE = 'sm_fichas';
@@ -331,6 +334,7 @@ async function rutas(request: Request, env: Env, url: URL): Promise<Response> {
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
+    if (url.pathname.startsWith('/api/')) return api(request, env, url);
     if (!url.pathname.startsWith('/fichas-api/') && url.pathname !== '/fichas-api') return env.ASSETS.fetch(request);
     if (!env.FICHAS_CODE) return error('El acceso todavía no está configurado.', 503);
     try {

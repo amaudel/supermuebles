@@ -1,0 +1,58 @@
+
+<section class="page-head" aria-labelledby="pg-title">
+  <h1 class="display" id="pg-title">Tu pedido</h1>
+  <p class="lead">Revisa los muebles, déjanos tus datos de entrega y envíalo. Una asesora te confirma el costo de envío y el total por WhatsApp antes de que pagues.</p>
+</section>
+
+<section class="pedido" id="pedido" aria-label="Pedido" data-turnstile="{{turnstile_sitekey}}">
+  <div class="pedido-estado" id="pedido-cargando" role="status">Cargando tu pedido…</div>
+
+  <div class="pedido-vacio" id="pedido-vacio" hidden>
+    <p class="lead">Todavía no agregaste muebles.</p>
+    <a class="btn" href="catalogo.html">Ver el catálogo</a>
+  </div>
+
+  <div class="pedido-cerrado" id="pedido-cerrado" hidden>
+    <p class="lead">Por ahora los pedidos se hacen por WhatsApp. Escríbenos y te ayudamos a cotizar.</p>
+    <a class="btn" href="[[wa:Hola Supermuebles Cuenca, quiero hacer un pedido.]]" target="_blank" rel="noopener noreferrer"><svg class="i" aria-hidden="true"><use href="#i-wa"/></svg><span>Escribir por WhatsApp</span></a>
+  </div>
+
+  <div class="pedido-cuerpo" id="pedido-cuerpo" hidden>
+    <div class="pedido-lineas">
+      <h2 class="h3">Muebles</h2>
+      <ul class="lineas" id="lineas"></ul>
+      <dl class="pedido-totales">
+        <div><dt>Subtotal</dt><dd id="pedido-subtotal"></dd></div>
+        <div><dt>Envío</dt><dd>Te lo confirmamos por WhatsApp</dd></div>
+      </dl>
+      <p class="pedido-nota">El total final, con el envío a tu ciudad, lo ves en el enlace de seguimiento cuando la asesora lo confirme. Recién entonces pagas.</p>
+    </div>
+
+    <form class="pedido-datos" id="pedido-form" novalidate>
+      <h2 class="h3">Datos de entrega</h2>
+      <div class="fields">
+        <div class="field field--full"><label for="p-nombre">Nombre completo</label><input id="p-nombre" name="nombre" type="text" autocomplete="name" required maxlength="120"></div>
+        <div class="field"><label for="p-telefono">WhatsApp</label><input id="p-telefono" name="telefono" type="tel" autocomplete="tel" inputmode="tel" placeholder="Ej. 099 123 4567" required maxlength="30"></div>
+        <div class="field"><label for="p-email">Correo (opcional)</label><input id="p-email" name="email" type="email" autocomplete="email" maxlength="160"></div>
+        <div class="field"><label for="p-ciudad">Ciudad</label><input id="p-ciudad" name="ciudad" type="text" autocomplete="address-level2" placeholder="Ej. Guayaquil" required maxlength="80"></div>
+        <div class="field"><label for="p-cedula">Cédula o RUC (opcional, para la factura)</label><input id="p-cedula" name="cedula" type="text" inputmode="numeric" maxlength="13"></div>
+        <div class="field field--full"><label for="p-direccion">Dirección de entrega</label><textarea id="p-direccion" name="direccion" rows="2" autocomplete="street-address" required maxlength="300"></textarea></div>
+        <div class="field field--full"><label for="p-referencia">Referencia (opcional)</label><input id="p-referencia" name="referencia" type="text" placeholder="Ej. Casa blanca junto a la farmacia" maxlength="300"></div>
+        <div class="field field--full"><label for="p-notas">Notas para la fábrica (opcional)</label><textarea id="p-notas" name="notas" rows="2" maxlength="1000"></textarea></div>
+      </div>
+      <div class="pedido-captcha" id="pedido-captcha"></div>
+      <p class="pedido-error" id="pedido-error" role="alert" hidden></p>
+      <button class="btn pedido-enviar" id="pedido-enviar" type="submit">Enviar pedido</button>
+      <p class="pedido-legal">Usamos estos datos solo para fabricar y entregar tu pedido. Lee la <a href="privacidad.html">política de privacidad</a>.</p>
+    </form>
+  </div>
+
+  <div class="pedido-listo" id="pedido-listo" hidden tabindex="-1">
+    <h2 class="h2">Recibimos tu pedido <span id="listo-codigo"></span></h2>
+    <p class="lead">Una asesora revisa el envío a tu ciudad y te escribe por WhatsApp con el total. Guarda este enlace: ahí ves el estado de tu pedido.</p>
+    <div class="pedido-acciones">
+      <a class="btn" id="listo-seguimiento" href="seguimiento.html">Ver mi pedido</a>
+      <a class="link" id="listo-wa" href="#" target="_blank" rel="noopener noreferrer">Avisar por WhatsApp <svg class="i" aria-hidden="true"><use href="#i-arrow"/></svg></a>
+    </div>
+  </div>
+</section>

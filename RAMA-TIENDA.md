@@ -30,7 +30,8 @@ Desde `supermuebles-tienda/tienda/`:
 
 ```
 npm ci                 # una vez
-npm run db:migrar      # crea las tablas en la base local
+npm run db:migrar      # crea las tablas y carga los 19 modelos sin precio
+npm run db:precios-prueba   # SOLO local: 3 precios inventados y tienda encendida, para probar
 npm run dev            # sitio + API en http://127.0.0.1:8787
 npm test               # en otra terminal, con el dev encendido
 ```
@@ -47,10 +48,16 @@ Falta antes:
 
 ## Fases pendientes
 
-- [ ] **Fase 1. Carrito, envío del pedido y seguimiento.** `GET /api/productos`, `POST /api/pedidos` (Turnstile, idempotencia, precios recalculados en el servidor), `GET /api/pedidos/:token`, carrito en panel lateral y `/pedido`, página `/pedido/<código>`.
+- [x] **Fase 1. Carrito, envío del pedido y seguimiento** (19 nov 2026).
+  - API en `tienda/worker/tienda.ts`: `GET /api/productos` (solo modelos con precio y tienda encendida), `POST /api/pedidos` (Turnstile, límite de 10 por minuto por IP, clave de idempotencia, precios y nombres sacados de la base, líneas iguales unidas, pedido sin envío ni total) y `GET /api/pedidos/:token` (sin teléfono ni dirección).
+  - Sitio: `deploy/tienda.js` agrega precio y «Agregar al pedido» en el catálogo, y el enlace «Tu pedido» en el encabezado. Páginas `pedido.html` (muebles, cantidades, nota por línea, datos de entrega) y `seguimiento.html#<token>` (estado y totales). El enlace va después de `#`, así el token no llega a ningún servidor en los registros ni en el Referer.
+  - Con la tienda apagada, sin API (Vercel) o sin precios, el sitio se ve igual que hoy.
+  - Pruebas: `tienda/test/tienda.test.mjs` (6) + las 12 de fichas, 18 de 18 en local.
+  - Cambio respecto al diseño: no hay panel lateral; el carrito vive en `pedido.html` y el seguimiento usa `seguimiento.html#<token>` en lugar de `/pedido/<código>`.
+  - Antes de abrir: poner la llave real de Turnstile (`site-src/config.py` y el secreto `TURNSTILE_SECRET`).
 - [ ] **Fase 2. Panel `/admin`.** Pedidos (listar, ver, cambiar estado, fijar envío, total y abono, nota interna), productos (precio, activar, opciones) y ajustes (banco, abono, IVA). Pasar las fichas de R2 a `products`.
 - [ ] **Fase 3. Comprobantes.** Subida a R2 privado, verificar o rechazar con motivo, limpieza diaria con Cron.
 - [ ] Pruebas con Miniflare de totales, idempotencia, transiciones de estado y límites de comprobante.
 - [ ] Actualizar la página de privacidad antes de abrir la tienda.
 
-Lo que ya está en la rama: `wrangler.tienda.jsonc`, el esquema inicial `tienda/migrations/0001_tienda.sql` (tablas de la sección 6 del diseño, tienda apagada) y las vinculaciones `DB` y `COMPROBANTES` en el Worker (opcionales, el sitio en vivo no las tiene).
+Base de la rama: `wrangler.tienda.jsonc`, el esquema `tienda/migrations/0001_tienda.sql` y la carga del catálogo `0002_catalogo.sql` (tablas de la sección 6 del diseño, tienda apagada) y las vinculaciones `DB` y `COMPROBANTES` en el Worker (opcionales, el sitio en vivo no las tiene).

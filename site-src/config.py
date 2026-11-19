@@ -38,3 +38,7 @@ LOCATION = {
 # antes de eso el script respondería 404. Los eventos personalizados (clics a WhatsApp, etc.)
 # requieren el plan Pro de Vercel; sin él se cuentan solo las visitas.
 ANALYTICS = False
+
+# Turnstile (anti-bots del envío de pedidos). Esta es la llave de PRUEBA oficial de Cloudflare:
+# siempre aprueba. Antes de abrir la tienda, cambiarla por la llave real del sitio.
+TURNSTILE_SITEKEY = "1x00000000000000000000AA"

@@ -5,7 +5,7 @@
 #   python build.py
 import os, re, json, urllib.parse
 import html as html_mod
-from config import SITE, WHATSAPP, WHATSAPP2, LASTMOD, GENERAL_MSG, LOCATION, ANALYTICS
+from config import SITE, WHATSAPP, WHATSAPP2, LASTMOD, GENERAL_MSG, LOCATION, ANALYTICS, TURNSTILE_SITEKEY
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.join(ROOT, '..', 'deploy')
@@ -93,6 +93,14 @@ PAGES = [
     ('proyectos.html', 'proyectos.html', 'proyectos',
      'Proyectos | Supermuebles Cuenca',
      'Proyectos de Supermuebles Cuenca: qué necesitaba el cliente y qué se fabricó.',
+     {'noindex': True}),
+    ('pedido.html', 'pedido.html', 'pedido',
+     'Tu pedido | Supermuebles Cuenca',
+     'Revisa los muebles de tu pedido y envíalo a Supermuebles Cuenca.',
+     {'noindex': True}),
+    ('seguimiento.html', 'seguimiento.html', 'seguimiento',
+     'Estado de tu pedido | Supermuebles Cuenca',
+     'Revisa en qué va tu pedido de Supermuebles Cuenca.',
      {'noindex': True}),
     ('privacidad.html', 'privacidad.html', 'privacidad',
      'Privacidad | Supermuebles Cuenca',
@@ -206,6 +214,7 @@ for fname, body, key, title, desc, ex in PAGES:
     html = html.replace('{{analytics}}', ANALYTICS_TAGS if ANALYTICS else '')
     html = html.replace('{{privacy_measure}}', PRIVACY_ON if ANALYTICS else PRIVACY_OFF)
     html = html.replace('{{site}}', SITE)
+    html = html.replace('{{turnstile_sitekey}}', TURNSTILE_SITEKEY)
     html = html.replace('{{robots}}', '<meta name="robots" content="noindex">' if ex.get('noindex') else '')
     scripts = []
     if ex.get('business'):
