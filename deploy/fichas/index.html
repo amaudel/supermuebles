@@ -162,6 +162,7 @@ details.more summary{cursor:pointer;font-weight:700;min-height:44px;display:flex
 <header class="top">
   <div class="brand"><span class="mono" aria-hidden="true">SM</span><div><strong>Fichas de muebles</strong><small>Supermuebles Cuenca</small></div></div>
   <div class="acts">
+    <button class="btn ghost" id="bCatalogo" type="button" hidden>Poner fotos del catálogo</button>
     <button class="btn ghost" id="bDescargar" type="button">Descargar todo</button>
     <button class="btn ghost" id="bCopiar" type="button">Copiar resumen</button>
     <button class="btn ghost" id="bSalir" type="button">Salir</button>
@@ -206,6 +207,13 @@ const uid = () => Math.random().toString(36).slice(2, 9) + Date.now().toString(3
 const $ = (s, r = document) => r.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fotoUrl = id => `${API}/fotos/${encodeURIComponent(id)}`;
+// Foto del catálogo de la página para cada uno de los 19 modelos iniciales (img/catalogo/<archivo>.jpg).
+const CATALOGO = {"seed-sala-titanic":"sala-titanic","seed-sala-titanic-l":"sala-titanic-l","seed-sala-rose":"sala-rose","seed-sala-soft-l":"sala-soft-l",
+  "seed-sala-francis":"sala-francis","seed-sala-relax":"sala-relax","seed-sofa-cama-nido":"sofa-cama","seed-comedor-rose":"comedor-rose",
+  "seed-comedor-gabriela":"comedor-gabriela","seed-comedor-dubai":"comedor-dubai","seed-comedor-luxuri":"comedor-luxuri","seed-dormitorio-arabi":"dorm-arabi",
+  "seed-dormitorio-venecia":"dorm-venecia","seed-cama-miami":"dorm-miami","seed-cama-princess":"dorm-princess","seed-cama-barquito":"dorm-barquito",
+  "seed-cama-castillo":"dorm-castillo","seed-cama-reina":"dorm-reina","seed-litera-nido-magico":"dorm-litera"};
+const sinFotoConCatalogo = () => S.fichas.filter(f => !f.fotos.length && CATALOGO[f.id]);
 
 const blankMedida = () => ({nombre:'',ancho:'',fondo:'',alto:'',precio:''});
 const blankFila = () => ({nombre:'',extra:''});
@@ -379,7 +387,9 @@ function fotosHTML(f, ocupado) {
   const g = f.fotos.map((id, i) => `<div class="ph">${i === 0 ? '<span class="tag">Principal</span>' : ''}<img src="${fotoUrl(id)}" alt="Foto ${i+1} de ${esc(f.nombre) || 'el mueble'}" loading="lazy">
     <div class="bt">${i > 0 ? `<button type="button" data-act="foto-main" data-i="${i}">Hacer principal</button>` : ''}<button type="button" data-act="foto-del" data-i="${i}">Quitar</button></div></div>`).join('');
   const hay = f.fotos.length < MAX_FOTOS;
-  return `${g ? `<div class="photos">${g}</div>` : ''}${hay ? `<label class="drop${ocupado ? ' busy' : ''}"><input type="file" accept="image/*" multiple id="fFotos"><span>${ocupado ? 'Subiendo fotos…' : '＋ Agregar fotos'}<br><small style="font-weight:400">Hasta ${MAX_FOTOS} por mueble · ${f.fotos.length} puestas</small></span></label>` : '<p class="hint">Ya tiene el máximo de fotos. Quita una para poner otra.</p>'}`;
+  const cat = !f.fotos.length && CATALOGO[f.id] && !ocupado
+    ? `<p class="hint" style="margin:0 0 .6rem"><button type="button" class="btn line" data-act="foto-catalogo">Usar la foto del catálogo</button> La misma que se ve hoy en la página. Después puedes cambiarla.</p>` : '';
+  return `${cat}${g ? `<div class="photos">${g}</div>` : ''}${hay ? `<label class="drop${ocupado ? ' busy' : ''}"><input type="file" accept="image/*" multiple id="fFotos"><span>${ocupado ? 'Subiendo fotos…' : '＋ Agregar fotos'}<br><small style="font-weight:400">Hasta ${MAX_FOTOS} por mueble · ${f.fotos.length} puestas</small></span></label>` : '<p class="hint">Ya tiene el máximo de fotos. Quita una para poner otra.</p>'}`;
 }
 function sugerencias(l, lista, f) {
   const usados = f[l].map(x => x.nombre.trim().toLowerCase());
@@ -510,6 +520,10 @@ form.addEventListener('click', async e => {
   } else if (a === 'sug') {
     const v = b.dataset.v;
     if (!f[l].some(x => x.nombre.trim().toLowerCase() === v.toLowerCase())) { f[l].push({nombre:v, extra:''}); repintarLista(f, l); pedirGuardado(f); }
+  } else if (a === 'foto-catalogo') {
+    b.disabled = true;
+    const ok = await fotoDelCatalogo(f);
+    aviso(ok ? 'Listo: la ficha ya tiene la foto del catálogo.' : 'No se pudo poner la foto. Revisa tu conexión.');
   } else if (a === 'foto-main') {
     const [x] = f.fotos.splice(i, 1); f.fotos.unshift(x); cambioFotos(f);
   } else if (a === 'foto-del') {
@@ -553,6 +567,45 @@ form.addEventListener('change', async e => {
     subiendo = false;
     if (actual() === f) cambioFotos(f);
   }
+});
+// Trae la foto del catálogo de la página y la sube como cualquier foto (misma ruta, mismo tamaño máximo).
+async function fotoDelCatalogo(f) {
+  if (f.fotos.length || !CATALOGO[f.id]) return true;
+  subiendo = true; if (actual() === f) $('#fotos').innerHTML = fotosHTML(f, true);
+  try {
+    if (!(await asegurar(f))) return false;
+    const res = await fetch(`/img/catalogo/${CATALOGO[f.id]}.jpg`, {cache: 'no-store'});
+    if (!res.ok) return false;
+    const blob = await comprimir(await res.blob());
+    const r = await llamar(`/fichas/${encodeURIComponent(f.id)}/fotos`, {metodo: 'POST', cuerpo: blob, tipo: 'image/jpeg'});
+    if (!r.ok) return false;
+    if (!f.fotos.length) f.fotos.push(r.datos.id);
+    return true;
+  } catch (_) {
+    return false;
+  } finally {
+    subiendo = false;
+    cambioFotos(f);
+    botonCatalogo();
+  }
+}
+function botonCatalogo() {
+  const n = sinFotoConCatalogo().length, b = $('#bCatalogo');
+  b.hidden = !n;
+  b.textContent = `Poner fotos del catálogo (${n})`;
+}
+$('#bCatalogo').addEventListener('click', async () => {
+  const lista = sinFotoConCatalogo();
+  if (!lista.length || subiendo) return;
+  if (!confirm(`Se pondrá la foto del catálogo en ${lista.length} ${lista.length === 1 ? 'ficha que no tiene' : 'fichas que no tienen'} ninguna foto. Las fichas que ya tienen fotos no se tocan. ¿Seguir?`)) return;
+  const b = $('#bCatalogo'); b.disabled = true;
+  let bien = 0;
+  for (const [i, f] of lista.entries()) {
+    b.textContent = `Poniendo fotos… ${i + 1} de ${lista.length}`;
+    if (await fotoDelCatalogo(f)) bien++;
+  }
+  b.disabled = false; botonCatalogo();
+  aviso(bien === lista.length ? `Listo: ${bien} fichas con su foto del catálogo.` : `Se pusieron ${bien} de ${lista.length}. Vuelve a tocar el botón para intentar las que faltan.`);
 });
 function cambioFotos(f) {
   if (actual() === f) $('#fotos').innerHTML = fotosHTML(f, subiendo);
@@ -747,7 +800,7 @@ async function cargar() {
   S.fichas = r.datos.fichas.map(completar);
   let ultimo = null; try { ultimo = localStorage.getItem('sm_fichas_sel'); } catch (_) {}
   sel = S.fichas.some(f => f.id === ultimo) ? ultimo : (S.fichas[0] || {}).id;
-  pintarLista(); pintarForm(); estadoGuardado();
+  pintarLista(); pintarForm(); estadoGuardado(); botonCatalogo();
 }
 
 (async () => {
