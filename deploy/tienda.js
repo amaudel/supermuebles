@@ -76,11 +76,21 @@
     fijarLineas(ls);
   };
 
+  // Fotos: las «listas» (subidas en el panel) tienen WEBP de 480 a 1600 px; las del catálogo son un archivo.
+  var esLista = function (imagen) { return String(imagen || '').indexOf('api/tienda-fotos/') === 0; };
+  var urlFoto = function (imagen, ancho) {
+    imagen = String(imagen || '').replace(/^\/+/, '');
+    return esLista(imagen) ? '/' + imagen + '/' + (ancho || 800) + '.webp' : '/' + imagen;
+  };
+  var srcsetFoto = function (imagen) {
+    return esLista(imagen) ? [480, 800, 1200, 1600].map(function (w) { return '/' + imagen + '/' + w + '.webp ' + w + 'w'; }).join(', ') : '';
+  };
+
   // Nombre, precio y foto de una línea: el juego completo o una pieza suelta. null si ya no se puede pedir.
   var infoLinea = function (cat, l) {
     var p = cat.porId[l.id];
     if (!p) return null;
-    var img = p.image ? '/' + String(p.image).replace(/^\/+/, '') : '';
+    var img = p.image ? urlFoto(p.image, 480) : '';
     if (!l.pieza) return { nombre: p.name + ((p.piezas || []).length ? ' (juego completo)' : ''), precio: p.price_cents, imagen: img };
     if (!p.sold_separately) return null;
     var x = (p.piezas || []).filter(function (y) { return y.id === l.pieza; })[0];
@@ -112,7 +122,8 @@
       li.className = 'item item--nuevo in';
       li.id = id;
       li.dataset.cat = p.category;
-      li.innerHTML = '<figure><div class="item-img"><img src="/' + esc(String(p.image).replace(/^\/+/, '')) + '" width="800" height="1000" loading="lazy" alt="' + esc(p.name) + '"></div>' +
+      var ss = srcsetFoto(p.image);
+      li.innerHTML = '<figure><div class="item-img"><img src="' + esc(urlFoto(p.image, 800)) + '"' + (ss ? ' srcset="' + esc(ss) + '" sizes="(max-width: 599px) 92vw, (max-width: 1023px) 46vw, 33vw"' : '') + ' width="800" height="1000" loading="lazy" alt="' + esc(p.name) + '"></div>' +
         '<figcaption><h2>' + esc(p.name) + '</h2>' + (p.description ? '<p>' + esc(p.description) + '</p>' : '') + '</figcaption></figure>' +
         '<div class="item-cta"><a class="ulink" href="' + esc(wa('Hola, vi el modelo «' + p.name + '» en la web de Supermuebles Cuenca y quiero cotizarlo.')) + '" target="_blank" rel="noopener noreferrer">Cotizar este diseño</a></div>';
       lista.appendChild(li);
@@ -124,6 +135,10 @@
       var p = cat.porId[li.id];
       var cta = $('.item-cta', li);
       if (!p || !cta || $('.item-agregar', li)) return;
+      if (esLista(p.image) && !li.classList.contains('item--nuevo')) {
+        var im = $('.item-img img', li);
+        if (im) { im.srcset = srcsetFoto(p.image); im.sizes = '(max-width: 599px) 92vw, (max-width: 1023px) 46vw, 33vw'; im.src = urlFoto(p.image, 800); }
+      }
       var precio = document.createElement('p');
       precio.className = 'item-precio';
       precio.textContent = dinero(p.price_cents);

@@ -2,7 +2,7 @@
 // Reglas (TIENDA-DISENO.md): el servidor recalcula todo y no cree ningún precio del navegador,
 // el pedido nace sin envío ni total final (los confirma la asesora), y nada funciona con la tienda apagada.
 import type { Env } from './index';
-import { adminApi, leerAjustes } from './admin';
+import { adminApi, leerAjustes, FOTO_ID, VARIANTES } from './admin';
 import { subirComprobante } from './comprobantes';
 
 const MAX_LINEAS = 20;
@@ -53,6 +53,21 @@ async function productos(db: D1Database): Promise<Response> {
         medidas: [x.width_cm, x.depth_cm, x.height_cm].some(v => v) ? { ancho: x.width_cm, fondo: x.depth_cm, alto: x.height_cm } : null,
       })),
     })),
+  });
+}
+
+/* ---------- GET /api/tienda-fotos/:id/:variante (fotos listas, públicas) ---------- */
+
+async function fotoTienda(env: Env, id: string, variante: string): Promise<Response> {
+  if (!FOTO_ID.test(id) || !VARIANTES.includes(variante)) return error('No encontrada.', 404);
+  const o = await env.FOTOS.get(`tienda/${id}/${variante}`);
+  if (!o) return error('No encontrada.', 404);
+  return new Response(o.body, {
+    headers: {
+      'Content-Type': o.httpMetadata?.contentType || 'application/octet-stream',
+      'Cache-Control': 'public, max-age=31536000, immutable', // cada foto nueva tiene un id nuevo
+      'X-Content-Type-Options': 'nosniff', ETag: o.httpEtag,
+    },
   });
 }
 
@@ -276,6 +291,8 @@ export async function api(request: Request, env: Env, url: URL): Promise<Respons
     if (p === '/api/productos' && m === 'GET') return await productos(env.DB);
     const f = p.match(/^\/api\/fotos\/([A-Za-z0-9_-]{1,40})$/);
     if (f && m === 'GET') return await fotoPublica(env, env.DB, f[1]);
+    const tf = p.match(/^\/api\/tienda-fotos\/([a-z0-9]{20})\/([0-9]{3,4}\.(?:webp|jpg))$/);
+    if (tf && (m === 'GET' || m === 'HEAD')) return await fotoTienda(env, tf[1], tf[2]);
     if (p === '/api/pedidos' && m === 'POST') return await crearPedido(request, env, env.DB);
     const c = p.match(/^\/api\/pedidos\/([^/]+)\/comprobante$/);
     if (c && m === 'POST') {

@@ -56,12 +56,34 @@ test('el panel lista las fichas vivas y sugiere el modelo que ya existe', { skip
   assert.equal((await admin('/fichas/foto/foto-prueba-1')).status, 200);
 });
 
-test('pasar una ficha nueva: juego completo sumado, piezas sueltas y foto de la ficha', { skip: !LOCAL && 'solo en local' }, async () => {
-  assert.equal((await fetch(BASE + '/api/fotos/foto-prueba-1')).status, 404, 'antes de publicar la foto es privada');
-  let r = await admin('/fichas/ficha-sala-prueba/publicar', { method: 'POST', body: {
-    producto: 'nuevo', nombre: 'Sala Prueba Nube', categoria: 'salas', descripcion: 'Sala de prueba.', separado: true, usar_foto_ficha: true, activo: true,
-    piezas: [{ nombre: 'Sofá triple', cantidad: 1, precio_cents: 89000, ancho: '210', alto: '90' }, { nombre: 'Butaca', cantidad: 2, precio_cents: 35000 }],
-  } });
+const WEBP = Buffer.concat([Buffer.from('RIFF'), Buffer.alloc(4, 1), Buffer.from('WEBP'), Buffer.alloc(100, 2)]);
+const JPG = Buffer.concat([Buffer.from([0xff, 0xd8, 0xff, 0xe0]), Buffer.alloc(100, 3)]);
+const FOTO = 'abcdefghij0123456789';
+const subirVariante = (nombre, cuerpo, tipo) =>
+  fetch(`${BASE}/api/admin/tienda-fotos/${FOTO}/${nombre}`, { method: 'PUT', headers: { 'Content-Type': tipo, 'X-Requested-With': 'admin', Cookie: galleta }, body: cuerpo });
+const datosSala = foto => ({
+  producto: 'nuevo', nombre: 'Sala Prueba Nube', categoria: 'salas', descripcion: 'Sala de prueba.', separado: true, foto_lista: foto, activo: true,
+  piezas: [{ nombre: 'Sofá triple', cantidad: 1, precio_cents: 89000, ancho: '210', alto: '90' }, { nombre: 'Butaca', cantidad: 2, precio_cents: 35000 }],
+});
+
+test('foto lista: se sube en varios tamaños y la de Milton nunca sale a la tienda', { skip: !LOCAL && 'solo en local' }, async () => {
+  let r = await admin('/fichas/ficha-sala-prueba/publicar', { method: 'POST', body: datosSala('') });
+  assert.equal(r.status, 400, 'un modelo nuevo necesita su foto lista');
+  assert.equal((await subirVariante('480.webp', JPG, 'image/webp')).status, 415, 'el formato se mira en los bytes');
+  assert.equal((await fetch(`${BASE}/api/admin/tienda-fotos/${FOTO}/480.webp`, { method: 'PUT', body: WEBP })).status, 403);
+  assert.equal((await subirVariante('480.webp', WEBP, 'image/webp')).status, 200);
+  r = await admin('/fichas/ficha-sala-prueba/publicar', { method: 'POST', body: datosSala(FOTO) });
+  assert.equal(r.status, 400, 'faltan tamaños: no se publica a medias');
+  for (const n of ['800.webp', '1200.webp', '1600.webp']) assert.equal((await subirVariante(n, WEBP, 'image/webp')).status, 200);
+  assert.equal((await subirVariante('1600.jpg', JPG, 'image/jpeg')).status, 200);
+  const f = await fetch(`${BASE}/api/tienda-fotos/${FOTO}/800.webp`);
+  assert.equal(f.status, 200);
+  assert.equal(f.headers.get('content-type'), 'image/webp');
+  assert.match(f.headers.get('cache-control'), /immutable/);
+});
+
+test('pasar una ficha nueva: juego completo sumado, piezas sueltas y foto lista', { skip: !LOCAL && 'solo en local' }, async () => {
+  let r = await admin('/fichas/ficha-sala-prueba/publicar', { method: 'POST', body: datosSala(FOTO) });
   assert.equal(r.status, 200, await r.clone().text());
   const pub = await r.json();
   assert.equal(pub.producto, 'sala-prueba-nube');
@@ -71,11 +93,9 @@ test('pasar una ficha nueva: juego completo sumado, piezas sueltas y foto de la 
   const p = prods.productos.find(x => x.id === 'sala-prueba-nube');
   assert.equal(p.price_cents, 159000);
   assert.equal(p.sold_separately, true);
-  assert.equal(p.image, 'api/fotos/foto-prueba-1');
+  assert.equal(p.image, 'api/tienda-fotos/' + FOTO);
   assert.deepEqual(p.piezas.map(x => [x.name, x.qty, x.price_cents]), [['Sofá triple', 1, 89000], ['Butaca', 2, 35000]]);
-  const foto = await fetch(BASE + '/api/fotos/foto-prueba-1');
-  assert.equal(foto.status, 200);
-  assert.equal(foto.headers.get('content-type'), 'image/jpeg');
+  assert.equal((await fetch(BASE + '/api/fotos/foto-prueba-1')).status, 404, 'la foto cruda de la ficha no es pública');
 
   // Pedido: un juego completo + una butaca suelta. El navegador no pone precios.
   const butaca = p.piezas.find(x => x.name === 'Butaca');
@@ -96,7 +116,7 @@ test('pasar una ficha nueva: juego completo sumado, piezas sueltas y foto de la 
 
 test('modelo existente sin venta suelta: conserva su foto del catálogo y no acepta piezas', { skip: !LOCAL && 'solo en local' }, async () => {
   let r = await admin('/fichas/ficha-cama-reina/publicar', { method: 'POST', body: {
-    producto: 'cama-reina', nombre: 'Cama Reina', categoria: 'infantil', descripcion: '', separado: false, usar_foto_ficha: false, activo: true,
+    producto: 'cama-reina', nombre: 'Cama Reina', categoria: 'infantil', descripcion: '', separado: false, activo: true,
     piezas: [{ nombre: 'Cuna', cantidad: 1, precio_cents: 40000 }, { nombre: 'Cómoda', cantidad: 1, precio_cents: 30000 }],
   } });
   assert.equal(r.status, 200, await r.clone().text());

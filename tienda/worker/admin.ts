@@ -323,9 +323,16 @@ async function publicarFicha(request: Request, env: Env, db: D1Database, fichaId
   if (destino && destino !== 'nuevo' && !existe) return error('Ese modelo no existe.', 404);
   if (existe?.ficha_id && existe.ficha_id !== ficha.id) return error('Ese modelo ya está unido a otra ficha.', 409);
 
+  // Foto de la tienda: la «foto lista» que se sube en el panel (ya retocada), nunca la foto cruda de la ficha.
   let imagen = existe?.image ?? null;
-  if (d?.usar_foto_ficha === true || !imagen) imagen = ficha.fotos[0] ? 'api/fotos/' + ficha.fotos[0] : imagen;
-  if (!imagen) return error('El modelo no tiene foto: súbela primero en la ficha.', 400);
+  const lista = texto(d?.foto_lista, 40);
+  if (lista) {
+    if (!FOTO_ID.test(lista) || !(await env.FOTOS.head(`tienda/${lista}/1600.jpg`)) || !(await env.FOTOS.head(`tienda/${lista}/480.webp`))) {
+      return error('La foto lista no terminó de subir. Vuelve a subirla.', 400);
+    }
+    imagen = 'api/tienda-fotos/' + lista;
+  }
+  if (!imagen) return error('Sube la foto lista para la tienda antes de guardar.', 400);
 
   const stmts: D1PreparedStatement[] = [];
   if (!existe) {
@@ -355,6 +362,28 @@ async function verModelo(db: D1Database, id: string): Promise<Response> {
   if (!p) return error('No existe ese modelo.', 404);
   const { results } = await db.prepare('SELECT name AS nombre, qty_in_set AS cantidad, price_cents, width_cm AS ancho, depth_cm AS fondo, height_cm AS alto FROM product_pieces WHERE product_id = ? ORDER BY sort').bind(id).all();
   return json({ modelo: p, piezas: results });
+}
+
+/* ---------- fotos listas para la tienda ---------- */
+
+// La foto retocada se sube desde el panel en varios tamaños ya preparados por el navegador:
+// WEBP de 480, 800, 1200 y 1600 px y un JPG de 1600 px de respaldo. Se guardan en tienda/<id>/.
+export const FOTO_ID = /^[a-z0-9]{20}$/;
+export const VARIANTES = ['480.webp', '800.webp', '1200.webp', '1600.webp', '1600.jpg'];
+const MAX_VARIANTE = 3_000_000;
+
+async function subirVariante(request: Request, env: Env, id: string, variante: string, u: Usuaria): Promise<Response> {
+  if (!FOTO_ID.test(id) || !VARIANTES.includes(variante)) return error('No encontrado.', 404);
+  const bytes = new Uint8Array(await request.arrayBuffer());
+  if (!bytes.length || bytes.length > MAX_VARIANTE) return error('La foto es demasiado grande.', 413);
+  const esJpg = bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff;
+  const esWebp = bytes.length > 12 && String.fromCharCode(...bytes.slice(0, 4)) === 'RIFF' && String.fromCharCode(...bytes.slice(8, 12)) === 'WEBP';
+  if (variante.endsWith('.jpg') ? !esJpg : !esWebp) return error('Formato de foto no válido.', 415);
+  await env.FOTOS.put(`tienda/${id}/${variante}`, bytes, {
+    httpMetadata: { contentType: variante.endsWith('.jpg') ? 'image/jpeg' : 'image/webp' },
+    customMetadata: { por: u.email },
+  });
+  return json({ ok: true });
 }
 
 /* ---------- ajustes ---------- */
@@ -432,6 +461,8 @@ export async function adminApi(request: Request, env: Env, url: URL): Promise<Re
   if (r && m === 'GET') return verComprobante(env, db, r[1], r[2]);
   if (p === '/productos' && m === 'GET') return listarProductos(db);
   if (p === '/fichas' && m === 'GET') return listarFichas(env, db);
+  const tf = p.match(/^\/tienda-fotos\/([a-z0-9]{20})\/([0-9]{3,4}\.(?:webp|jpg))$/);
+  if (tf && m === 'PUT') return subirVariante(request, env, tf[1], tf[2], u);
   let q = p.match(/^\/fichas\/foto\/([A-Za-z0-9_-]{1,40})$/);
   if (q && m === 'GET') return fotoDeFicha(env, q[1]);
   q = p.match(/^\/fichas\/([A-Za-z0-9_-]{1,40})\/publicar$/);

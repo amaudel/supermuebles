@@ -140,6 +140,14 @@ main { padding: var(--m); max-width: 90rem; margin: 0 auto; }
   .modelos td:first-child { grid-row: span 4; }
 }
 /* fichas */
+.fotos-dos { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 1.5rem; }
+.fotos-tit { font-weight: 600; display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; }
+.fotos-milton { display: flex; flex-wrap: wrap; gap: .75rem; margin-top: .5rem; }
+.fotos-milton figure { margin: 0; display: grid; justify-items: start; }
+.fotos-milton img, .foto-lista img { object-fit: cover; background: var(--arena); display: block; }
+.foto-lista { display: grid; gap: .3rem; justify-items: start; margin: .5rem 0 .75rem; }
+.subir-lista { cursor: pointer; }
+@media (max-width: 599px) { .fotos-dos { grid-template-columns: 1fr; } }
 .ficha-fila { grid-template-columns: 3.5rem 1fr; align-items: center; }
 .ficha-fila img, .sin-foto { width: 3.5rem; height: 3.5rem; object-fit: cover; display: grid; place-items: center; background: var(--arena); color: var(--suave); font-size: .75rem; }
 .ficha-fila .cli { display: block; }
@@ -524,7 +532,7 @@ main { padding: var(--m); max-width: 90rem; margin: 0 auto; }
     api('/productos').then(function (d) {
       $('#modelos').innerHTML = d.productos.map(function (m) {
         return '<tr data-id="' + esc(m.id) + '">' +
-          '<td>' + (m.image ? '<img src="/' + esc(m.image) + '" alt="" loading="lazy" width="56" height="56">' : '') + '</td>' +
+          '<td>' + (m.image ? '<img src="' + esc(urlFoto(m.image, 480)) + '" alt="" loading="lazy" width="56" height="56">' : '') + '</td>' +
           '<td><strong>' + esc(m.name) + '</strong><br><span class="ayuda">' + esc(m.category) + '</span></td>' +
           '<td><input type="number" min="0" step="0.01" value="' + esc(aDolares(m.price_cents)) + '" placeholder="Sin precio" aria-label="Precio de ' + esc(m.name) + '"' + (m.piezas ? ' readonly' : '') + '>' +
           (m.piezas ? '<br><span class="ayuda">Juego de ' + m.piezas + (m.piezas === 1 ? ' pieza' : ' piezas') + (m.sold_separately ? ', también sueltas' : '') + '. Se cambia en «Fichas».</span>' : '') + '</td>' +
@@ -583,6 +591,48 @@ main { padding: var(--m); max-width: 90rem; margin: 0 auto; }
       '<td><button class="enlace" type="button" data-quitar-pieza>Quitar</button></td></tr>';
   }
 
+  var nombreArchivo = function (t) {
+    return String(t || 'mueble').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'mueble';
+  };
+  // Dirección de la foto de un modelo: las «listas» tienen varios tamaños; las del catálogo, uno.
+  var urlFoto = function (imagen, ancho) {
+    imagen = String(imagen || '');
+    return imagen.indexOf('api/tienda-fotos/') === 0 ? '/' + imagen + '/' + (ancho || 480) + '.webp' : '/' + imagen.replace(/^\/+/, '');
+  };
+
+  // Prepara la foto retocada en los tamaños de la web (WEBP 480, 800, 1200 y 1600, y JPG 1600 de respaldo) y los sube.
+  var aBlob = function (lienzo, tipo, calidad) {
+    return new Promise(function (ok, mal) {
+      lienzo.toBlob(function (b) { b && b.type === tipo ? ok(b) : mal(new Error('Este navegador no puede preparar la foto. Usa Chrome o Edge.')); }, tipo, calidad);
+    });
+  };
+  function subirFotoLista(archivo) {
+    if (archivo.size > 40000000) return Promise.reject(new Error('La foto pesa demasiado (más de 40 MB).'));
+    var id = Array.prototype.map.call(crypto.getRandomValues(new Uint8Array(20)), function (n) { return 'abcdefghijklmnopqrstuvwxyz0123456789'[n % 36]; }).join('');
+    return createImageBitmap(archivo).then(function (img) {
+      if (Math.max(img.width, img.height) < 800) throw new Error('La foto es muy pequeña: usa una de al menos 1200 px de ancho.');
+      var tamanos = [480, 800, 1200, 1600];
+      var trabajos = tamanos.map(function (w) { return { w: w, tipo: 'image/webp', nombre: w + '.webp', calidad: 0.8 }; }).concat([{ w: 1600, tipo: 'image/jpeg', nombre: '1600.jpg', calidad: 0.85 }]);
+      return trabajos.reduce(function (cadena, t) {
+        return cadena.then(function () {
+          var k = Math.min(1, t.w / img.width);
+          var c = document.createElement('canvas');
+          c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
+          var x = c.getContext('2d');
+          x.fillStyle = '#fff'; x.fillRect(0, 0, c.width, c.height);
+          x.imageSmoothingQuality = 'high';
+          x.drawImage(img, 0, 0, c.width, c.height);
+          return aBlob(c, t.tipo, t.calidad).then(function (blob) {
+            return fetch('/api/admin/tienda-fotos/' + id + '/' + t.nombre, { method: 'PUT', credentials: 'same-origin', headers: { 'Content-Type': t.tipo, 'X-Requested-With': 'admin' }, body: blob });
+          }).then(function (r) {
+            if (r.status === 401) { mostrarEntrada(); throw new Error('Tu sesión terminó.'); }
+            if (!r.ok) return r.json().catch(function () { return {}; }).then(function (d) { throw new Error(d.error || 'No se pudo subir la foto.'); });
+          });
+        });
+      }, Promise.resolve());
+    }).then(function () { return id; });
+  }
+
   function abrirFicha(id) {
     var f = fichasData.fichas.filter(function (x) { return x.id === id; })[0];
     if (!f) return;
@@ -620,7 +670,18 @@ main { padding: var(--m); max-width: 90rem; margin: 0 auto; }
         '<p class="juego">Precio del juego completo: <strong id="juego-total" class="num">—</strong></p></section>' +
         '<section><label class="check"><input type="checkbox" name="separado"' + ((actual ? actual.sold_separately === 1 : f.separado) ? ' checked' : '') + '> También se venden piezas sueltas</label>' +
         '<p class="ayuda">En la ficha el dueño marcó: ' + (f.separado ? 'sí se vende por separado.' : 'no se vende por separado.') + '</p>' +
-        '<label class="check"><input type="checkbox" name="usar_foto_ficha"' + (f.fotos[0] ? (destino === 'nuevo' ? ' checked' : '') : ' disabled') + '> Usar la foto de la ficha' + (f.fotos[0] ? '' : ' (la ficha no tiene fotos)') + '</label>' +
+        '</section><section><h3>Fotos</h3>' +
+        '<div class="fotos-dos"><div><p class="fotos-tit">Fotos de Milton <span class="chip">Originales</span></p>' +
+        '<p class="ayuda">Tal como las subió en su ficha. Descárgalas para retocarlas.</p>' +
+        (f.fotos.length ? '<div class="fotos-milton">' + f.fotos.map(function (id, i) {
+          return '<figure><img src="/api/admin/fichas/foto/' + esc(id) + '" alt="Foto ' + (i + 1) + ' de Milton" width="120" height="120" loading="lazy">' +
+            '<a class="enlace" href="/api/admin/fichas/foto/' + esc(id) + '" download="' + esc(nombreArchivo(f.nombre)) + '-milton-' + (i + 1) + '.jpg">Descargar</a></figure>';
+        }).join('') + '</div>' : '<p class="ayuda">Esta ficha todavía no tiene fotos.</p>') + '</div>' +
+        '<div><p class="fotos-tit">Foto lista para la tienda <span class="chip chip--entregado">Lista</span></p>' +
+        '<p class="ayuda">La foto ya retocada. Es la que ven los clientes en la tienda y en el catálogo.</p>' +
+        '<div class="foto-lista" id="foto-lista">' + (actual && actual.image ? '<img src="' + esc(urlFoto(actual.image, 480)) + '" alt="Foto actual en la tienda" width="200" height="200"><span class="ayuda">Foto actual en la tienda</span>' : '<span class="ayuda">Todavía no hay foto lista.</span>') + '</div>' +
+        '<label class="btn btn--claro subir-lista">Subir foto lista<input type="file" accept="image/jpeg,image/png,image/webp" id="foto-lista-archivo" hidden></label>' +
+        '<input type="hidden" name="foto_lista" value=""></div></div>' +
         '<label class="check"><input type="checkbox" name="activo"' + (actual && actual.active === 1 ? ' checked' : '') + '> Visible en la tienda</label>' +
         '<p class="ayuda">Si no lo marcas, queda guardado pero oculto, para revisarlo antes.</p></section>' +
         '<div class="acciones"><button class="btn" type="submit">Guardar en la tienda</button></div></form>';
@@ -642,9 +703,20 @@ main { padding: var(--m); max-width: 90rem; margin: 0 auto; }
         if (e.target.closest('[data-agregar-pieza]')) { $('#piezas').insertAdjacentHTML('beforeend', filaPieza({ nombre: '', cantidad: 1, precio: '' })); total(); }
         if (e.target.closest('[data-volver-fichas]')) cargarFichas();
       });
-      form.elements.producto.addEventListener('change', function () {
-        var u = form.elements.usar_foto_ficha;
-        if (!u.disabled) u.checked = this.value === 'nuevo';
+      $('#foto-lista-archivo').addEventListener('change', function () {
+        var a = this.files && this.files[0];
+        this.value = '';
+        if (!a) return;
+        var caja = $('#foto-lista'), b = $('button[type=submit]', form);
+        caja.innerHTML = '<span class="ayuda">Preparando y subiendo la foto…</span>';
+        b.disabled = true;
+        subirFotoLista(a).then(function (id) {
+          form.elements.foto_lista.value = id;
+          caja.innerHTML = '<img src="/api/tienda-fotos/' + id + '/480.webp" alt="Foto lista nueva" width="200" height="200"><span class="ayuda">Foto nueva. Se usará al tocar «Guardar en la tienda».</span>';
+        }).catch(function (x) {
+          caja.innerHTML = '<span class="ayuda">' + esc(x.message) + '</span>';
+          aviso(x.message, 'error');
+        }).then(function () { b.disabled = false; });
       });
       form.addEventListener('submit', function (e) {
         e.preventDefault();
@@ -658,7 +730,7 @@ main { padding: var(--m); max-width: 90rem; margin: 0 auto; }
         api('/fichas/' + f.id + '/publicar', { method: 'POST', body: {
           producto: form.elements.producto.value, nombre: form.elements.nombre.value, categoria: form.elements.categoria.value,
           descripcion: form.elements.descripcion.value, piezas: piezasOut, separado: form.elements.separado.checked,
-          usar_foto_ficha: form.elements.usar_foto_ficha.checked, activo: form.elements.activo.checked,
+          foto_lista: form.elements.foto_lista.value, activo: form.elements.activo.checked,
         } })
           .then(function (r) { aviso('Guardado en la tienda. Juego completo: ' + dinero(r.juego_cents) + (form.elements.activo.checked ? '.' : ' (oculto).')); cargarFichas(); })
           .catch(function (x) { aviso(x.message, 'error'); })

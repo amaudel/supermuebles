@@ -80,6 +80,11 @@ Falta antes:
   - Datos: migración `0004_piezas.sql` (`product_pieces`, `products.ficha_id`, `ficha_rev`, `sold_separately`), aplicada también en la base de pruebas de Cloudflare.
   - En la rama de pruebas, `FICHAS_FUENTE` apunta al bucket REAL de fichas (`supermuebles-fichas-fotos`) solo para leer. Al unir a `main` sobra: allí `FOTOS` ya es ese bucket.
   - Pruebas: `tienda/test/fichas-tienda.test.mjs` (5), 31 de 31.
+- [x] **Fotos de Milton y fotos listas** (19 nov 2026, pedido del usuario).
+  - En «Fichas» del panel, cada ficha muestra dos grupos: **Fotos de Milton (originales)**, con «Descargar» para retocarlas con IA, y **Foto lista para la tienda**, que se sube ya retocada.
+  - Al subir la foto lista, el navegador prepara WEBP de 480, 800, 1200 y 1600 px y un JPG de 1600 px; se guardan en `FOTOS` bajo `tienda/<id>/` (prefijo aparte de las fotos de las fichas, `fotos/`). Se sirven en `/api/tienda-fotos/<id>/<tamaño>` con caché de un año.
+  - La foto cruda de la ficha nunca sale a la tienda. Un modelo nuevo no se guarda sin foto lista; los 19 actuales siguen con la foto del catálogo hasta que se les suba una lista, y entonces el catálogo de la página la reemplaza.
+  - En `main` (publicado el 19 nov 2026): botón «Poner fotos del catálogo» en `/fichas/` para las fichas sin foto.
 - [ ] Pruebas con Miniflare de totales, idempotencia, transiciones de estado y límites de comprobante.
 - [ ] Actualizar la página de privacidad antes de abrir la tienda.
 
