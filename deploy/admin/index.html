@@ -72,6 +72,7 @@ input:focus, select:focus, textarea:focus { outline: 2px solid var(--terracota);
 .tabs button[aria-selected="true"] { background: var(--bg); color: var(--tinta); }
 .barra .quien { font-size: .875rem; opacity: .85; }
 .barra .enlace { color: var(--bg); }
+.barra a.enlace { display: inline-flex; align-items: center; }
 
 main { padding: var(--m); max-width: 90rem; margin: 0 auto; }
 .cabeza { display: flex; flex-wrap: wrap; align-items: end; gap: .75rem 1rem; margin-bottom: 1.25rem; }
@@ -190,6 +191,7 @@ main { padding: var(--m); max-width: 90rem; margin: 0 auto; }
       <button type="button" role="tab" data-tab="ajustes" aria-selected="false">Ajustes</button>
     </nav>
     <span class="quien" id="quien"></span>
+    <a class="enlace" href="https://supermuebles-resenas.andresdelgado1984.workers.dev/" target="_blank" rel="noopener noreferrer">Reseñas</a>
     <button class="enlace" type="button" id="salir">Salir</button>
   </header>
 
