@@ -158,4 +158,4 @@ Un lector que nota un texto de máquina duda del resto. Para evitarlo:
 - **Redes:** Facebook supermueblescuenca, Instagram supermuebles_cuenca, TikTok @supermueblescuenc.
 - **Lema:** Hecho en Cuenca para tu casa.
 - **Nombre en el logo:** Súper Muebles Cuenca (con tilde).
-- **Sitio:** supermuebles-cuenca.vercel.app. El dominio supermueblescuenca.com está libre y no es de la marca hoy.
+- **Sitio:** supermuebles-cuenca.andresdelgado1984.workers.dev (Cloudflare desde el 20 de noviembre de 2026; la dirección anterior, supermuebles-cuenca.vercel.app, redirige a esta). El dominio supermueblescuenca.com está libre y no es de la marca hoy.

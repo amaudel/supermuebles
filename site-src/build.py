@@ -55,11 +55,16 @@ CRUMBS = {
 UNDER_CATALOG = {'salas.html', 'comedores.html', 'dormitorios.html'}
 
 
+def url_de(fname):
+    # Cloudflare sirve cada página sin la extensión: catalogo.html -> /catalogo, index.html -> /
+    return SITE + '/' + ('' if fname == 'index.html' else fname[:-len('.html')])
+
+
 def breadcrumb(fname):
     items = [('Inicio', SITE + '/')]
     if fname in UNDER_CATALOG:
-        items.append(('Catálogo', SITE + '/catalogo.html'))
-    items.append((CRUMBS[fname], '%s/%s' % (SITE, fname)))
+        items.append(('Catálogo', url_de('catalogo.html')))
+    items.append((CRUMBS[fname], url_de(fname)))
     els = ',\n    '.join('{"@type": "ListItem", "position": %d, "name": "%s", "item": "%s"}' % (i + 1, n, u) for i, (n, u) in enumerate(items))
     return '{\n  "@context": "https://schema.org",\n  "@type": "BreadcrumbList",\n  "itemListElement": [\n    %s\n  ]\n}' % els
 
@@ -124,7 +129,7 @@ def wa(text, number=WHATSAPP):
     return 'https://wa.me/%s?text=%s' % (number, urllib.parse.quote(text, safe=''))
 
 
-SHOW_MORE = ('<p class="loc-more"><a class="link" href="guayaquil.html">¿Vives en Guayaquil? Mira cómo comprar desde '
+SHOW_MORE = ('<p class="loc-more"><a class="link" href="/guayaquil">¿Vives en Guayaquil? Mira cómo comprar desde '
              '<span class="nowrap">allá<svg class="i" aria-hidden="true"><use href="#i-arrow"/></svg></span></a></p>')
 
 
@@ -155,7 +160,7 @@ def loc_fill(s, fname=''):
         'name': L['name'], 'address': L['address'], 'locality': L['locality'],
         'plus_code': L['plus_code'], 'phone': L['phone'], 'phone_tel': L['phone_tel'], 'phone2': L['phone2'], 'phone2_tel': L['phone2_tel'],
         'directions': dest,
-        'agenda': '#agendar' if fname == 'visitanos.html' else 'visitanos.html#agendar',
+        'agenda': '#agendar' if fname == 'visitanos.html' else '/visitanos#agendar',
         'open': 'https://maps.google.com/?cid=' + L['cid'],
         'embed': 'https://www.google.com/maps?q=%s&amp;z=16&amp;hl=es&amp;output=embed' % urllib.parse.quote(L['name'] + ' @' + ll, safe='@,'),
         'hours': ''.join('<span class="loc-d">%s</span><span class="loc-t">%s</span>' % h for h in L['hours']),
@@ -199,7 +204,7 @@ for fname, body, key, title, desc, ex in PAGES:
         content = content.replace('value="Sala" checked', 'value="Sala"')
         content = content.replace('value="%s"><span>' % ex['tipo_default'], 'value="%s" checked><span>' % ex['tipo_default'])
         content = content.replace('<dd id="s-tipo">Sala</dd>', '<dd id="s-tipo">%s</dd>' % ex['tipo_default'])
-    url = SITE + '/' if fname == 'index.html' else '%s/%s' % (SITE, fname)
+    url = url_de(fname)
     html = html.replace('{{content}}', content)
     html = html.replace('{{title}}', title).replace('{{description}}', desc)
     html = html.replace('{{page}}', key).replace('{{url}}', url)
@@ -230,7 +235,7 @@ for fname, body, key, title, desc, ex in PAGES:
 urls = [('index.html', '1.0')] + [(f, '0.8') for f, _, _, _, _, ex in PAGES if f != 'index.html' and not ex.get('noindex')]
 sm = ['<?xml version="1.0" encoding="UTF-8"?>', '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">']
 for f, pr in urls:
-    loc = SITE + '/' if f == 'index.html' else '%s/%s' % (SITE, f)
+    loc = url_de(f)
     sm.append('  <url><loc>%s</loc><lastmod>%s</lastmod><priority>%s</priority></url>' % (loc, LASTMOD, pr))
 sm.append('</urlset>')
 open(os.path.join(OUT, 'sitemap.xml'), 'w', encoding='utf8', newline='\n').write('\n'.join(sm) + '\n')

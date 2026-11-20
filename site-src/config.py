@@ -1,5 +1,8 @@
-# Datos que se usan en varias páginas. Cuando exista el dominio propio, cambia SITE y vuelve a correr build.py.
-SITE = 'https://supermuebles-cuenca.vercel.app'
+# Datos que se usan en varias páginas. Cuando exista el dominio propio, cambia SITE y vuelve a correr
+# make_catalog.py y build.py (desde site-src/). SITE es la dirección pública: sale en canonical, mapa del
+# sitio, robots.txt y en los enlaces de WhatsApp de cada modelo.
+# Desde el 20 nov 2026 el sitio está en Cloudflare (Worker `supermuebles-cuenca`); Vercel ya no se usa.
+SITE = 'https://supermuebles-cuenca.andresdelgado1984.workers.dev'
 WHATSAPP = '593999880023'
 WHATSAPP2 = '593959641962'  # segundo número de la fábrica (celular y WhatsApp)
 LASTMOD = '2026-11-12'
@@ -33,8 +36,6 @@ LOCATION = {
 }
 
 
-# Medición de visitas sin cookies (Vercel Web Analytics).
-# Ponla en True solo después de activar Web Analytics en el panel del proyecto en Vercel;
-# antes de eso el script respondería 404. Los eventos personalizados (clics a WhatsApp, etc.)
-# requieren el plan Pro de Vercel; sin él se cuentan solo las visitas.
+# Medición de visitas con Vercel Web Analytics. Ya no aplica: el sitio dejó Vercel. Se deja en False.
+# Si se quiere medir visitas en Cloudflare hay que usar Cloudflare Web Analytics y cambiar build.py.
 ANALYTICS = False

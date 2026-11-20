@@ -26,8 +26,15 @@ Los estilos (`deploy/styles.css`) y el JavaScript (`deploy/main.js`) se editan d
 
 ## Publicar
 
-- **Vercel** (sitio actual): desde `deploy/`, `vercel deploy --prod --yes`.
-- **Cloudflare**: desde la raíz, `npx wrangler@latest deploy`.
+El sitio vive en **Cloudflare** (Worker `supermuebles-cuenca`, que sirve `deploy/` y la API de fichas). Se publica desde la raíz:
+
+```bash
+npx wrangler@latest deploy
+```
+
+La dirección pública sale de `SITE` en `site-src/config.py` (hoy la de `workers.dev`). Al cambiarla, correr `make_catalog.py` y `build.py` y volver a publicar. Las páginas se sirven sin extensión (`/catalogo`, no `/catalogo.html`); Cloudflare redirige las direcciones con `.html`.
+
+**Vercel ya no se usa.** `vercel-redirect/vercel.json` es un proyecto mínimo que redirige todo `supermuebles-cuenca.vercel.app` a la dirección de Cloudflare, para que los enlaces viejos sigan funcionando. Se publica con `vercel deploy --prod --yes` desde esa carpeta (no desde `deploy/`).
 
 ## Pendientes del dueño
 

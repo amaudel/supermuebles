@@ -90,7 +90,7 @@ def chips(key, label, opts):
 def item(m, page):
     (n, tipo, pu, ac, img, w, h, txt, alt) = m
     sid = slug(n)
-    url = '%s/%s#%s' % (SITE, page, sid)
+    url = '%s/%s#%s' % (SITE, page[:-len('.html')], sid)  # Cloudflare sirve /catalogo, no /catalogo.html
     msg1 = 'Hola, vi el modelo «%s» en la web de Supermuebles Cuenca y quiero cotizarlo. ¿Me ayudan a revisar medidas, opciones de acabado, precio y entrega? %s' % (n, url)
     msg2 = 'Hola, me gusta el modelo «%s» de la web de Supermuebles Cuenca, pero necesito adaptarlo (otra medida o acabado). ¿Me ayudan a revisar qué ajustes son posibles? %s' % (n, url)
     return (
@@ -116,9 +116,9 @@ cat = '''
 
 <section class="catalog-wrap" aria-label="Modelos">
   <nav class="cats" aria-label="Categorías">
-    <a href="salas.html">Ver solo salas</a>
-    <a href="comedores.html">Ver solo comedores</a>
-    <a href="dormitorios.html">Ver solo dormitorios</a>
+    <a href="/salas">Ver solo salas</a>
+    <a href="/comedores">Ver solo comedores</a>
+    <a href="/dormitorios">Ver solo dormitorios</a>
   </nav>
   <button class="filters-toggle" id="filters-toggle" type="button" aria-expanded="false" aria-controls="filters">Filtrar modelos</button>
   <form class="filters" id="filters" aria-label="Filtrar modelos" onsubmit="return false">
@@ -143,7 +143,7 @@ cat = '''
   <p class="lead">Escríbenos antes de decidir. Revisamos contigo qué ajustes son posibles en ese modelo.</p>
   <img class="closer-img" src="img/catalogo/s-butaca-mostaza.jpg" width="552" height="703" loading="lazy" alt="Butaca mostaza con cojín blanco de pelo">
   <div class="closer-links">
-    <a class="btn" href="a-medida.html"><span>Ver cómo pedirlo a medida</span></a>
+    <a class="btn" href="/a-medida"><span>Ver cómo pedirlo a medida</span></a>
     <a class="link" href="%s" target="_blank" rel="noopener noreferrer">Cotizar por WhatsApp <svg class="i" aria-hidden="true"><use href="#i-arrow"/></svg></a>
   </div>
 </section>
@@ -173,7 +173,7 @@ for fname, tipos, h1, lead, seo in CATS:
         else:
             blocks.append('  <ul class="catalog" id="catalog-%s">\n%s\n  </ul>' % (t, lis))
     links = ''.join(
-        '<a href="%s"%s>%s</a>' % (f, ' aria-current="page"' if f == fname else '', l)
+        '<a href="/%s"%s>%s</a>' % (f[:-len('.html')], ' aria-current="page"' if f == fname else '', l)
         for f, l in [('catalogo.html', 'Todo el catálogo'), ('salas.html', 'Salas'), ('comedores.html', 'Comedores'), ('dormitorios.html', 'Dormitorios')])
     html = '''
 <section class="page-head" aria-labelledby="pg-title">
@@ -192,7 +192,7 @@ for fname, tipos, h1, lead, seo in CATS:
   <p class="lead" data-r>Envíanos una foto del ambiente y las medidas que tengas. Te ayudamos a revisar qué diseño funciona mejor.</p>
   <div class="closer-links" data-r>
     <a class="btn" href="%s" target="_blank" rel="noopener noreferrer"><svg class="i" aria-hidden="true"><use href="#i-wa"/></svg><span>Pedir ayuda con las medidas</span></a>
-    <a class="link" href="a-medida.html">Ver cómo pedirlo a medida <svg class="i" aria-hidden="true"><use href="#i-arrow"/></svg></a>
+    <a class="link" href="/a-medida">Ver cómo pedirlo a medida <svg class="i" aria-hidden="true"><use href="#i-arrow"/></svg></a>
   </div>
 </section>
 ''' % (h1, lead, links, '\n'.join(blocks), seo, GENERAL)

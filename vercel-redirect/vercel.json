@@ -1,0 +1,6 @@
+﻿{
+  "redirects": [
+    { "source": "/index.html", "destination": "https://supermuebles-cuenca.andresdelgado1984.workers.dev/", "permanent": true },
+    { "source": "/:path*", "destination": "https://supermuebles-cuenca.andresdelgado1984.workers.dev/:path*", "permanent": true }
+  ]
+}
