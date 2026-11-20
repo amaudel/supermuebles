@@ -1,0 +1,14 @@
+{
+  "name": "supermuebles-resenas",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev --local --port 8788",
+    "db:migrar": "wrangler d1 migrations apply supermuebles-resenas --local",
+    "test": "node --test test/resenas.test.mjs",
+    "publicar": "wrangler deploy"
+  },
+  "devDependencies": {
+    "wrangler": "^4"
+  }
+}

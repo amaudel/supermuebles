@@ -1,0 +1,392 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#2F6B4F"><title>Control de Reseñas Supermuebles</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Young+Serif&family=Figtree:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: herramienta de una columna para el celular; arriba el resumen y lo que toca hoy, luego agregar cliente, la lista, la actividad y la administración */
+:root{
+  --bg:#F5F6F1; --surface:#FFFFFF; --ink:#2B211A; --muted:#6B625A; --line:#E2DED5;
+  --wood:#8A5A36; --green:#2F6B4F; --green-ink:#FFFFFF; --green-soft:#E3EFE7;
+  --amber:#9A6A00; --amber-soft:#FBF0D6; --grey-soft:#EEECE7; --red:#A33A2B;
+  --display:"Young Serif", Georgia, serif; --body:"Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#15130F; --surface:#1F1B16; --ink:#EFE9E1; --muted:#A79D92; --line:#352E26;
+  --wood:#D19A6A; --green:#6FBF94; --green-ink:#0F1F17; --green-soft:#1F3229;
+  --amber:#E6B54D; --amber-soft:#3A2F17; --grey-soft:#2A251F; --red:#E8806F; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#15130F; --surface:#1F1B16; --ink:#EFE9E1; --muted:#A79D92; --line:#352E26;
+  --wood:#D19A6A; --green:#6FBF94; --green-ink:#0F1F17; --green-soft:#1F3229;
+  --amber:#E6B54D; --amber-soft:#3A2F17; --grey-soft:#2A251F; --red:#E8806F; color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0}
+body{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.5}
+.wrap{max-width:760px;margin:0 auto;padding-block:28px 64px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:32px}
+h1,h2{font-family:var(--display);font-weight:400;margin:0;line-height:1.15;text-wrap:balance}
+h1{font-size:clamp(1.7rem,5vw,2.2rem)}
+h2{font-size:1.3rem}
+p{margin:0}
+.eyebrow{font-size:.75rem;letter-spacing:.12em;text-transform:uppercase;color:var(--wood);font-weight:700}
+.muted{color:var(--muted)}
+section{display:flex;flex-direction:column;gap:14px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding-block:14px}
+@media (max-width:520px){.stats{grid-template-columns:repeat(2,1fr);row-gap:14px}}
+.stats div{display:flex;flex-direction:column;gap:2px}
+.stats b{font-family:var(--display);font-weight:400;font-size:1.9rem;line-height:1;font-variant-numeric:tabular-nums}
+.stats span{font-size:.82rem;color:var(--muted)}
+.stats .hot b{color:var(--green)}
+.list{display:flex;flex-direction:column;gap:10px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.card.todo{border-color:var(--green);box-shadow:inset 4px 0 0 var(--green)}
+.row1{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap}
+.name{font-weight:700;font-size:1.05rem}
+.sub{font-size:.9rem;color:var(--muted)}
+.pill{font-size:.75rem;font-weight:700;padding:3px 9px;border-radius:999px;white-space:nowrap}
+.p-send{background:var(--green-soft);color:var(--green)}
+.p-wait{background:var(--amber-soft);color:var(--amber)}
+.p-done{background:var(--grey-soft);color:var(--muted)}
+.p-ok{background:var(--green-soft);color:var(--green)}
+.actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.btn{font:inherit;font-size:.92rem;font-weight:600;border-radius:9px;border:1px solid var(--line);background:transparent;color:var(--ink);padding:8px 12px;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:6px}
+.btn:hover{border-color:var(--muted)}
+.btn:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:2px solid var(--green);outline-offset:2px}
+.btn.primary{background:var(--green);color:var(--green-ink);border-color:var(--green)}
+.btn.primary:hover{filter:brightness(1.07)}
+.btn.small{font-size:.82rem;padding:6px 10px}
+.btn.danger{color:var(--red)}
+.btn[disabled]{opacity:.5;cursor:default}
+.preview{font-size:.88rem;color:var(--muted);background:var(--bg);border-radius:8px;padding:8px 10px;overflow-wrap:anywhere}
+.empty{border:1px dashed var(--line);border-radius:12px;padding:18px;color:var(--muted);text-align:center}
+form.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:520px){form.grid{grid-template-columns:1fr}}
+label{display:flex;flex-direction:column;gap:4px;font-size:.85rem;font-weight:600;min-width:0}
+input,textarea,select{font:inherit;font-weight:400;font-size:1rem;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:9px;padding:9px 11px;width:100%}
+textarea{min-height:96px;resize:vertical}
+.full{grid-column:1/-1}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{font:inherit;font-size:.85rem;border:1px solid var(--line);background:transparent;color:var(--ink);border-radius:999px;padding:5px 12px;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+details{border-top:1px solid var(--line);padding-top:14px}
+summary{cursor:pointer;font-family:var(--display);font-size:1.2rem}
+.note{font-size:.88rem;color:var(--muted)}
+.banner{background:var(--amber-soft);color:var(--ink);border-radius:10px;padding:10px 12px;font-size:.92rem}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:10px 14px;border-radius:10px;font-size:.92rem;display:flex;gap:12px;align-items:center;max-width:calc(100% - 32px);z-index:20}
+.toast button{font:inherit;font-weight:700;background:none;border:0;color:var(--bg);text-decoration:underline;cursor:pointer}
+.confirm{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:.88rem}
+@media (prefers-reduced-motion:no-preference){.card{transition:border-color .2s}}
+.stats small{font-size:.78rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.dup{background:var(--amber-soft);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:8px;font-size:.92rem}
+.hist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.hist li{display:grid;grid-template-columns:auto 1fr;gap:2px 10px;font-size:.88rem;border-left:2px solid var(--line);padding-left:10px}
+.hist time{color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+.hist .who{color:var(--muted)}
+.chk{flex-direction:row;align-items:flex-start;gap:8px;font-weight:500}
+.chk input{width:auto;margin-top:3px}
+.p-open{background:var(--amber-soft);color:var(--amber)}
+.urow{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center}
+</style></head><body>
+
+<div class="wrap" id="login" hidden>
+  <header style="display:flex;flex-direction:column;gap:8px">
+    <span class="eyebrow">Supermuebles Cuenca</span>
+    <h1>Control de reseñas</h1>
+    <p class="muted" id="lTxt">Entra con tu usuario y tu clave.</p>
+  </header>
+  <form class="grid" id="loginForm" autocomplete="on">
+    <label class="full" id="lNombreWrap" hidden>Tu nombre<input id="lNombre" autocomplete="name" placeholder="Andrés Delgado"></label>
+    <label class="full">Usuario<input id="lUsuario" required autocomplete="username" autocapitalize="none" placeholder="andres"></label>
+    <label class="full">Clave<input id="lClave" type="password" required autocomplete="current-password"></label>
+    <label class="full" id="lClave2Wrap" hidden>Repite la clave<input id="lClave2" type="password" autocomplete="new-password"></label>
+    <div class="full actions"><button class="btn primary" type="submit" id="lBtn">Entrar</button><span class="note" id="lMsg" role="status"></span></div>
+  </form>
+</div>
+
+<div class="wrap" id="app" hidden>
+  <header style="display:flex;flex-direction:column;gap:8px">
+    <div class="row1"><span class="eyebrow">Supermuebles Cuenca</span><span class="note" id="yoTxt"></span></div>
+    <h1>Control de reseñas</h1>
+    <p class="muted" id="hoyTxt"></p>
+  </header>
+
+  <div class="banner" id="banner" hidden></div>
+
+  <section aria-labelledby="hEmbudo">
+    <h2 id="hEmbudo" class="sr">Resumen</h2>
+    <div class="stats">
+      <div class="hot"><b id="sHoy">–</b><span>para enviar hoy</span></div>
+      <div><b id="sIni">–</b><span>solicitudes iniciadas</span></div>
+      <div><b id="sAbi">–</b><span>enlaces abiertos</span><small id="sAbiP"></small></div>
+      <div><b id="sRes">–</b><span>reseñas registradas</span><small id="sResP"></small></div>
+    </div>
+    <p class="note">«Enlace abierto» solo dice que el cliente tocó el enlace. Una reseña cuenta cuando alguien del equipo la ve en Google y toca «Reseña registrada».</p>
+  </section>
+
+  <section aria-labelledby="hHoy">
+    <h2 id="hHoy">Para enviar hoy</h2>
+    <p class="note">Toca «Enviar por WhatsApp», manda el mensaje y la app lo anota sola como enviado, con tu nombre.</p>
+    <div class="list" id="todayList"><div class="empty">Cargando clientes…</div></div>
+  </section>
+
+  <section aria-labelledby="hNuevo">
+    <h2 id="hNuevo">Agregar cliente</h2>
+    <form class="grid" id="addForm" autocomplete="off">
+      <label>Nombre<input id="fNombre" required placeholder="María Pérez"></label>
+      <label>Teléfono<input id="fTel" required inputmode="tel" placeholder="0991234567"></label>
+      <label>Mueble<input id="fProd" placeholder="juego de comedor"></label>
+      <label>Fecha de entrega<input id="fFecha" type="date" required></label>
+      <div class="full dup" id="dupBox" hidden></div>
+      <div class="full actions"><button class="btn primary" type="submit" id="addBtn">Guardar cliente</button><span class="note" id="addMsg" role="status"></span></div>
+    </form>
+  </section>
+
+  <section aria-labelledby="hTodos">
+    <h2 id="hTodos">Todos los clientes</h2>
+    <div class="chips" role="group" aria-label="Filtrar">
+      <button class="chip" data-f="todos" aria-pressed="true">Todos</button>
+      <button class="chip" data-f="espera" aria-pressed="false">En curso</button>
+      <button class="chip" data-f="abiertos" aria-pressed="false">Enlace abierto</button>
+      <button class="chip" data-f="resenas" aria-pressed="false">Con reseña</button>
+      <button class="chip" data-f="cerrados" aria-pressed="false">Terminados</button>
+    </div>
+    <input id="q" type="search" placeholder="Buscar por nombre o teléfono" aria-label="Buscar">
+    <div class="list" id="allList"></div>
+  </section>
+
+  <details id="actDet">
+    <summary>Actividad reciente</summary>
+    <ol class="hist" id="actList" style="margin-top:14px"><li class="note">Cargando…</li></ol>
+  </details>
+
+  <details id="cuentaDet">
+    <summary>Mi cuenta</summary>
+    <form class="grid" id="claveForm" style="margin-top:14px" autocomplete="off">
+      <label>Clave actual<input id="kActual" type="password" required autocomplete="current-password"></label>
+      <label>Clave nueva (mínimo 8)<input id="kNueva" type="password" required autocomplete="new-password"></label>
+      <div class="full actions"><button class="btn primary" type="submit">Cambiar mi clave</button><button class="btn" type="button" id="salir">Salir</button><span class="note" id="kMsg" role="status"></span></div>
+    </form>
+  </details>
+
+  <details id="usrDet" hidden>
+    <summary>Usuarios</summary>
+    <p class="note" style="margin-top:14px">Cada persona entra con su propio usuario. Así el historial dice quién hizo cada cambio.</p>
+    <div class="list" id="usrList" style="margin-top:12px"></div>
+    <form class="grid" id="usrForm" style="margin-top:14px" autocomplete="off">
+      <label>Nombre<input id="uNombre" required placeholder="Juan Vendedor"></label>
+      <label>Usuario<input id="uUsuario" required autocapitalize="none" placeholder="juan"></label>
+      <label>Clave inicial (mínimo 8)<input id="uClave" type="password" required autocomplete="new-password"></label>
+      <label>Rol<select id="uRol"><option value="vendedor">Vendedor</option><option value="admin">Administrador</option></select></label>
+      <div class="full actions"><button class="btn primary" type="submit">Crear usuario</button><span class="note" id="uMsg" role="status"></span></div>
+    </form>
+  </details>
+
+  <details id="ajustes" hidden>
+    <summary>Ajustes</summary>
+    <form class="grid" id="cfgForm" style="margin-top:14px">
+      <label class="full">Enlace de reseñas de Google<input id="cEnlace"></label>
+      <p class="note full">Los mensajes llevan un enlace propio que pasa al de Google. Así la app sabe quién lo abrió. Las vistas previas automáticas de WhatsApp no cuentan.</p>
+      <label>Días después de la entrega para el 1er mensaje<input id="cD1" type="number" min="0" max="30"></label>
+      <label>Días de espera antes del recordatorio<input id="cD2" type="number" min="1" max="30"></label>
+      <label class="full chk"><input id="cRec" type="checkbox"> Mandar el recordatorio aunque el cliente ya haya abierto el enlace (si todavía no hay reseña registrada)</label>
+      <label class="full">Mensaje 1 (usa {nombre}, {mueble}, {enlace})<textarea id="cM1"></textarea></label>
+      <label class="full">Mensaje 2, recordatorio<textarea id="cM2"></textarea></label>
+      <div class="full actions"><button class="btn primary" type="submit">Guardar ajustes</button><span class="note" id="cfgMsg" role="status"></span></div>
+    </form>
+    <p class="note" style="margin-top:12px">Reglas de Google: pedir a todos los clientes, nunca pedir «5 estrellas» ni dar descuentos a cambio.</p>
+  </details>
+</div>
+<div class="toast" id="toast" hidden role="status"><span id="toastTxt"></span><button id="toastUndo" type="button">Deshacer</button></div>
+<script>const DEF={enlace:"https://search.google.com/local/writereview?placeid=ChIJY80S_zYZzZERq-GOKXlWkdw",d1:1,d2:4,recordarSiAbrio:false,
+ m1:"Hola {nombre}, le saluda Supermuebles Cuenca. Esperamos que esté disfrutando su {mueble}. ¿Nos regala un minuto para contar su experiencia en Google? Nos ayuda mucho a nuestro taller en Turi: {enlace} ¡Muchas gracias! (Si prefiere no recibir este mensaje, responda NO.)",
+ m2:"Hola {nombre}, un recordatorio amable de Supermuebles Cuenca. Si tiene un minuto, nos encantaría saber cómo le fue con su {mueble}: {enlace} Este es nuestro último mensaje sobre esto. ¡Gracias por confiar en nosotros!"};
+let cfg={...DEF}, clientes=[], yo=null, filtro="todos", busy=new Set(), confirmDel=null, undoFn=null, toastT=null, token="", abiertos=new Set(), hist={}, pendienteDup=null, modoSetup=false;
+try{token=localStorage.getItem("sm_token")||""}catch(e){}
+const $=id=>document.getElementById(id);
+const ymd=d=>{const z=n=>String(n).padStart(2,"0");return d.getFullYear()+"-"+z(d.getMonth()+1)+"-"+z(d.getDate())};
+const hoy=()=>ymd(new Date());
+const addDays=(s,n)=>{const d=new Date(s+"T12:00:00");d.setDate(d.getDate()+Number(n||0));return ymd(d)};
+const fmt=s=>{if(!s)return"";const d=new Date(String(s).slice(0,10)+"T12:00:00");return d.toLocaleDateString("es-EC",{day:"numeric",month:"short"})};
+const fmtHora=s=>new Date(s).toLocaleString("es-EC",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"});
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const telWa=t=>{let p=String(t||"").replace(/[^\d]/g,"");if(p.startsWith("0"))p="593"+p.slice(1);return p};
+const primerNombre=n=>String(n||"").replace(/^EJEMPLO\s*[–-]\s*/i,"").trim().split(/\s+/)[0]||"";
+const pct=(a,b)=>b?Math.round(a*100/b)+"% de las iniciadas":"";
+const TIPOS={creado:"Cliente agregado",mensaje1:"1er mensaje enviado",mensaje1_deshecho:"Se quitó el 1er mensaje",recordatorio:"Recordatorio enviado",recordatorio_deshecho:"Se quitó el recordatorio",
+ enlace_abierto:"El cliente abrió el enlace",enlace_reiniciado:"Se reinició «enlace abierto»",resena:"Reseña registrada",resena_quitada:"Se quitó «reseña registrada»",
+ no_molestar:"Pidió no recibir más mensajes",no_molestar_quitado:"Se quitó «no molestar»",editado:"Datos corregidos",borrado:"Cliente borrado",ajustes:"Ajustes cambiados",
+ usuario_creado:"Usuario creado",usuario_activado:"Usuario activado",usuario_desactivado:"Usuario desactivado",rol_cambiado:"Rol cambiado",clave_reiniciada:"Clave reiniciada",clave_cambiada:"Cambió su clave"};
+const NOMB={nombre:"nombre",telefono:"teléfono",producto:"mueble",entrega:"entrega"};
+function detalleTxt(e){let d=null;try{d=e.detalle?JSON.parse(e.detalle):null}catch(x){}
+  if(!d)return"";
+  if(e.tipo==="editado")return Object.entries(d).map(([k,v])=>(NOMB[k]||k)+": «"+(v.antes??"")+"» → «"+(v.despues??"")+"»").join(" · ");
+  if(e.tipo==="creado")return d.duplicado_confirmado?"Se guardó aunque parecía repetido.":"";
+  if(d.usuario)return "Usuario: "+d.usuario+(d.rol?" ("+d.rol+")":"");
+  return"";}
+
+async function api(path,opts={}){
+  const r=await fetch("/api/"+path,{...opts,headers:{"Content-Type":"application/json","Authorization":"Bearer "+token}});
+  if(r.status===401){salir("Tu sesión terminó. Vuelve a entrar.");throw Object.assign(new Error("401"),{status:401})}
+  const j=r.status===204?null:await r.json().catch(()=>null);
+  if(!r.ok) throw Object.assign(new Error((j&&j.error)||String(r.status)),{status:r.status,body:j});
+  return j;
+}
+function estado(c){
+  const t=hoy();
+  if(c.resena) return {k:"ok",txt:"Reseña registrada",cls:"p-ok"};
+  if(c.no_molestar) return {k:"no",txt:"No molestar",cls:"p-done"};
+  if(!c.msg1){const f=addDays(c.entrega,cfg.d1); return t>=f?{k:"enviar1",txt:"Enviar 1er mensaje",cls:"p-send"}:{k:"esp1",txt:"1er mensaje el "+fmt(f),cls:"p-wait"}}
+  if(!c.msg2){
+    if(c.clic&&!cfg.recordarSiAbrio) return {k:"abierto",txt:"Enlace abierto, falta reseña",cls:"p-open"};
+    const f=addDays(c.msg1,cfg.d2); return t>=f?{k:"enviar2",txt:"Enviar recordatorio",cls:"p-send"}:{k:"esp2",txt:(c.clic?"Enlace abierto · ":"")+"recordatorio el "+fmt(f),cls:c.clic?"p-open":"p-wait"}}
+  return {k:"fin",txt:c.clic?"Terminado: abrió el enlace, sin reseña":"Terminado, no molestar más",cls:"p-done"};
+}
+function mensaje(c,e){
+  const tpl=e.k==="enviar2"?cfg.m2:cfg.m1;
+  return tpl.replaceAll("{nombre}",primerNombre(c.nombre)).replaceAll("{mueble}",c.producto||"mueble").replaceAll("{producto}",c.producto||"mueble").replaceAll("{enlace}",location.origin+"/r/"+c.id);
+}
+const waUrl=(c,e)=>"https://wa.me/"+telWa(c.telefono)+"?text="+encodeURIComponent(mensaje(c,e));
+function histHtml(list){if(!list)return'<p class="note">Cargando historial…</p>';if(!list.length)return'<p class="note">Sin movimientos todavía.</p>';
+  return '<ol class="hist">'+list.map(e=>`<li><time datetime="${esc(e.fecha)}">${esc(fmtHora(e.fecha))}</time><span><b>${esc(TIPOS[e.tipo]||e.tipo)}</b>${e.cliente!==undefined&&e.cliente?" · "+esc(e.cliente):""} <span class="who">· ${esc(e.usuario||"Cliente")}</span>${detalleTxt(e)?`<br><span class="who">${esc(detalleTxt(e))}</span>`:""}</span></li>`).join("")+'</ol>'}
+function card(c,inToday){
+  const e=estado(c), todo=e.k.startsWith("enviar"), b=busy.has(c.id);
+  const pasos=[c.msg1&&("1er mensaje "+fmt(c.msg1)),c.msg2&&("recordatorio "+fmt(c.msg2)),c.clic&&("abrió el enlace "+fmt(c.clic))].filter(Boolean).join(" · ");
+  let h=`<article class="card${todo?" todo":""}" data-id="${esc(c.id)}"><div class="row1"><div><div class="name">${esc(c.nombre)}</div><div class="sub">${esc(c.producto||"Sin mueble anotado")} · entrega ${esc(fmt(c.entrega))} · ${esc(c.telefono)}</div>${pasos?`<div class="sub">${esc(pasos)}</div>`:""}</div><span class="pill ${e.cls}">${esc(e.txt)}</span></div>`;
+  if(todo&&inToday) h+=`<div class="preview">${esc(mensaje(c,e))}</div>`;
+  h+=`<div class="actions">`;
+  if(todo) h+=`<a class="btn primary" href="${esc(waUrl(c,e))}" target="_blank" rel="noopener" data-act="send" data-step="${e.k}">Enviar por WhatsApp</a>`;
+  if(!c.resena&&!c.no_molestar){h+=`<button class="btn small" data-act="resena" ${b?"disabled":""} title="Tócalo cuando veas la reseña publicada en Google">Reseña registrada</button><button class="btn small" data-act="nomolestar" ${b?"disabled":""}>Pidió no escribir</button>`}
+  else h+=`<button class="btn small" data-act="reabrir" ${b?"disabled":""}>Reabrir</button>`;
+  if(!inToday){
+    if(c.msg2) h+=`<button class="btn small" data-act="undo2" ${b?"disabled":""}>Quitar recordatorio</button>`;
+    else if(c.msg1) h+=`<button class="btn small" data-act="undo1" ${b?"disabled":""}>Quitar 1er mensaje</button>`;
+    h+=confirmDel===c.id?`<span class="confirm">¿Borrar a ${esc(primerNombre(c.nombre))}? Su historial se guarda. <button class="btn small danger" data-act="delok">Sí, borrar</button><button class="btn small" data-act="delno">No</button></span>`:`<button class="btn small danger" data-act="del" ${b?"disabled":""}>Borrar</button>`;
+  }
+  h+=`<button class="btn small" data-act="hist" aria-expanded="${abiertos.has(c.id)}">${abiertos.has(c.id)?"Ocultar historial":"Historial"}</button></div>`;
+  if(abiertos.has(c.id)) h+=histHtml(hist[c.id]);
+  return h+`</article>`;
+}
+function render(){
+  $("hoyTxt").textContent="Hoy es "+new Date().toLocaleDateString("es-EC",{weekday:"long",day:"numeric",month:"long"})+".";
+  const w=clientes.map(c=>({c,e:estado(c)}));
+  const today=w.filter(x=>x.e.k.startsWith("enviar"));
+  const ini=clientes.filter(c=>c.msg1).length, abi=clientes.filter(c=>c.clic).length, res=clientes.filter(c=>c.resena).length;
+  $("sHoy").textContent=today.length; $("sIni").textContent=ini; $("sAbi").textContent=abi; $("sRes").textContent=res;
+  $("sAbiP").textContent=pct(abi,ini); $("sResP").textContent=pct(res,ini);
+  $("todayList").innerHTML=today.length?today.map(x=>card(x.c,true)).join(""):`<div class="empty">${clientes.length?"No hay mensajes para hoy. Vuelve mañana.":"Todavía no hay clientes. Agrega el primero abajo cuando entregues un mueble."}</div>`;
+  const q=$("q").value.trim().toLowerCase();
+  const F={todos:()=>true,espera:x=>["enviar1","enviar2","esp1","esp2","abierto"].includes(x.e.k),abiertos:x=>!!x.c.clic,resenas:x=>!!x.c.resena,cerrados:x=>["ok","no","fin"].includes(x.e.k)};
+  let all=w.filter(F[filtro]||F.todos);
+  if(q) all=all.filter(x=>(x.c.nombre+" "+x.c.telefono).toLowerCase().includes(q));
+  all.sort((a,b)=>String(b.c.entrega).localeCompare(String(a.c.entrega)));
+  $("allList").innerHTML=all.length?all.map(x=>card(x.c,false)).join(""):`<div class="empty">${clientes.length?"Ningún cliente coincide.":"Aquí aparecerán todos los clientes."}</div>`;
+}
+function toast(txt,undo){
+  $("toastTxt").textContent=txt; undoFn=undo||null; $("toastUndo").hidden=!undo; $("toast").hidden=false;
+  clearTimeout(toastT); toastT=setTimeout(()=>{$("toast").hidden=true;undoFn=null},7000);
+}
+$("toastUndo").onclick=async()=>{const f=undoFn;$("toast").hidden=true;undoFn=null;if(f)await f()};
+async function cargar(){
+  try{const d=await api("datos"); clientes=d.clientes; cfg={...DEF,...d.config}; yo=d.yo; pintarYo();
+    if(!document.activeElement?.closest("#cfgForm")) fillCfg(); $("banner").hidden=true;
+    for(const id of abiertos) cargarHist(id,false);
+    if($("actDet").open) cargarAct(); render()}
+  catch(e){ if(e.status!==401){$("banner").hidden=false;$("banner").textContent="No se pudo conectar. Revisa el internet y recarga."} }
+}
+async function cargarHist(id,pintar=true){try{hist[id]=await api("clientes/"+id+"/historial")}catch(e){hist[id]=[]} if(pintar) render()}
+async function cargarAct(){try{$("actList").outerHTML=histHtml(await api("actividad")).replace('<ol class="hist">','<ol class="hist" id="actList" style="margin-top:14px">')}catch(e){}}
+$("actDet").addEventListener("toggle",()=>{if($("actDet").open)cargarAct()});
+async function patch(id,data,okTxt,undoData){
+  busy.add(id);render();
+  try{await api("clientes/"+id,{method:"PATCH",body:JSON.stringify(data)}); const c=clientes.find(x=>x.id===id); if(c) Object.assign(c,data);
+    if(abiertos.has(id)) await cargarHist(id,false);
+    if(okTxt) toast(okTxt,undoData?()=>patch(id,undoData,"Cambio deshecho."):null)}
+  catch(e){ if(e.status!==401) toast(e.message||"No se pudo guardar. Intenta de nuevo.")}
+  finally{busy.delete(id);render()}
+}
+document.addEventListener("click",ev=>{
+  const el=ev.target.closest("[data-act]"); if(!el) return;
+  const id=el.closest(".card")?.dataset.id, act=el.dataset.act, c=clientes.find(x=>x.id===id); if(!c) return;
+  if(act==="send"){const t=hoy();
+    if(el.dataset.step==="enviar1") patch(id,{msg1:t},"Anotado: 1er mensaje enviado a "+primerNombre(c.nombre)+".",{msg1:null});
+    else patch(id,{msg2:t},"Anotado: recordatorio enviado a "+primerNombre(c.nombre)+".",{msg2:null});
+    return;}
+  ev.preventDefault();
+  if(act==="hist"){if(abiertos.has(id))abiertos.delete(id);else{abiertos.add(id);hist[id]=null;cargarHist(id)} render();return}
+  if(act==="resena") patch(id,{resena:1},"Reseña de "+primerNombre(c.nombre)+" registrada.",{resena:0});
+  if(act==="nomolestar") patch(id,{no_molestar:1},"No se le escribirá más a "+primerNombre(c.nombre)+".",{no_molestar:0});
+  if(act==="reabrir") patch(id,{resena:0,no_molestar:0},"Cliente reabierto.");
+  if(act==="undo1") patch(id,{msg1:null},"Se quitó el 1er mensaje.");
+  if(act==="undo2") patch(id,{msg2:null},"Se quitó el recordatorio.");
+  if(act==="del"){confirmDel=id;render()}
+  if(act==="delno"){confirmDel=null;render()}
+  if(act==="delok"){confirmDel=null;(async()=>{try{await api("clientes/"+id,{method:"DELETE"});clientes=clientes.filter(x=>x.id!==id);render();toast("Cliente borrado. Su historial queda guardado.")}catch(e){toast("No se pudo borrar.")}})()}
+});
+document.querySelectorAll(".chip").forEach(b=>b.onclick=()=>{filtro=b.dataset.f;document.querySelectorAll(".chip").forEach(x=>x.setAttribute("aria-pressed",x===b?"true":"false"));render()});
+$("q").addEventListener("input",render);
+["fNombre","fTel","fProd","fFecha"].forEach(i=>$(i).addEventListener("input",()=>{pendienteDup=null;$("dupBox").hidden=true;$("addBtn").textContent="Guardar cliente"}));
+$("addForm").addEventListener("submit",async ev=>{
+  ev.preventDefault();
+  const tel=$("fTel").value.trim();
+  if(telWa(tel).length<11){$("addMsg").textContent="Revisa el teléfono: debe tener 10 dígitos, por ejemplo 0991234567.";return}
+  $("addBtn").disabled=true;$("addMsg").textContent="Guardando…";
+  const ent=$("fFecha").value||hoy();
+  const datos={nombre:$("fNombre").value.trim(),telefono:tel,producto:$("fProd").value.trim(),entrega:ent,forzar:!!pendienteDup};
+  try{const c=await api("clientes",{method:"POST",body:JSON.stringify(datos)});
+    clientes.push(c); $("addForm").reset(); $("fFecha").value=hoy(); pendienteDup=null; $("dupBox").hidden=true; $("addBtn").textContent="Guardar cliente";
+    $("addMsg").textContent="Guardado. Le toca su 1er mensaje el "+fmt(addDays(ent,cfg.d1))+"."; render()}
+  catch(e){
+    if(e.status===409&&e.body&&e.body.duplicado){const d=e.body.duplicado;pendienteDup=d.id;
+      $("dupBox").hidden=false;$("dupBox").innerHTML=`<b>Ya existe un cliente con el mismo teléfono, mueble y fecha de entrega.</b><span>${esc(d.nombre)} · ${esc(d.producto||"sin mueble")} · entrega ${esc(fmt(d.entrega))} · ${esc(estado(d).txt)}</span><span>Si de verdad es otra entrega, toca «Guardar de todos modos». Si no, borra el formulario.</span>`;
+      $("addBtn").textContent="Guardar de todos modos";$("addMsg").textContent=""}
+    else if(e.status!==401) $("addMsg").textContent=e.message||"No se pudo guardar. Intenta de nuevo."}
+  finally{$("addBtn").disabled=false}
+});
+function fillCfg(){$("cEnlace").value=cfg.enlace;$("cD1").value=cfg.d1;$("cD2").value=cfg.d2;$("cM1").value=cfg.m1;$("cM2").value=cfg.m2;$("cRec").checked=!!cfg.recordarSiAbrio}
+$("cfgForm").addEventListener("submit",async ev=>{
+  ev.preventDefault();
+  const n={enlace:$("cEnlace").value.trim()||DEF.enlace,d1:Math.max(0,parseInt($("cD1").value)||0),d2:Math.max(1,parseInt($("cD2").value)||4),m1:$("cM1").value.trim()||DEF.m1,m2:$("cM2").value.trim()||DEF.m2,recordarSiAbrio:$("cRec").checked};
+  $("cfgMsg").textContent="Guardando…";
+  try{await api("config",{method:"PUT",body:JSON.stringify(n)});cfg=n;$("cfgMsg").textContent="Ajustes guardados.";render()}catch(e){$("cfgMsg").textContent=e.message||"No se pudo guardar."}
+});
+function pintarYo(){if(!yo)return;$("yoTxt").textContent=yo.nombre+(yo.rol==="admin"?" · administrador":" · vendedor");
+  const adm=yo.rol==="admin";$("usrDet").hidden=!adm;$("ajustes").hidden=!adm}
+async function cargarUsuarios(){try{const l=await api("usuarios");
+  $("usrList").innerHTML=l.map(x=>`<div class="card" data-uid="${esc(x.id)}"><div class="urow"><div><div class="name">${esc(x.nombre)}</div><div class="sub">usuario: ${esc(x.usuario)} · ${x.rol==="admin"?"administrador":"vendedor"}${x.activo?"":" · desactivado"}</div></div>
+  ${x.id===yo.id?'<span class="note">Eres tú</span>':`<div class="actions"><button class="btn small" data-uact="${x.activo?"off":"on"}">${x.activo?"Desactivar":"Activar"}</button><button class="btn small" data-uact="reset">Nueva clave</button></div>`}</div>
+  <form class="actions" data-reset hidden><input type="password" placeholder="Clave nueva (mínimo 8)" autocomplete="new-password" style="max-width:260px"><button class="btn small primary" type="submit">Guardar clave</button></form></div>`).join("")}catch(e){}}
+$("usrDet").addEventListener("toggle",()=>{if($("usrDet").open)cargarUsuarios()});
+$("usrList").addEventListener("click",async ev=>{const b=ev.target.closest("[data-uact]");if(!b)return;const card=b.closest("[data-uid]"),uid=card.dataset.uid;
+  if(b.dataset.uact==="reset"){card.querySelector("[data-reset]").hidden=false;card.querySelector("[data-reset] input").focus();return}
+  try{await api("usuarios/"+uid,{method:"PATCH",body:JSON.stringify({activo:b.dataset.uact==="on"})});toast(b.dataset.uact==="on"?"Usuario activado.":"Usuario desactivado. Ya no puede entrar.");cargarUsuarios()}catch(e){toast(e.message)}});
+$("usrList").addEventListener("submit",async ev=>{ev.preventDefault();const f=ev.target,uid=f.closest("[data-uid]").dataset.uid,v=f.querySelector("input").value;
+  try{await api("usuarios/"+uid,{method:"PATCH",body:JSON.stringify({clave:v})});toast("Clave cambiada. Dásela a esa persona.");cargarUsuarios()}catch(e){toast(e.message)}});
+$("usrForm").addEventListener("submit",async ev=>{ev.preventDefault();$("uMsg").textContent="Creando…";
+  try{await api("usuarios",{method:"POST",body:JSON.stringify({nombre:$("uNombre").value,usuario:$("uUsuario").value,clave:$("uClave").value,rol:$("uRol").value})});
+    $("usrForm").reset();$("uMsg").textContent="Usuario creado. Pásale su usuario y su clave.";cargarUsuarios()}catch(e){$("uMsg").textContent=e.message}});
+$("claveForm").addEventListener("submit",async ev=>{ev.preventDefault();$("kMsg").textContent="Guardando…";
+  try{await api("clave",{method:"POST",body:JSON.stringify({actual:$("kActual").value,nueva:$("kNueva").value})});$("claveForm").reset();$("kMsg").textContent="Clave cambiada."}catch(e){$("kMsg").textContent=e.message}});
+function salir(msg){if(token)fetch("/api/logout",{method:"POST",headers:{"Authorization":"Bearer "+token}}).catch(()=>{});
+  token="";yo=null;try{localStorage.removeItem("sm_token")}catch(e){} $("app").hidden=true;$("login").hidden=false;$("lMsg").textContent=msg||"";revisarEstado()}
+$("salir").onclick=()=>salir("");
+async function revisarEstado(){try{const r=await (await fetch("/api/estado")).json();modoSetup=!r.hayUsuarios}catch(e){modoSetup=false}
+  $("lNombreWrap").hidden=!modoSetup;$("lClave2Wrap").hidden=!modoSetup;
+  $("lTxt").textContent=modoSetup?"Primera vez: crea tu usuario de administrador. Después podrás crear un usuario para cada persona del equipo.":"Entra con tu usuario y tu clave.";
+  $("lBtn").textContent=modoSetup?"Crear administrador y entrar":"Entrar";
+  $("lClave").autocomplete=modoSetup?"new-password":"current-password"}
+$("loginForm").addEventListener("submit",async ev=>{ev.preventDefault();
+  const usuario=$("lUsuario").value.trim(),clave=$("lClave").value;let r;
+  try{
+    if(modoSetup){if(clave.length<8){$("lMsg").textContent="La clave debe tener al menos 8 caracteres.";return}
+      if(clave!==$("lClave2").value){$("lMsg").textContent="Las dos claves no coinciden.";return}
+      r=await fetch("/api/setup",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({nombre:$("lNombre").value,usuario,clave})});}
+    else r=await fetch("/api/login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({usuario,clave})});
+    const j=await r.json().catch(()=>({}));
+    if(!r.ok){$("lMsg").textContent=j.error||"No se pudo entrar.";if(r.status===409)revisarEstado();return}
+    token=j.token;yo=j.yo;try{localStorage.setItem("sm_token",token)}catch(e){} $("loginForm").reset(); entrar();
+  }catch(e){$("lMsg").textContent="No se pudo conectar."}});
+function entrar(){$("login").hidden=true;$("app").hidden=false;$("fFecha").value=hoy();pintarYo();fillCfg();cargar()}
+if(token) entrar(); else salir("");
+setInterval(()=>{if(!$("app").hidden&&!document.hidden) cargar()},30000);
+document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!$("app").hidden) cargar()});
+</script></body></html>
