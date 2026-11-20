@@ -107,6 +107,29 @@ export default {
       return json({ token: await crearSesion(env, u), yo: publico(u) });
     }
 
+    // Entrada automática desde el panel de pedidos (tienda): cuando un pedido pasa a «entregado»,
+    // la tienda llama aquí y el cliente queda en la lista para empezar el flujo de reseña.
+    // No usa sesión: se autentica con la clave compartida INTEGRACION_CLAVE (secreto del Worker).
+    if (p === "/api/integracion/entrega" && M === "POST") {
+      const clave = req.headers.get("X-Integracion-Clave") || "";
+      if (!env.INTEGRACION_CLAVE || !igual(await sha(clave), await sha(env.INTEGRACION_CLAVE))) return json({ error: "No autorizado." }, 401);
+      const pedido = String(b.pedido || "").trim();
+      const nombre = String(b.nombre || "").trim().slice(0, 120), tel = String(b.telefono || "").trim().slice(0, 30), producto = String(b.producto || "").trim().slice(0, 120);
+      const entrega = /^\d{4}-\d{2}-\d{2}$/.test(b.entrega) ? b.entrega : hoyEC();
+      if (!/^[A-Za-z0-9-]{3,40}$/.test(pedido)) return json({ error: "Falta el código del pedido." }, 400);
+      if (!nombre || normTel(tel).length < 9) return json({ error: "Faltan el nombre o un teléfono válido." }, 400);
+      const existente = () => env.DB.prepare("SELECT id FROM clientes WHERE pedido=?").bind(pedido).first();
+      const ya = await existente(); if (ya) return json({ id: ya.id, yaExistia: true });
+      const id = aleatorio(6);
+      try {
+        await env.DB.prepare("INSERT INTO clientes (id,nombre,telefono,producto,entrega,msg1,msg2,clic,resena,no_molestar,creado,borrado,creado_por,pedido) VALUES (?,?,?,?,?,NULL,NULL,NULL,0,0,?,0,'tienda',?)").bind(id, nombre, tel, producto, entrega, ahora(), pedido).run();
+      } catch (e) {
+        const otro = await existente(); if (otro) return json({ id: otro.id, yaExistia: true }); throw e;
+      }
+      await evento(env, id, { id: null, nombre: "Tienda" }, "creado", { entrega, producto, pedido });
+      return json({ id, creado: true }, 201);
+    }
+
     // Todo lo de abajo exige sesión.
     const u = await sesion(env, req); if (!u) return json({ error: "sesion" }, 401);
     const admin = u.rol === "admin";

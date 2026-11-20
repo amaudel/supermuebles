@@ -478,7 +478,8 @@ main { padding: var(--m); max-width: 90rem; margin: 0 auto; }
           ev.tipo === 'montos' ? 'Fijó envío ' + dinero(ev.detalle.envio_cents) + ' y total ' + dinero(ev.detalle.total_cents) + (ev.detalle.abono_cents != null ? ', abono ' + dinero(ev.detalle.abono_cents) : '') :
           ev.tipo === 'nota' ? ev.detalle.texto :
           ev.tipo === 'creado' ? 'El cliente envió el pedido' :
-          ev.tipo === 'comprobante' ? 'El cliente subió un comprobante' : ev.tipo;
+          ev.tipo === 'comprobante' ? 'El cliente subió un comprobante' :
+          ev.tipo === 'resenas' ? (ev.detalle.ok ? (ev.detalle.yaExistia ? 'El cliente ya estaba en el panel de reseñas' : 'El cliente pasó al panel de reseñas para pedirle su opinión') : 'No se pudo pasar al panel de reseñas: ' + (ev.detalle.error || 'error desconocido') + ' Agrégalo a mano.') : ev.tipo;
         return '<li><time>' + esc(fecha(ev.at)) + ' · ' + esc(ev.actor) + '</time><span>' + esc(t) + '</span></li>';
       }).join('') +
       '</ol></section></article>';

@@ -3,6 +3,7 @@
 // La sesión es una cookie firmada que lleva el correo, así cada cambio queda registrado con quién lo hizo.
 import type { Env } from './index';
 import { verComprobante, limpiar } from './comprobantes';
+import { avisarResenas } from './resenas';
 
 const COOKIE = 'sm_admin';
 const SESION_HORAS = 12;
@@ -169,7 +170,7 @@ async function fijarMontos(request: Request, db: D1Database, id: string, u: Usua
   return verPedidoAdmin(db, id);
 }
 
-async function cambiarEstado(request: Request, db: D1Database, id: string, u: Usuaria): Promise<Response> {
+async function cambiarEstado(request: Request, env: Env, db: D1Database, id: string, u: Usuaria): Promise<Response> {
   const d: any = await request.json().catch(() => ({}));
   const nuevo = texto(d?.estado, 40);
   const desde = texto(d?.desde, 40);
@@ -192,6 +193,8 @@ async function cambiarEstado(request: Request, db: D1Database, id: string, u: Us
     ...(pago ? [db.prepare("UPDATE payments SET status = ?, verified_by = ?, verified_at = ? WHERE order_id = ? AND status = 'en_revision'").bind(pago, u.email, t, id)] : []),
   ]);
   if (!r[0].meta.changes) return error('El pedido cambió mientras lo editabas. Vuelve a abrirlo.', 409);
+  // Entregado: el cliente pasa solo al panel de reseñas para empezar a pedirle su opinión.
+  if (nuevo === 'entregado') await avisarResenas(env, db, id);
   return verPedidoAdmin(db, id);
 }
 
@@ -454,7 +457,7 @@ export async function adminApi(request: Request, env: Env, url: URL): Promise<Re
     const [, id, accion] = r;
     if (!accion && m === 'GET') return verPedidoAdmin(db, id);
     if (accion === '/montos' && m === 'POST') return fijarMontos(request, db, id, u);
-    if (accion === '/estado' && m === 'POST') return cambiarEstado(request, db, id, u);
+    if (accion === '/estado' && m === 'POST') return cambiarEstado(request, env, db, id, u);
     if (accion === '/nota' && m === 'POST') return agregarNota(request, db, id, u);
   }
   r = p.match(/^\/pedidos\/([0-9a-f-]{36})\/comprobantes\/([0-9a-f-]{36})$/);

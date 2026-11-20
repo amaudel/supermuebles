@@ -8,6 +8,7 @@
     "db:migrar:nube": "wrangler d1 migrations apply supermuebles-tienda-pruebas --config ../wrangler.tienda.jsonc --remote",
     "db:precios-prueba": "wrangler d1 execute supermuebles-tienda-pruebas --config ../wrangler.tienda.jsonc --local --file scripts/solo-local-precios-de-prueba.sql",
     "test": "node --test --test-concurrency=1 test/smoke.test.mjs test/tienda.test.mjs test/admin.test.mjs test/comprobantes.test.mjs test/fichas-tienda.test.mjs",
+    "test:resenas": "node --test --test-concurrency=1 test/resenas.test.mjs",
     "publicar:pruebas": "wrangler deploy --config ../wrangler.tienda.jsonc"
   },
   "devDependencies": {

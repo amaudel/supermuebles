@@ -25,6 +25,10 @@ export interface Env {
   ADMIN_CODE?: string; // código del panel /admin/ (secreto del Worker)
   LIMITE_PEDIDOS?: RateLimit;
   LIMITE_COMPROBANTES?: RateLimit;
+  // Aviso al panel de reseñas cuando un pedido queda entregado (worker/resenas.ts).
+  RESENAS?: Fetcher;        // vínculo de servicio al Worker `supermuebles-resenas`
+  RESENAS_URL?: string;     // solo en local: dirección del panel de reseñas en marcha
+  RESENAS_CLAVE?: string;   // secreto compartido (INTEGRACION_CLAVE en el panel de reseñas)
 }
 
 const COOKIE = 'sm_fichas';

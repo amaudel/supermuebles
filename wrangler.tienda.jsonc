@@ -23,6 +23,9 @@
     // El código de la tienda nunca escribe aquí (tienda/worker/admin.ts, leerFichas; tienda.ts, fotoPublica).
     { "binding": "FICHAS_FUENTE", "bucket_name": "supermuebles-fichas-fotos" }
   ],
+  // Panel de reseñas (carpeta resenas/): al entregar un pedido, tienda/worker/resenas.ts le avisa por aquí.
+  // Necesita el secreto RESENAS_CLAVE (el mismo valor que INTEGRACION_CLAVE en el Worker de reseñas).
+  "services": [{ "binding": "RESENAS", "service": "supermuebles-resenas" }],
   "d1_databases": [
     // En local (npm run dev) funciona sin crear nada en Cloudflare.
     // Base de pruebas creada el 19 nov 2026 (cupo liberado al borrar pricelabs-revenue-db).

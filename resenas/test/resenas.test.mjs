@@ -81,6 +81,40 @@ test('enlace /r/<id> registra el clic y manda a Google; un bot no lo registra', 
   assert.ok(datos.clientes.find(x => x.id === id).clic);
 });
 
+// La clave local está en resenas/.dev.vars (INTEGRACION_CLAVE); en las pruebas se puede cambiar con la variable de entorno.
+const CLAVE_INTEGRACION = process.env.INTEGRACION_CLAVE || 'CLAVE-LOCAL-DE-PRUEBA';
+const entrega = (cuerpo, clave = CLAVE_INTEGRACION) =>
+  fetch(BASE + '/api/integracion/entrega', { method: 'POST', headers: { ...J, ...(clave ? { 'X-Integracion-Clave': clave } : {}) }, body: JSON.stringify(cuerpo) });
+
+test('integración: sin la clave correcta no entra nadie', async () => {
+  const c = { pedido: 'SM-AAAA11', nombre: 'Ana Pedido', telefono: '0981112233', producto: 'Comedor' };
+  assert.equal((await entrega(c, '')).status, 401);
+  assert.equal((await entrega(c, 'clave-equivocada')).status, 401);
+});
+
+test('integración: un pedido entregado crea el cliente una sola vez', async () => {
+  const c = { pedido: 'SM-BBBB22', nombre: 'Luis Pedido', telefono: '+593 98 111 2233', producto: '2 × Sala, Mesa de centro', entrega: '2026-11-20' };
+  const r1 = await entrega(c);
+  assert.equal(r1.status, 201);
+  const id = (await r1.json()).id;
+  const r2 = await entrega(c);
+  assert.equal(r2.status, 200);
+  assert.deepEqual(await r2.json(), { id, yaExistia: true });
+  const datos = await (await api('datos')).json();
+  const cli = datos.clientes.filter(x => x.pedido === 'SM-BBBB22');
+  assert.equal(cli.length, 1);
+  assert.equal(cli[0].nombre, 'Luis Pedido');
+  assert.equal(cli[0].entrega, '2026-11-20');
+  assert.equal(cli[0].msg1, null);
+  const hist = await (await api('clientes/' + id + '/historial')).json();
+  assert.ok(hist.some(e => e.tipo === 'creado' && e.usuario === 'Tienda'));
+});
+
+test('integración: datos incompletos se rechazan con un mensaje claro', async () => {
+  assert.equal((await entrega({ pedido: 'SM-CCCC33', nombre: 'Sin teléfono', telefono: '123', producto: 'X' })).status, 400);
+  assert.equal((await entrega({ pedido: '', nombre: 'Sin pedido', telefono: '0981112233' })).status, 400);
+});
+
 test('cambiar la propia clave', async () => {
   assert.equal((await api('clave', { metodo: 'POST', cuerpo: { actual: 'incorrecta-1', nueva: 'Nueva-clave-22' } })).status, 400);
   assert.equal((await api('clave', { metodo: 'POST', cuerpo: { actual: CLAVE, nueva: 'Nueva-clave-22' } })).status, 204);
