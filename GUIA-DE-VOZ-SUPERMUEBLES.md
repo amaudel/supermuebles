@@ -150,7 +150,7 @@ Un lector que nota un texto de máquina duda del resto. Para evitarlo:
 
 - **Nombre:** Supermuebles Cuenca. Antes se llamó Austro Muebles. Titular: Melgar Chapa Milton Mateo, RUC 0104931506001.
 - **Desde:** 2008 (inicio de actividades: 20 de diciembre de 2008). "18 años" solo desde el 20 de diciembre de 2026. Antes se escribe "desde 2008".
-- **Fábrica y local:** Turi, Cuenca, sector San Pedro, vía al centro de rehabilitación. Código Plus 3233+34Q.
+- **Fábrica y local:** Turi, Cuenca, sector San Pedro. Código Plus 3233+34Q. No mencionar el centro de rehabilitación como referencia (decisión del 23 nov 2026).
 - **Horario de Turi:** lunes a viernes de 8:00 a 12:00 y de 13:30 a 17:00. Sábados de 8:00 a 14:00. Domingos solo con cita previa (lo definió el dueño en octubre de 2026; el perfil de Google puede decir otra cosa y conviene actualizarlo).
 - **Showroom:** Mall del Norte, segundo piso, Guayaquil.
 - **Contacto:** teléfono (07) 403-9472; celular y WhatsApp 099 988 0023; celular y WhatsApp 095 964 1962.

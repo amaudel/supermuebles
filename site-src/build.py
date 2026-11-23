@@ -21,7 +21,7 @@ BUSINESS = '''{
   "telephone": ["+59374039472", "+593959641962"],
   "address": {
     "@type": "PostalAddress",
-    "streetAddress": "Sector San Pedro, vía al centro de rehabilitación, Turi",
+    "streetAddress": "Sector San Pedro, Turi",
     "addressLocality": "Cuenca",
     "addressRegion": "Azuay",
     "addressCountry": "EC"

@@ -22,7 +22,7 @@ LOCATION = {
     'place_id': 'ChIJY80S_zYZzZERq-GOKXlWkdw',
     'cid': '15893579638355452331',
     'plus_code': '3233+34Q',
-    'address': 'Sector San Pedro, vía al centro de rehabilitación',
+    'address': 'Sector San Pedro',
     'locality': 'Turi, Cuenca, Azuay, Ecuador',
     'phone': '(07) 403-9472',
     'phone_tel': '+59374039472',
