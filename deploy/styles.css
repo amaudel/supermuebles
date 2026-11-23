@@ -1122,3 +1122,11 @@ input, textarea { caret-color: var(--accent); }
 @media (max-width: 859px) {
   .hero.hero--fab .vista-toggle, .hero.hero--fab .sound-toggle { top: calc(var(--bar-h) + 56.25vw - 3.5rem); bottom: auto; }
 }
+
+/* Íconos de Lucide en la portada: ambientes, «Cómo trabajamos» y respaldo.
+   Toman el terracota de la marca; el texto sigue en su color. */
+.frame .nm { display: inline-flex; align-items: center; gap: 0.45rem; }
+.nm-i { width: 1.15em; height: 1.15em; color: var(--accent); }
+.pillar-h { display: flex; align-items: center; gap: 0.5rem; }
+.pillar-i { width: 1.35rem; height: 1.35rem; color: var(--accent); }
+.assure-i { width: 2.25rem; height: 2.25rem; stroke-width: 1.5; color: var(--accent); }
