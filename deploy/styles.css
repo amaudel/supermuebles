@@ -1123,10 +1123,66 @@ input, textarea { caret-color: var(--accent); }
   .hero.hero--fab .vista-toggle, .hero.hero--fab .sound-toggle { top: calc(var(--bar-h) + 56.25vw - 3.5rem); bottom: auto; }
 }
 
-/* Íconos de Lucide en la portada: ambientes, «Cómo trabajamos» y respaldo.
+/* Íconos de Lucide en la portada: «Cómo trabajamos» y respaldo (los de ambientes van en su bloque).
    Toman el terracota de la marca; el texto sigue en su color. */
-.frame .nm { display: inline-flex; align-items: center; gap: 0.45rem; }
-.nm-i { width: 1.15em; height: 1.15em; color: var(--accent); }
 .pillar-h { display: flex; align-items: center; gap: 0.5rem; }
 .pillar-i { width: 1.35rem; height: 1.35rem; color: var(--accent); }
 .assure-i { width: 2.25rem; height: 2.25rem; stroke-width: 1.5; color: var(--accent); }
+
+/* ---------- Elige tu ambiente: tarjetas que se apilan al bajar ----------
+   Igual que «Así salen del sillón» de Distrito Barber. Sin JS o con movimiento reducido
+   las tres tarjetas se ven una debajo de otra; main.js agrega .is-on y mueve cada tarjeta. */
+.amb { padding: clamp(4rem, 7vw, 6.5rem) 0 var(--sec); }
+.amb-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 1.5rem; flex-wrap: wrap; padding: 0 var(--m); margin-bottom: clamp(1.5rem, 3vw, 2.5rem); }
+.amb-head .sec-label { margin-bottom: 1.1rem; }
+.amb-stage { display: grid; gap: var(--gap); padding: 0 var(--m); }
+.amb-card {
+  position: relative; display: block; overflow: hidden; border-radius: 1rem; background: var(--surface);
+  aspect-ratio: 16 / 10; color: #fff; isolation: isolate;
+}
+.amb-card img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: -2; transition: transform 0.6s var(--ease-out); }
+.amb-card::after { content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  background: linear-gradient(rgba(16, 24, 32, 0.62), transparent 40%, transparent 62%, rgba(16, 24, 32, 0.55)); }
+.amb-label { position: absolute; top: clamp(1rem, 2.4vw, 1.75rem); left: clamp(1.1rem, 2.6vw, 2rem); right: clamp(1.1rem, 2.6vw, 2rem);
+  display: flex; justify-content: space-between; align-items: center; gap: 0.5rem 1rem; flex-wrap: wrap; }
+.amb-label h3 { display: flex; align-items: center; gap: 0.6rem; font-size: clamp(1.9rem, 1rem + 3.2vw, 3.6rem); font-weight: 400; line-height: 1; letter-spacing: -0.02em; }
+.amb-label h3 .i { width: 0.8em; height: 0.8em; stroke-width: 1.5; color: var(--accent-light); }
+.amb-label span { font-size: 0.75rem; font-weight: 600; letter-spacing: 0.24em; text-transform: uppercase; opacity: 0.9; }
+.amb-go { position: absolute; left: clamp(1.1rem, 2.6vw, 2rem); bottom: clamp(1rem, 2.4vw, 1.75rem);
+  display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.7rem 1.1rem; border-radius: 999px;
+  background: var(--bg); color: var(--ink); font-weight: 600; font-size: 0.95rem; }
+.amb-go .i { width: 1.1em; height: 1.1em; transition: transform 0.2s var(--ease-out); }
+.amb-shade { position: absolute; inset: 0; background: #101820; opacity: 0; pointer-events: none; }
+@media (hover: hover) and (pointer: fine) {
+  .amb-card:hover img { transform: scale(1.03); }
+  .amb-card:hover .amb-go .i { transform: translateX(4px); }
+}
+.amb-card:focus-visible { outline: 3px solid var(--accent); outline-offset: 4px; }
+
+/* Con JS: el escenario queda fijo y las tarjetas suben una sobre otra */
+.amb-stack.is-on { height: 300vh; }
+.amb-stack.is-on .amb-stage { position: sticky; top: 0; height: 100vh; height: 100svh; padding: 0; display: block; overflow: hidden; }
+.amb-stack.is-on .amb-card {
+  position: absolute; inset: 0; margin: auto; aspect-ratio: auto;
+  width: min(80vw, 64rem); height: min(76svh, 40rem); will-change: transform;
+}
+.amb-stack.is-on .amb-card:nth-child(n+2) { transform: translateY(110svh); }
+
+/* Los demás ambientes, en una fila de enlaces con ícono */
+.amb-more { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--gap); padding: clamp(1.5rem, 3vw, 2.5rem) var(--m) 0; }
+.amb-more a { display: flex; align-items: center; gap: 0.85rem; height: 100%; padding: 1.1rem 1.2rem; border-radius: 0.75rem; background: var(--surface); transition: background 0.2s var(--ease-out); }
+.amb-more .i { width: 1.6rem; height: 1.6rem; color: var(--accent); }
+.amb-more span { display: grid; gap: 0.1rem; line-height: 1.3; }
+.amb-more b { font-weight: 600; }
+.amb-more small { font-size: var(--small); color: var(--muted); }
+@media (hover: hover) and (pointer: fine) { .amb-more a:hover { background: #d8cfb6; } }
+
+@media (max-width: 859px) {
+  .amb-card { aspect-ratio: 4 / 5; }
+  .amb-stack.is-on { height: 270vh; }
+  .amb-stack.is-on .amb-card { width: 88vw; height: min(68svh, 36rem); }
+  .amb-label { flex-direction: column; align-items: flex-start; }
+  .amb-more { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 479px) { .amb-more { grid-template-columns: 1fr; } }
+.amb-stack.is-on + .amb-more { padding-top: 0; }

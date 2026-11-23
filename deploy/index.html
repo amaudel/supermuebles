@@ -191,66 +191,45 @@
   </div>
 </section>
 
-<!-- ================= Por ambiente ================= -->
-<section class="showcase" id="ambientes" aria-labelledby="ambientes-title">
-  <div class="showcase-side">
+<!-- ================= Por ambiente: tarjetas que se apilan al bajar ================= -->
+<section class="amb" id="ambientes" aria-labelledby="ambientes-title">
+  <div class="amb-head">
     <div>
       <p class="sec-label" data-r><b>03</b> Ambientes</p>
       <h2 class="h2" id="ambientes-title" data-r>Elige tu ambiente</h2>
-      <a class="link" href="/catalogo" data-r>Ver todo el catálogo <svg class="i" aria-hidden="true"><use href="#i-arrow"/></svg></a>
-      <div class="arrows" data-r>
-        <button class="sq" type="button" data-prev="#run-muebles" aria-label="Muebles anteriores"><svg class="i" aria-hidden="true"><use href="#i-left"/></svg></button>
-        <button class="sq" type="button" data-next="#run-muebles" aria-label="Más muebles"><svg class="i" aria-hidden="true"><use href="#i-arrow"/></svg></button>
-      </div>
+    </div>
+    <a class="link" href="/catalogo" data-r>Ver todo el catálogo <svg class="i" aria-hidden="true"><use href="#i-arrow"/></svg></a>
+  </div>
+
+  <div class="amb-stack" id="amb-stack">
+    <div class="amb-stage">
+      <a class="amb-card" href="/salas">
+        <img loading="lazy" src="img/catalogo/sala-soft-l.jpg" srcset="img/catalogo/sala-soft-l-480.webp 480w, img/catalogo/sala-soft-l-800.webp 800w, img/catalogo/sala-soft-l-1056.webp 1056w" sizes="(max-width: 859px) 88vw, 72vw" width="1056" height="1382" style="object-position: 50% 60%" alt="Sala Soft: sofá seccional en L beige con pufs azul cobalto y mesa de centro de cristal">
+        <div class="amb-label"><h3><svg class="i" aria-hidden="true"><use href="#i-sofa"/></svg>Salas</h3><span>Seccionales y juegos</span></div>
+        <span class="amb-go">Ver salas <svg class="i" aria-hidden="true"><use href="#i-arrow"/></svg></span>
+        <span class="amb-shade" aria-hidden="true"></span>
+      </a>
+      <a class="amb-card" href="/comedores">
+        <img loading="lazy" src="img/catalogo/comedor-luxuri.jpg" srcset="img/catalogo/comedor-luxuri-480.webp 480w, img/catalogo/comedor-luxuri-800.webp 800w, img/catalogo/comedor-luxuri-1170.webp 1170w" sizes="(max-width: 859px) 88vw, 72vw" width="1170" height="1274" style="object-position: 50% 55%" alt="Comedor Luxuri: mesa con tablero tipo mármol y pedestal de cedro oscuro, con seis sillas marfil">
+        <div class="amb-label"><h3><svg class="i" aria-hidden="true"><use href="#i-utensils"/></svg>Comedores</h3><span>De 6 a 8 puestos</span></div>
+        <span class="amb-go">Ver comedores <svg class="i" aria-hidden="true"><use href="#i-arrow"/></svg></span>
+        <span class="amb-shade" aria-hidden="true"></span>
+      </a>
+      <a class="amb-card" href="/dormitorios">
+        <img loading="lazy" src="img/catalogo/dorm-miami.jpg" srcset="img/catalogo/dorm-miami-480.webp 480w, img/catalogo/dorm-miami-800.webp 800w, img/catalogo/dorm-miami-1200.webp 1200w" sizes="(max-width: 859px) 88vw, 72vw" width="1238" height="1508" style="object-position: 50% 45%" alt="Cama Miami tapizada en cuerina capitoné con detalles en espejo metálico y mesas de noche">
+        <div class="amb-label"><h3><svg class="i" aria-hidden="true"><use href="#i-bed"/></svg>Dormitorios</h3><span>Camas y veladores</span></div>
+        <span class="amb-go">Ver dormitorios <svg class="i" aria-hidden="true"><use href="#i-arrow"/></svg></span>
+        <span class="amb-shade" aria-hidden="true"></span>
+      </a>
     </div>
   </div>
 
-  <div class="run" id="run-muebles" tabindex="0" role="region" aria-label="Muebles por ambiente. Desliza para ver más.">
-    <ul class="frames" data-rg>
-      <li class="frame frame--lift" data-r="slide">
-        <a href="/salas">
-          <figure><div class="frame-img"><img src="img/catalogo/sala-soft-l.jpg" width="1056" srcset="img/catalogo/sala-soft-l-480.webp 480w, img/catalogo/sala-soft-l-800.webp 800w, img/catalogo/sala-soft-l-1056.webp 1056w" sizes="(max-width: 599px) 92vw, (max-width: 1023px) 46vw, 33vw" height="1382" loading="lazy" alt="Sala Soft: sofá seccional en L beige con pufs azul cobalto y mesa de centro de cristal"></div>
-          <figcaption><span class="nm"><svg class="i nm-i" aria-hidden="true"><use href="#i-sofa"/></svg>Ver salas</span><span class="ft">Seccionales y juegos</span></figcaption></figure>
-        </a>
-      </li>
-      <li class="frame" data-r="slide">
-        <a href="/comedores">
-          <figure><div class="frame-img"><img src="img/catalogo/comedor-luxuri.jpg" width="1170" srcset="img/catalogo/comedor-luxuri-480.webp 480w, img/catalogo/comedor-luxuri-800.webp 800w, img/catalogo/comedor-luxuri-1170.webp 1170w" sizes="(max-width: 599px) 92vw, (max-width: 1023px) 46vw, 33vw" height="1274" loading="lazy" alt="Comedor Luxuri: mesa con tablero tipo mármol y pedestal de cedro oscuro, con seis sillas marfil"></div>
-          <figcaption><span class="nm"><svg class="i nm-i" aria-hidden="true"><use href="#i-utensils"/></svg>Ver comedores</span><span class="ft">De 6 a 8 puestos</span></figcaption></figure>
-        </a>
-      </li>
-      <li class="frame" data-r="slide">
-        <a href="/dormitorios">
-          <figure><div class="frame-img"><img src="img/catalogo/dorm-miami.jpg" width="1238" srcset="img/catalogo/dorm-miami-480.webp 480w, img/catalogo/dorm-miami-800.webp 800w, img/catalogo/dorm-miami-1200.webp 1200w, img/catalogo/dorm-miami-1238.webp 1238w" sizes="(max-width: 599px) 92vw, (max-width: 1023px) 46vw, 33vw" height="1508" loading="lazy" alt="Cama Miami tapizada en cuerina capitoné con detalles en espejo metálico y mesas de noche"></div>
-          <figcaption><span class="nm"><svg class="i nm-i" aria-hidden="true"><use href="#i-bed"/></svg>Ver dormitorios</span><span class="ft">Camas y veladores</span></figcaption></figure>
-        </a>
-      </li>
-      <li class="frame" data-r="slide">
-        <a href="/salas#sala-relax">
-          <figure><div class="frame-img"><img src="img/catalogo/sala-relax.jpg" width="837" srcset="img/catalogo/sala-relax-480.webp 480w, img/catalogo/sala-relax-800.webp 800w, img/catalogo/sala-relax-837.webp 837w" sizes="(max-width: 599px) 92vw, (max-width: 1023px) 46vw, 33vw" height="910" loading="lazy" alt="Sala Relax en cuero sintético marrón con sillones reclinables"></div>
-          <figcaption><span class="nm"><svg class="i nm-i" aria-hidden="true"><use href="#i-armchair"/></svg>Sala Relax</span><span class="ft">Reclinables eléctricos</span></figcaption></figure>
-        </a>
-      </li>
-      <li class="frame" data-r="slide">
-        <a href="/salas#sofa-cama-nido">
-          <figure><div class="frame-img"><img src="img/catalogo/sofa-cama.jpg" width="1238" srcset="img/catalogo/sofa-cama-480.webp 480w, img/catalogo/sofa-cama-800.webp 800w, img/catalogo/sofa-cama-1200.webp 1200w, img/catalogo/sofa-cama-1238.webp 1238w" sizes="(max-width: 599px) 92vw, (max-width: 1023px) 46vw, 33vw" height="936" loading="lazy" alt="Sofá cama beige con cama nido deslizable"></div>
-          <figcaption><span class="nm"><svg class="i nm-i" aria-hidden="true"><use href="#i-bed-single"/></svg>Sofá cama</span><span class="ft">Con cama nido</span></figcaption></figure>
-        </a>
-      </li>
-      <li class="frame" data-r="slide">
-        <a href="/dormitorios#infantil">
-          <figure><div class="frame-img"><img src="img/catalogo/dorm-castillo.jpg" width="922" srcset="img/catalogo/dorm-castillo-480.webp 480w, img/catalogo/dorm-castillo-800.webp 800w, img/catalogo/dorm-castillo-922.webp 922w" sizes="(max-width: 599px) 92vw, (max-width: 1023px) 46vw, 33vw" height="1136" loading="lazy" alt="Cama Castillo Rosa: litera blanca y rosa con cama nido y escalera con cajones"></div>
-          <figcaption><span class="nm"><svg class="i nm-i" aria-hidden="true"><use href="#i-baby"/></svg>Dormitorios infantiles</span><span class="ft">Literas, cunas y camas</span></figcaption></figure>
-        </a>
-      </li>
-      <li class="frame" data-r="slide">
-        <a href="/a-medida">
-          <figure><div class="frame-img"><img src="img/catalogo/s-juego-centro.jpg" width="666" srcset="img/catalogo/s-juego-centro-480.webp 480w, img/catalogo/s-juego-centro-666.webp 666w" sizes="(max-width: 599px) 92vw, (max-width: 1023px) 46vw, 33vw" height="603" loading="lazy" alt="Juego de mesas de centro de dos piezas con superficie de espejo y cuerpo acanalado en tono champagne"></div>
-          <figcaption><span class="nm"><svg class="i nm-i" aria-hidden="true"><use href="#i-pencil-ruler"/></svg>A medida</span><span class="ft">Tu idea, tu espacio</span></figcaption></figure>
-        </a>
-      </li>
-    </ul>
-  </div>
+  <ul class="amb-more" data-rg>
+    <li data-r><a href="/salas#sala-relax"><svg class="i" aria-hidden="true"><use href="#i-armchair"/></svg><span><b>Sala Relax</b><small>Reclinables eléctricos</small></span></a></li>
+    <li data-r><a href="/salas#sofa-cama-nido"><svg class="i" aria-hidden="true"><use href="#i-bed-single"/></svg><span><b>Sofá cama</b><small>Con cama nido</small></span></a></li>
+    <li data-r><a href="/dormitorios#infantil"><svg class="i" aria-hidden="true"><use href="#i-baby"/></svg><span><b>Dormitorios infantiles</b><small>Literas, cunas y camas</small></span></a></li>
+    <li data-r><a href="/a-medida"><svg class="i" aria-hidden="true"><use href="#i-pencil-ruler"/></svg><span><b>A medida</b><small>Tu idea, tu espacio</small></span></a></li>
+  </ul>
 </section>
 
 <!-- ================= Directo de fábrica ================= -->

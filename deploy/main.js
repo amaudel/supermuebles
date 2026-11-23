@@ -712,4 +712,34 @@
     vupdate();
   }
 
+  /* ---------- Elige tu ambiente: tarjetas que se apilan al bajar ----------
+     Igual que «Así salen del sillón» de Distrito Barber: el escenario queda fijo y cada
+     tarjeta sube desde abajo, girada un poco, y tapa a la anterior, que se achica y se oscurece.
+     Con movimiento reducido no se activa y las tarjetas quedan una debajo de otra. */
+  var amb = document.getElementById('amb-stack');
+  if (amb && !reduce) {
+    var ambCards = $$('.amb-card', amb);
+    var ambClamp = function (v) { return Math.min(Math.max(v, 0), 1); };
+    var ambQueued = false;
+    amb.classList.add('is-on');
+    var ambDraw = function () {
+      ambQueued = false;
+      var r = amb.getBoundingClientRect();
+      var p = ambClamp(-r.top / (r.height - window.innerHeight)) * (ambCards.length - 1);
+      ambCards.forEach(function (c, i) {
+        var entrada = ambClamp(p - (i - 1));   // cuánto ha subido esta tarjeta
+        var tapada = ambClamp(p - i);          // cuánto la tapa la siguiente
+        var fuera = window.innerHeight / 2 + c.offsetHeight / 2 + 24;
+        var y = i === 0 ? 0 : (1 - entrada) * fuera;
+        var giro = (1 - entrada) * (i % 2 ? 3 : -3);
+        c.style.transform = 'translateY(' + y.toFixed(1) + 'px) scale(' + (1 - tapada * 0.08).toFixed(4) + ') rotate(' + giro.toFixed(2) + 'deg)';
+        c.querySelector('.amb-shade').style.opacity = (tapada * 0.55).toFixed(3);
+      });
+    };
+    var ambQueue = function () { if (!ambQueued) { ambQueued = true; requestAnimationFrame(ambDraw); } };
+    window.addEventListener('scroll', ambQueue, { passive: true });
+    window.addEventListener('resize', ambQueue);
+    ambDraw();
+  }
+
 })();
