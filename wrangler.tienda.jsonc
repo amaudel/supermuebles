@@ -1,0 +1,50 @@
+// Configuración SOLO para la rama `tienda` (carrito, pedidos y panel).
+// Publica en un Worker de pruebas aparte, con sus propios bucket y base de datos.
+// Nunca toca el Worker `supermuebles-cuenca` ni el bucket de fichas reales.
+// La configuración del sitio en vivo sigue en wrangler.jsonc y no se usa desde esta rama.
+{
+  "$schema": "https://unpkg.com/wrangler/config-schema.json",
+  "name": "supermuebles-tienda-pruebas",
+  "main": "tienda/worker/index.ts",
+  "compatibility_date": "2026-10-27",
+  "workers_dev": true,
+  "assets": {
+    "directory": "./deploy",
+    "binding": "ASSETS",
+    "not_found_handling": "404-page",
+    "html_handling": "auto-trailing-slash",
+    "run_worker_first": ["/fichas-api/*", "/api/*", "/admin/*"]
+  },
+  "r2_buckets": [
+    // Copia de pruebas: las fichas reales del dueño no se leen ni se escriben desde aquí.
+    { "binding": "FOTOS", "bucket_name": "supermuebles-pruebas-fichas" },
+    { "binding": "COMPROBANTES", "bucket_name": "supermuebles-pruebas-comprobantes" },
+    // Fichas REALES del dueño, solo para LEERLAS y pasarlas a la tienda desde el panel.
+    // El código de la tienda nunca escribe aquí (tienda/worker/admin.ts, leerFichas; tienda.ts, fotoPublica).
+    { "binding": "FICHAS_FUENTE", "bucket_name": "supermuebles-fichas-fotos" }
+  ],
+  // Panel de reseñas (carpeta resenas/): al entregar un pedido, tienda/worker/resenas.ts le avisa por aquí.
+  // Necesita el secreto RESENAS_CLAVE (el mismo valor que INTEGRACION_CLAVE en el Worker de reseñas).
+  "services": [{ "binding": "RESENAS", "service": "supermuebles-resenas" }],
+  "d1_databases": [
+    // En local (npm run dev) funciona sin crear nada en Cloudflare.
+    // Base de pruebas creada el 19 nov 2026 (cupo liberado al borrar pricelabs-revenue-db).
+    // Para el esquema en Cloudflare: npm run db:migrar:nube (desde tienda/).
+    {
+      "binding": "DB",
+      "database_name": "supermuebles-tienda-pruebas",
+      "database_id": "c3e2a088-7bb4-4f17-842b-c9071797ed66",
+      "migrations_dir": "tienda/migrations"
+    }
+  ],
+  // Hasta 10 envíos de pedido y 10 comprobantes por minuto desde la misma IP.
+  "ratelimits": [
+    { "name": "LIMITE_PEDIDOS", "namespace_id": "1001", "simple": { "limit": 10, "period": 60 } },
+    { "name": "LIMITE_COMPROBANTES", "namespace_id": "1002", "simple": { "limit": 10, "period": 60 } }
+  ],
+  // Limpieza diaria: la cuenta gratuita ya usa sus 5 tareas programadas, así que no hay cron.
+  // La limpieza corre al abrir el panel, como máximo una vez cada 24 horas (admin.ts, limpiezaDelDia).
+  // Con plan de pago o un cupo libre, agregar: "triggers": { "crons": ["0 8 * * *"] }  (03:00 de Ecuador).
+  "triggers": { "crons": [] },
+  "observability": { "enabled": true }
+}

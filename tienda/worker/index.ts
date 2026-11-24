@@ -8,11 +8,27 @@
 // Los cambios al documento usan escritura condicional (etag): si otra petición escribió antes,
 // se vuelve a leer y se reintenta, así nunca se pisan dos guardados a la vez.
 import { SEED } from './seed';
+import { api } from './tienda';
+import { limpiar as limpiarTienda } from './comprobantes';
 
 export interface Env {
   ASSETS: Fetcher;
   FOTOS: R2Bucket;
   FICHAS_CODE: string; // código de acceso compartido (secreto del Worker)
+  // Solo existen en la rama `tienda` (wrangler.tienda.jsonc). El sitio en vivo no los tiene.
+  DB?: D1Database;
+  COMPROBANTES?: R2Bucket;
+  // Bucket de donde se LEEN las fichas del dueño para pasarlas a la tienda (en la rama de pruebas, las fichas reales).
+  // Si falta, se usa FOTOS. Nunca se escribe en él desde la tienda.
+  FICHAS_FUENTE?: R2Bucket;
+  TURNSTILE_SECRET?: string;
+  ADMIN_CODE?: string; // código del panel /admin/ (secreto del Worker)
+  LIMITE_PEDIDOS?: RateLimit;
+  LIMITE_COMPROBANTES?: RateLimit;
+  // Aviso al panel de reseñas cuando un pedido queda entregado (worker/resenas.ts).
+  RESENAS?: Fetcher;        // vínculo de servicio al Worker `supermuebles-resenas`
+  RESENAS_URL?: string;     // solo en local: dirección del panel de reseñas en marcha
+  RESENAS_CLAVE?: string;   // secreto compartido (INTEGRACION_CLAVE en el panel de reseñas)
 }
 
 const COOKIE = 'sm_fichas';
@@ -328,6 +344,12 @@ async function rutas(request: Request, env: Env, url: URL): Promise<Response> {
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
+    if (url.pathname.startsWith('/api/')) return api(request, env, url);
+    // Sin base de datos (el sitio en vivo mientras la tienda no se activa) las páginas de la tienda y el panel
+    // no existen: se responde la página 404 normal del sitio en vez de mostrar pantallas que no funcionan.
+    if (!env.DB && /^\/(admin|pedido|seguimiento)(\/|\.html|$)/.test(url.pathname)) {
+      return env.ASSETS.fetch(new Request(new URL('/no-existe-tienda-apagada', url), { headers: request.headers }));
+    }
     if (!url.pathname.startsWith('/fichas-api/') && url.pathname !== '/fichas-api') return env.ASSETS.fetch(request);
     if (!env.FICHAS_CODE) return error('El acceso todavía no está configurado.', 503);
     try {
@@ -336,5 +358,9 @@ export default {
       console.error('fichas-api', e);
       return error('Error interno. Inténtalo de nuevo.', 500);
     }
+  },
+  // Limpieza diaria de la tienda (comprobantes vencidos e intentos viejos). Solo corre donde hay cron (rama tienda).
+  async scheduled(_ev: ScheduledController, env: Env, ctx: ExecutionContext): Promise<void> {
+    ctx.waitUntil(limpiarTienda(env));
   },
 } satisfies ExportedHandler<Env>;

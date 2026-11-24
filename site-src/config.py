@@ -39,3 +39,7 @@ LOCATION = {
 # Medición de visitas con Vercel Web Analytics. Ya no aplica: el sitio dejó Vercel. Se deja en False.
 # Si se quiere medir visitas en Cloudflare hay que usar Cloudflare Web Analytics y cambiar build.py.
 ANALYTICS = False
+
+# Turnstile (anti-bots del envío de pedidos). Esta es la llave de PRUEBA oficial de Cloudflare:
+# siempre aprueba. Antes de abrir la tienda, cambiarla por la llave real del sitio.
+TURNSTILE_SITEKEY = "1x00000000000000000000AA"

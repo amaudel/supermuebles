@@ -22,3 +22,19 @@
 /fichas/*
   X-Robots-Tag: noindex, nofollow
   Cache-Control: no-cache
+
+/tienda.js
+  Cache-Control: public, max-age=0, must-revalidate
+
+/seguimiento*
+  X-Robots-Tag: noindex
+  Referrer-Policy: no-referrer
+
+/pedido*
+  X-Robots-Tag: noindex
+
+/admin/*
+  X-Robots-Tag: noindex, nofollow
+  Cache-Control: no-cache
+  X-Frame-Options: DENY
+  Referrer-Policy: no-referrer

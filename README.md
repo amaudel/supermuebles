@@ -10,8 +10,11 @@ Sitio web de Supermuebles Cuenca, fábrica de muebles en Turi, Cuenca. Es un sit
 | `site-src/` | Fuente de las páginas. `build.py` las genera en `deploy/`. |
 | `site-src/config.py` | Datos que se repiten: ubicación, horarios, teléfonos y WhatsApp. |
 | `GUIA-DE-VOZ-SUPERMUEBLES.md` | Cómo escribe la marca, lema, paleta y datos verificados. |
-| `TIENDA-DISENO.md` | Diseño de la tienda online (aún sin construir). |
-| `wrangler.jsonc` | Configuración para publicar en Cloudflare. |
+| `TIENDA-DISENO.md` | Diseño de la tienda online. |
+| `tienda/` | Worker de la tienda (carrito, pedidos, panel `/admin/`, comprobantes) y de las fichas del dueño, con su base D1 y pruebas. Ver `RAMA-TIENDA.md`. |
+| `resenas/` | Panel de reseñas: pide reseñas de Google a quienes recibieron su mueble. Los pedidos entregados llegan solos. Ver `resenas/README.md`. |
+| `wrangler.jsonc` | Configuración del sitio en vivo en Cloudflare (sin base de datos: la tienda queda apagada y sus páginas dan 404). |
+| `wrangler.tienda.jsonc` | Configuración de la tienda de pruebas (con base de datos, buckets y vínculo a reseñas). |
 
 ## Construir el sitio
 

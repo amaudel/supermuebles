@@ -1,0 +1,772 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Panel de pedidos | Supermuebles Cuenca</title>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<style>
+@font-face { font-family: "Archivo"; font-style: normal; font-weight: 100 900; font-display: swap; src: url("/fonts/archivo-latin.woff2") format("woff2"); }
+:root {
+  --bg: #efeee9; --papel: #fbfaf6; --arena: #e2dac5; --tinta: #293e4f; --tinta-2: #1f2f3c; --suave: #4e5c69;
+  --linea: rgba(41, 62, 79, 0.2); --terracota: #a94633; --terracota-2: #8c3828; --ok: #2f6b4a; --error: #a3321f;
+  --m: clamp(1rem, 3vw, 2rem);
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--bg); color: var(--tinta); font: 16px/1.5 "Archivo", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+::selection { background: var(--tinta); color: var(--bg); }
+:focus-visible { outline: 2px solid var(--terracota); outline-offset: 2px; }
+[hidden] { display: none !important; }
+h1, h2, h3, p { margin: 0; }
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+.num { font-variant-numeric: tabular-nums; }
+
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: .5rem; min-height: 2.75rem; padding: 0 1.1rem; border: 0; border-radius: 0; background: var(--terracota); color: #fff; font-weight: 600; white-space: nowrap; transition: background-color .16s ease-out, transform .16s cubic-bezier(.23,1,.32,1); }
+.btn:active { transform: scale(.97); }
+.btn:disabled { opacity: .55; cursor: progress; transform: none; }
+.btn--sec { background: var(--tinta); }
+.btn--claro { background: #fff; color: var(--tinta); box-shadow: inset 0 0 0 1px var(--linea); }
+.btn--peligro { background: #fff; color: var(--error); box-shadow: inset 0 0 0 1px var(--error); }
+@media (hover: hover) and (pointer: fine) {
+  .btn:hover { background: var(--terracota-2); }
+  .btn--sec:hover { background: var(--tinta-2); }
+  .btn--claro:hover, .btn--peligro:hover { background: var(--arena); }
+}
+.enlace { background: none; border: 0; padding: 0; min-height: 2.75rem; color: var(--tinta); font-weight: 600; text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: .25em; }
+
+label { display: grid; gap: .3rem; font-size: .875rem; color: var(--suave); }
+input[type=text], input[type=email], input[type=password], input[type=number], input[type=search], select, textarea {
+  width: 100%; min-height: 2.75rem; padding: .55rem .75rem; border: 1px solid rgba(41, 62, 79, .35); border-radius: 0; background: #fff; color: var(--tinta); font-size: 1rem;
+}
+textarea { resize: vertical; min-height: 4.5rem; }
+input:focus, select:focus, textarea:focus { outline: 2px solid var(--terracota); outline-offset: 0; border-color: var(--terracota); }
+.check { display: flex; align-items: center; gap: .6rem; min-height: 2.75rem; color: var(--tinta); font-size: 1rem; }
+.check input { width: 1.25rem; height: 1.25rem; accent-color: var(--terracota); }
+.clave { position: relative; margin-top: -.7rem; }
+.clave input { padding-right: 3.25rem; }
+.ojo { position: absolute; top: 0; right: 0; width: 2.75rem; height: 100%; display: grid; place-items: center; border: 0; background: none; color: var(--suave); }
+.ojo svg { width: 1.35rem; height: 1.35rem; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.ojo .ojo-cerrado, .ojo[aria-pressed="true"] .ojo-abierto { display: none; }
+.ojo[aria-pressed="true"] .ojo-cerrado { display: block; }
+@media (hover: hover) and (pointer: fine) { .ojo:hover { color: var(--tinta); } }
+.entrada label[for="codigo"] { font-size: .875rem; color: var(--suave); }
+
+.msg { padding: .7rem 1rem; font-weight: 600; }
+.msg--error { background: #f6e1db; color: var(--error); }
+.msg--ok { background: #dfece3; color: var(--ok); }
+
+/* entrada */
+.entrada { min-height: 100vh; display: grid; place-items: center; padding: var(--m); }
+.entrada form { width: 100%; max-width: 26rem; background: var(--papel); padding: 2rem; display: grid; gap: 1rem; box-shadow: 0 1px 2px rgba(41,62,79,.08), 0 8px 24px rgba(41,62,79,.08); }
+.entrada h1 { font-size: 1.5rem; font-weight: 500; }
+.entrada p { color: var(--suave); }
+
+/* barra */
+.barra { position: sticky; top: 0; z-index: 10; display: flex; flex-wrap: wrap; align-items: center; gap: .5rem 1.5rem; padding: .5rem var(--m); background: var(--tinta); color: var(--bg); }
+.barra strong { font-weight: 600; margin-right: auto; }
+.tabs { display: flex; gap: .25rem; }
+.tabs button { min-height: 2.75rem; padding: 0 .9rem; border: 0; background: transparent; color: var(--bg); font-weight: 600; }
+.tabs button[aria-selected="true"] { background: var(--bg); color: var(--tinta); }
+.barra .quien { font-size: .875rem; opacity: .85; }
+.barra .enlace { color: var(--bg); }
+.barra a.enlace { display: inline-flex; align-items: center; }
+
+main { padding: var(--m); max-width: 90rem; margin: 0 auto; }
+.cabeza { display: flex; flex-wrap: wrap; align-items: end; gap: .75rem 1rem; margin-bottom: 1.25rem; }
+.cabeza h1 { font-size: 1.75rem; font-weight: 500; margin-right: auto; }
+.cabeza label { min-width: 12rem; }
+
+/* lista de pedidos */
+.split { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: var(--m); align-items: start; }
+.lista { display: grid; background: var(--papel); }
+.fila { display: grid; grid-template-columns: auto 1fr auto; gap: .15rem 1rem; padding: .85rem 1rem; border: 0; border-bottom: 1px solid var(--linea); background: none; text-align: left; }
+.fila[aria-current="true"] { background: var(--arena); }
+@media (hover: hover) and (pointer: fine) { .fila:hover { background: #f1eee5; } }
+.fila .cod { font-weight: 700; font-variant-numeric: tabular-nums; }
+.fila .cli { color: var(--suave); grid-column: 1 / 3; font-size: .875rem; }
+.fila .tot { text-align: right; font-weight: 600; font-variant-numeric: tabular-nums; }
+.vacio { padding: 2rem 1rem; color: var(--suave); }
+
+.chip { display: inline-block; padding: .15rem .5rem; font-size: .8125rem; font-weight: 600; background: var(--arena); color: var(--tinta); }
+.chip--nuevo { background: var(--terracota); color: #fff; }
+.chip--por_pagar, .chip--comprobante_recibido { background: #f3dfb0; color: #5e3f07; }
+.chip--confirmado, .chip--en_fabricacion, .chip--listo, .chip--enviado { background: var(--tinta); color: var(--bg); }
+.chip--entregado { background: #dfece3; color: var(--ok); }
+.chip--cancelado { background: #e4e4e4; color: #555; }
+
+/* detalle */
+.detalle { background: var(--papel); padding: clamp(1rem, 2.5vw, 2rem); display: grid; gap: 1.75rem; }
+.detalle h2 { font-size: 1.5rem; font-weight: 500; display: flex; flex-wrap: wrap; align-items: center; gap: .5rem 1rem; }
+.detalle h3 { font-size: 1.0625rem; font-weight: 600; margin-bottom: .6rem; }
+.datos { display: grid; grid-template-columns: max-content 1fr; gap: .35rem 1rem; }
+.datos dt { color: var(--suave); }
+.datos dd { margin: 0; overflow-wrap: anywhere; }
+.detalle a { color: var(--tinta); font-weight: 600; text-underline-offset: .2em; }
+.tabla { width: 100%; border-collapse: collapse; }
+.tabla th, .tabla td { padding: .55rem .5rem; border-bottom: 1px solid var(--linea); text-align: left; vertical-align: top; }
+.tabla th { font-size: .8125rem; color: var(--suave); font-weight: 600; }
+.tabla .der { text-align: right; font-variant-numeric: tabular-nums; }
+.tabla tfoot td { font-weight: 600; border-bottom: 0; }
+.montos { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .75rem; align-items: end; }
+.acciones { display: flex; flex-wrap: wrap; gap: .5rem; }
+.motivo { display: grid; gap: .5rem; margin-top: .75rem; }
+.historia { display: grid; gap: .6rem; padding: 0; margin: 0; list-style: none; }
+.historia li { display: grid; gap: .1rem; padding-left: .9rem; border-left: 1px solid var(--linea); }
+.historia time { font-size: .8125rem; color: var(--suave); }
+.ayuda { font-size: .875rem; color: var(--suave); }
+
+/* modelos */
+.modelos td input[type=number] { max-width: 9rem; }
+.modelos img { width: 3.5rem; height: 3.5rem; object-fit: cover; display: block; background: var(--arena); }
+
+/* ajustes */
+.ajustes { display: grid; gap: 1.5rem; max-width: 46rem; }
+.caja { background: var(--papel); padding: 1.5rem; display: grid; gap: 1rem; }
+.caja h2 { font-size: 1.25rem; font-weight: 500; }
+.dos { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: .75rem; }
+.dos > *, .detalle > * { min-width: 0; }
+
+@media (max-width: 899px) {
+  .split { grid-template-columns: 1fr; }
+  .split.con-detalle .lista-col { display: none; }
+}
+@media (max-width: 599px) {
+  .montos, .dos { grid-template-columns: 1fr; }
+  .modelos thead { display: none; }
+  .modelos tr { display: grid; grid-template-columns: 3.5rem 1fr; gap: .25rem .75rem; padding: .75rem 0; border-bottom: 1px solid var(--linea); }
+  .modelos td { border: 0; padding: 0; }
+  .modelos td:first-child { grid-row: span 4; }
+}
+/* fichas */
+.fotos-dos { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 1.5rem; }
+.fotos-tit { font-weight: 600; display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; }
+.fotos-milton { display: flex; flex-wrap: wrap; gap: .75rem; margin-top: .5rem; }
+.fotos-milton figure { margin: 0; display: grid; justify-items: start; }
+.fotos-milton img, .foto-lista img { object-fit: cover; background: var(--arena); display: block; }
+.foto-lista { display: grid; gap: .3rem; justify-items: start; margin: .5rem 0 .75rem; }
+.subir-lista { cursor: pointer; }
+@media (max-width: 599px) { .fotos-dos { grid-template-columns: 1fr; } }
+.ficha-fila { grid-template-columns: 3.5rem 1fr; align-items: center; }
+.ficha-fila img, .sin-foto { width: 3.5rem; height: 3.5rem; object-fit: cover; display: grid; place-items: center; background: var(--arena); color: var(--suave); font-size: .75rem; }
+.ficha-fila .cli { display: block; }
+.incluye { margin: 0; padding-left: 1.2rem; color: var(--suave); }
+.tabla-scroll { overflow-x: auto; }
+.piezas input { min-width: 5rem; }
+.piezas td:first-child input { min-width: 11rem; }
+.piezas td:nth-child(3) input { min-width: 7.5rem; }
+.juego { margin-top: .75rem; font-size: 1.125rem; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+
+<section class="entrada" id="entrada" hidden>
+  <form id="f-entrar" novalidate>
+    <h1>Panel de pedidos</h1>
+    <p>Entra con tu correo y el código del panel.</p>
+    <label>Correo<input type="email" name="email" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" required></label>
+    <label for="codigo">Código del panel</label>
+    <div class="clave">
+      <input type="password" id="codigo" name="codigo" autocomplete="current-password" autocapitalize="none" autocorrect="off" spellcheck="false" required>
+      <button type="button" class="ojo" id="ver-codigo" aria-label="Mostrar el código" aria-pressed="false">
+        <svg class="ojo-abierto" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg>
+        <svg class="ojo-cerrado" viewBox="0 0 24 24" aria-hidden="true"><path d="M10.6 5.1A10.4 10.4 0 0 1 12 5c6.4 0 10 7 10 7a17.6 17.6 0 0 1-2.6 3.5"/><path d="M6.6 6.6C3.8 8.4 2 12 2 12s3.6 7 10 7a9.8 9.8 0 0 0 5.4-1.6"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/><path d="m2 2 20 20"/></svg>
+      </button>
+    </div>
+    <p class="msg msg--error" id="entrar-error" role="alert" hidden></p>
+    <button class="btn" type="submit">Entrar</button>
+  </form>
+</section>
+
+<div id="app" hidden>
+  <header class="barra">
+    <strong>Supermuebles · Panel</strong>
+    <nav class="tabs" role="tablist" aria-label="Secciones">
+      <button type="button" role="tab" data-tab="pedidos" aria-selected="true">Pedidos</button>
+      <button type="button" role="tab" data-tab="modelos" aria-selected="false">Modelos y precios</button>
+      <button type="button" role="tab" data-tab="fichas" aria-selected="false">Fichas</button>
+      <button type="button" role="tab" data-tab="ajustes" aria-selected="false">Ajustes</button>
+    </nav>
+    <span class="quien" id="quien"></span>
+    <a class="enlace" href="https://supermuebles-resenas.andresdelgado1984.workers.dev/" target="_blank" rel="noopener noreferrer">Reseñas</a>
+    <button class="enlace" type="button" id="salir">Salir</button>
+  </header>
+
+  <main>
+    <p class="msg" id="aviso" role="status" hidden></p>
+
+    <!-- Pedidos -->
+    <section id="tab-pedidos" role="tabpanel">
+      <div class="cabeza">
+        <h1>Pedidos</h1>
+        <label>Mostrar
+          <select id="filtro-estado">
+            <option value="abiertos">Abiertos (sin entregar ni cancelar)</option>
+            <option value="nuevo">Nuevos</option>
+            <option value="por_pagar">Por pagar</option>
+            <option value="comprobante_recibido">Revisar pago</option>
+            <option value="confirmado">Pago confirmado</option>
+            <option value="en_fabricacion">En fabricación</option>
+            <option value="listo">Listos para enviar</option>
+            <option value="enviado">Enviados</option>
+            <option value="entregado">Entregados</option>
+            <option value="cancelado">Cancelados</option>
+            <option value="">Todos</option>
+          </select>
+        </label>
+        <label>Buscar<input type="search" id="buscar" placeholder="Código, nombre, teléfono o ciudad"></label>
+      </div>
+      <div class="split" id="split">
+        <div class="lista-col"><div class="lista" id="lista"></div></div>
+        <div id="detalle-col"></div>
+      </div>
+    </section>
+
+    <!-- Modelos -->
+    <section id="tab-modelos" role="tabpanel" hidden>
+      <div class="cabeza">
+        <h1>Modelos y precios</h1>
+        <p class="ayuda">Un modelo sin precio no se puede pedir en línea: sigue con «Cotizar por WhatsApp». Pon solo precios que confirmó el dueño.</p>
+      </div>
+      <table class="tabla modelos">
+        <thead><tr><th></th><th>Modelo</th><th>Precio (USD)</th><th>Visible en la tienda</th><th></th></tr></thead>
+        <tbody id="modelos"></tbody>
+      </table>
+    </section>
+
+    <!-- Fichas del dueño -->
+    <section id="tab-fichas" role="tabpanel" hidden>
+      <div class="cabeza">
+        <h1>Fichas</h1>
+        <p class="ayuda">Lo que el dueño llena en /fichas/. Revisa cada ficha y pásala a la tienda: el precio del juego completo se calcula con las piezas.</p>
+      </div>
+      <div class="lista" id="fichas-lista"></div>
+      <div id="ficha-editor"></div>
+    </section>
+
+    <!-- Ajustes -->
+    <section id="tab-ajustes" role="tabpanel" hidden>
+      <div class="cabeza"><h1>Ajustes</h1></div>
+      <form class="ajustes" id="f-ajustes" novalidate>
+        <div class="caja">
+          <h2>Tienda en línea</h2>
+          <label class="check"><input type="checkbox" name="tienda_activa"> La tienda recibe pedidos</label>
+          <p class="ayuda">Al activarla, los modelos con precio muestran «Agregar al pedido» en el sitio. Apágala y todo vuelve a ser solo por WhatsApp.</p>
+        </div>
+        <div class="caja">
+          <h2>Cuenta para transferencias</h2>
+          <p class="ayuda">El cliente la ve en el enlace de su pedido solo cuando está «Por pagar».</p>
+          <div class="dos">
+            <label>Banco<input type="text" name="banco" maxlength="80"></label>
+            <label>Tipo de cuenta<select name="tipo"><option value="">Elegir</option><option>Ahorros</option><option>Corriente</option></select></label>
+            <label>Número de cuenta<input type="text" name="numero" maxlength="40" inputmode="numeric"></label>
+            <label>Titular<input type="text" name="titular" maxlength="120"></label>
+            <label>Cédula o RUC del titular<input type="text" name="identificacion" maxlength="20" inputmode="numeric"></label>
+          </div>
+          <label>Indicaciones para pagar (opcional)<textarea name="pago_instrucciones" maxlength="600" placeholder="Ej. Envía el comprobante por WhatsApp con tu número de pedido."></textarea></label>
+        </div>
+        <div><button class="btn" type="submit">Guardar ajustes</button></div>
+      </form>
+    </section>
+  </main>
+</div>
+
+<script>
+(function () {
+  'use strict';
+  var $ = function (s, r) { return (r || document).querySelector(s); };
+  var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
+  var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
+  var dinero = function (c) {
+    if (c == null) return '—';
+    try { return new Intl.NumberFormat('es-EC', { style: 'currency', currency: 'USD' }).format(c / 100); } catch (e) { return '$' + (c / 100).toFixed(2); }
+  };
+  var aCentavos = function (v) {
+    v = String(v || '').trim().replace(',', '.');
+    if (v === '') return null;
+    var n = Number(v);
+    return isFinite(n) && n >= 0 ? Math.round(n * 100) : NaN;
+  };
+  var aDolares = function (c) { return c == null ? '' : (c / 100).toFixed(2); };
+  var fecha = function (iso) { try { return new Date(iso).toLocaleString('es-EC', { dateStyle: 'medium', timeStyle: 'short' }); } catch (e) { return iso; } };
+
+  var ESTADO = {
+    nuevo: 'Nuevo', por_pagar: 'Por pagar', comprobante_recibido: 'Revisar pago', confirmado: 'Pago confirmado',
+    en_fabricacion: 'En fabricación', listo: 'Listo para enviar', enviado: 'Enviado', entregado: 'Entregado', cancelado: 'Cancelado',
+  };
+  // Texto del botón para pasar a cada estado.
+  var ACCION = {
+    por_pagar: 'Pasar a «Por pagar»', comprobante_recibido: 'Marcar comprobante recibido', confirmado: 'Confirmar pago',
+    nuevo: 'Volver a «Nuevo»', en_fabricacion: 'Empezar fabricación', listo: 'Marcar listo para enviar',
+    enviado: 'Marcar enviado', entregado: 'Marcar entregado', cancelado: 'Cancelar pedido',
+  };
+  var chip = function (e) { return '<span class="chip chip--' + esc(e) + '">' + esc(ESTADO[e] || e) + '</span>'; };
+
+  /* ---------- llamadas a la API ---------- */
+  var api = function (ruta, opt) {
+    opt = opt || {};
+    var h = { Accept: 'application/json' };
+    if (opt.body !== undefined) { h['Content-Type'] = 'application/json'; }
+    if (opt.method && opt.method !== 'GET') h['X-Requested-With'] = 'admin';
+    return fetch('/api/admin' + ruta, { method: opt.method || 'GET', headers: h, credentials: 'same-origin', body: opt.body !== undefined ? JSON.stringify(opt.body) : undefined })
+      .then(function (r) {
+        return r.json().catch(function () { return {}; }).then(function (d) {
+          if (r.status === 401 && ruta !== '/entrar') { mostrarEntrada(); throw new Error(d.error || 'Tu sesión terminó.'); }
+          if (!r.ok) throw new Error(d.error || 'Algo falló. Inténtalo de nuevo.');
+          return d;
+        });
+      });
+  };
+
+  var avisoT;
+  var aviso = function (t, tipo) {
+    var el = $('#aviso');
+    el.textContent = t;
+    el.className = 'msg msg--' + (tipo || 'ok');
+    el.hidden = false;
+    clearTimeout(avisoT);
+    avisoT = setTimeout(function () { el.hidden = true; }, tipo === 'error' ? 8000 : 3500);
+  };
+
+  /* ---------- entrar y salir ---------- */
+  function mostrarEntrada() { $('#app').hidden = true; $('#entrada').hidden = false; $('#f-entrar').elements.email.focus(); }
+  function mostrarApp(yo) {
+    $('#entrada').hidden = true; $('#app').hidden = false;
+    $('#quien').textContent = yo.nombre ? yo.nombre + ' · ' + yo.email : yo.email;
+    cargarPedidos();
+  }
+  $('#f-entrar').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var f = e.target, err = $('#entrar-error'), b = $('button', f);
+    err.hidden = true; b.disabled = true;
+    api('/entrar', { method: 'POST', body: { email: f.elements.email.value, codigo: f.elements.codigo.value } })
+      .then(function () { f.elements.codigo.value = ''; f.elements.codigo.type = 'password'; $('#ver-codigo').setAttribute('aria-pressed', 'false'); return api('/yo'); })
+      .then(mostrarApp)
+      .catch(function (x) { err.textContent = x.message; err.hidden = false; })
+      .then(function () { b.disabled = false; });
+  });
+  $('#ver-codigo').addEventListener('click', function () {
+    var b = this, inp = $('#codigo'), ver = inp.type === 'password';
+    inp.type = ver ? 'text' : 'password';
+    b.setAttribute('aria-pressed', ver ? 'true' : 'false');
+    b.setAttribute('aria-label', ver ? 'Ocultar el código' : 'Mostrar el código');
+    inp.focus();
+  });
+  $('#salir').addEventListener('click', function () { api('/salir', { method: 'POST', body: {} }).catch(function () {}).then(mostrarEntrada); });
+
+  /* ---------- pestañas ---------- */
+  $$('.tabs button').forEach(function (b) {
+    b.addEventListener('click', function () {
+      $$('.tabs button').forEach(function (x) { x.setAttribute('aria-selected', x === b ? 'true' : 'false'); });
+      ['pedidos', 'modelos', 'fichas', 'ajustes'].forEach(function (t) { $('#tab-' + t).hidden = t !== b.dataset.tab; });
+      if (b.dataset.tab === 'pedidos') cargarPedidos();
+      if (b.dataset.tab === 'modelos') cargarModelos();
+      if (b.dataset.tab === 'fichas') cargarFichas();
+      if (b.dataset.tab === 'ajustes') cargarAjustes();
+    });
+  });
+
+  /* ---------- pedidos ---------- */
+  var actual = null;
+  var buscarT;
+  function cargarPedidos() {
+    var q = '?estado=' + encodeURIComponent($('#filtro-estado').value) + '&q=' + encodeURIComponent($('#buscar').value.trim());
+    return api('/pedidos' + q).then(function (d) {
+      var l = $('#lista');
+      if (!d.pedidos.length) { l.innerHTML = '<p class="vacio">No hay pedidos con este filtro.</p>'; return; }
+      l.innerHTML = d.pedidos.map(function (p) {
+        return '<button class="fila" type="button" data-id="' + esc(p.id) + '"' + (actual === p.id ? ' aria-current="true"' : '') + '>' +
+          '<span class="cod">' + esc(p.codigo) + '</span>' + chip(p.estado) +
+          '<span class="tot">' + (p.total_cents != null ? dinero(p.total_cents) : dinero(p.subtotal_cents) + ' + envío') + '</span>' +
+          '<span class="cli">' + esc(p.nombre) + ' · ' + esc(p.ciudad) + ' · ' + esc(fecha(p.creado)) + '</span></button>';
+      }).join('');
+    }).catch(function (x) { aviso(x.message, 'error'); });
+  }
+  $('#filtro-estado').addEventListener('change', cargarPedidos);
+  $('#buscar').addEventListener('input', function () { clearTimeout(buscarT); buscarT = setTimeout(cargarPedidos, 300); });
+  $('#lista').addEventListener('click', function (e) {
+    var f = e.target.closest('.fila');
+    if (f) abrirPedido(f.dataset.id);
+  });
+
+  function abrirPedido(id) {
+    actual = id;
+    $$('.fila').forEach(function (f) { f.setAttribute('aria-current', f.dataset.id === id ? 'true' : 'false'); });
+    return api('/pedidos/' + id).then(pintarPedido).catch(function (x) { aviso(x.message, 'error'); });
+  }
+
+  function pintarPedido(d) {
+    var p = d.pedido;
+    var enlace = location.origin + '/seguimiento#' + p.token;
+    var tel = String(p.telefono || '').replace(/\D/g, '');
+    if (tel.length === 10 && tel[0] === '0') tel = '593' + tel.slice(1);
+    var editable = p.estado === 'nuevo' || p.estado === 'por_pagar';
+    var col = $('#detalle-col');
+    $('#split').classList.add('con-detalle');
+    col.innerHTML =
+      '<article class="detalle" aria-labelledby="det-titulo">' +
+      '<div><button class="enlace" type="button" data-volver>← Volver a la lista</button>' +
+      '<h2 id="det-titulo">Pedido ' + esc(p.codigo) + ' ' + chip(p.estado) + '</h2>' +
+      '<p class="ayuda">Recibido el ' + esc(fecha(p.creado)) + '</p></div>' +
+
+      '<section><h3>Cliente</h3><dl class="datos">' +
+      '<dt>Nombre</dt><dd>' + esc(p.nombre) + '</dd>' +
+      '<dt>WhatsApp</dt><dd><a href="https://wa.me/' + esc(tel) + '" target="_blank" rel="noopener noreferrer">' + esc(p.telefono) + '</a></dd>' +
+      (p.email ? '<dt>Correo</dt><dd>' + esc(p.email) + '</dd>' : '') +
+      (p.cedula ? '<dt>Cédula o RUC</dt><dd>' + esc(p.cedula) + '</dd>' : '') +
+      '<dt>Ciudad</dt><dd>' + esc(p.ciudad) + '</dd>' +
+      '<dt>Dirección</dt><dd>' + esc(p.direccion) + (p.referencia ? '<br><span class="ayuda">' + esc(p.referencia) + '</span>' : '') + '</dd>' +
+      (p.notas ? '<dt>Notas</dt><dd>' + esc(p.notas) + '</dd>' : '') +
+      '</dl></section>' +
+
+      '<section><h3>Muebles</h3><table class="tabla"><thead><tr><th>Modelo</th><th class="der">Cant.</th><th class="der">Precio</th><th class="der">Total</th></tr></thead><tbody>' +
+      d.lineas.map(function (l) {
+        return '<tr><td>' + esc(l.nombre) + (l.nota ? '<br><span class="ayuda">' + esc(l.nota) + '</span>' : '') + '</td><td class="der">' + esc(l.cantidad) +
+          '</td><td class="der">' + dinero(l.precio_cents) + '</td><td class="der">' + dinero(l.precio_cents * l.cantidad) + '</td></tr>';
+      }).join('') +
+      '</tbody><tfoot>' +
+      '<tr><td colspan="3">Subtotal</td><td class="der">' + dinero(p.subtotal_cents) + '</td></tr>' +
+      '<tr><td colspan="3">Envío</td><td class="der">' + (p.envio_cents == null ? 'Sin fijar' : dinero(p.envio_cents)) + '</td></tr>' +
+      (p.descuento_cents ? '<tr><td colspan="3">Descuento</td><td class="der">−' + dinero(p.descuento_cents) + '</td></tr>' : '') +
+      '<tr><td colspan="3">Total</td><td class="der">' + (p.total_cents == null ? 'Sin fijar' : dinero(p.total_cents)) + '</td></tr>' +
+      (p.abono_cents != null ? '<tr><td colspan="3">Abono para empezar</td><td class="der">' + dinero(p.abono_cents) + '</td></tr>' : '') +
+      '</tfoot></table></section>' +
+
+      (editable ?
+        '<section><h3>Envío y total</h3><form class="montos" data-montos novalidate>' +
+        '<label>Envío (USD)<input type="number" name="envio" min="0" step="0.01" value="' + esc(aDolares(p.envio_cents)) + '" required></label>' +
+        '<label>Descuento (USD)<input type="number" name="descuento" min="0" step="0.01" value="' + esc(aDolares(p.descuento_cents || 0)) + '"></label>' +
+        '<label>Abono (USD, opcional)<input type="number" name="abono" min="0" step="0.01" value="' + esc(aDolares(p.abono_cents)) + '"></label>' +
+        '<div><button class="btn btn--sec" type="submit">Guardar envío y total</button></div></form>' +
+        '<p class="ayuda">El total se calcula solo: subtotal + envío − descuento.</p></section>' : '') +
+
+      ((d.pagos || []).length ?
+        '<section><h3>Comprobantes de pago</h3>' +
+        (p.estado === 'comprobante_recibido' ? '<p class="ayuda">Revisa en tu banco que el dinero llegó antes de confirmar el pago.</p>' : '') +
+        '<table class="tabla"><thead><tr><th>Subido</th><th class="der">Valor esperado</th><th>Estado</th><th></th></tr></thead><tbody>' +
+        d.pagos.slice().reverse().map(function (g) {
+          var est = { en_revision: 'En revisión', verificado: 'Verificado', rechazado: 'Rechazado' }[g.estado] || g.estado;
+          return '<tr><td>' + esc(g.subido ? fecha(g.subido) : '—') + '</td><td class="der">' + dinero(g.monto_cents) + '</td>' +
+            '<td>' + esc(est) + (g.verificado_por ? '<br><span class="ayuda">' + esc(g.verificado_por) + '</span>' : '') + '</td>' +
+            '<td>' + (g.tiene_archivo ? '<a href="/api/admin/pedidos/' + esc(p.id) + '/comprobantes/' + esc(g.id) + '" target="_blank" rel="noopener noreferrer">Ver comprobante</a>' : '<span class="ayuda">Borrado</span>') + '</td></tr>';
+        }).join('') +
+        '</tbody></table></section>' : '') +
+
+      (d.siguientes.length ?
+        '<section><h3>Siguiente paso</h3><div class="acciones">' +
+        d.siguientes.map(function (s) {
+          var cls = s === 'cancelado' ? 'btn btn--peligro' : (s === 'nuevo' || (p.estado === 'comprobante_recibido' && s === 'por_pagar')) ? 'btn btn--claro' : 'btn';
+          var txt = p.estado === 'comprobante_recibido' && s === 'por_pagar' ? 'Rechazar pago' : ACCION[s] || s;
+          return '<button class="' + cls + '" type="button" data-estado="' + esc(s) + '">' + esc(txt) + '</button>';
+        }).join('') +
+        '</div><div class="motivo" data-motivo hidden><label>Motivo (lo verá el equipo)<textarea maxlength="500"></textarea></label>' +
+        '<div class="acciones"><button class="btn" type="button" data-confirmar>Confirmar</button><button class="enlace" type="button" data-cancelar-motivo>No, volver</button></div></div></section>' : '') +
+
+      '<section><h3>Enlace del cliente</h3><p class="ayuda">Envíalo al cliente si lo perdió. Quien tenga el enlace ve este pedido.</p>' +
+      '<div class="acciones"><button class="btn btn--claro" type="button" data-copiar>Copiar enlace</button>' +
+      '<a class="enlace" href="' + esc(enlace) + '" target="_blank" rel="noopener noreferrer">Abrir como cliente</a></div></section>' +
+
+      '<section><h3>Notas internas e historial</h3>' +
+      '<form data-nota novalidate><label>Nueva nota<textarea maxlength="1000" placeholder="Ej. Cliente pidió entrega en la tarde"></textarea></label>' +
+      '<div class="acciones" style="margin-top:.5rem"><button class="btn btn--sec" type="submit">Agregar nota</button></div></form>' +
+      '<ol class="historia" style="margin-top:1rem">' +
+      d.eventos.slice().reverse().map(function (ev) {
+        var t = ev.tipo === 'estado' ? 'Cambió de «' + (ESTADO[ev.detalle.de] || ev.detalle.de) + '» a «' + (ESTADO[ev.detalle.a] || ev.detalle.a) + '»' + (ev.detalle.motivo ? ': ' + ev.detalle.motivo : '') :
+          ev.tipo === 'montos' ? 'Fijó envío ' + dinero(ev.detalle.envio_cents) + ' y total ' + dinero(ev.detalle.total_cents) + (ev.detalle.abono_cents != null ? ', abono ' + dinero(ev.detalle.abono_cents) : '') :
+          ev.tipo === 'nota' ? ev.detalle.texto :
+          ev.tipo === 'creado' ? 'El cliente envió el pedido' :
+          ev.tipo === 'comprobante' ? 'El cliente subió un comprobante' :
+          ev.tipo === 'resenas' ? (ev.detalle.ok ? (ev.detalle.yaExistia ? 'El cliente ya estaba en el panel de reseñas' : 'El cliente pasó al panel de reseñas para pedirle su opinión') : 'No se pudo pasar al panel de reseñas: ' + (ev.detalle.error || 'error desconocido') + ' Agrégalo a mano.') : ev.tipo;
+        return '<li><time>' + esc(fecha(ev.at)) + ' · ' + esc(ev.actor) + '</time><span>' + esc(t) + '</span></li>';
+      }).join('') +
+      '</ol></section></article>';
+
+    // acciones del detalle
+    $('[data-volver]', col).addEventListener('click', function () { $('#split').classList.remove('con-detalle'); col.innerHTML = ''; actual = null; cargarPedidos(); });
+    var fm = $('[data-montos]', col);
+    if (fm) fm.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var env = aCentavos(fm.elements.envio.value), des = aCentavos(fm.elements.descuento.value) || 0, abo = aCentavos(fm.elements.abono.value);
+      if (env == null || isNaN(env)) { aviso('Escribe el costo de envío (0 si no tiene costo).', 'error'); fm.elements.envio.focus(); return; }
+      if (isNaN(des) || isNaN(abo)) { aviso('Revisa los valores.', 'error'); return; }
+      api('/pedidos/' + p.id + '/montos', { method: 'POST', body: { envio_cents: env, descuento_cents: des, abono_cents: abo } })
+        .then(function (d) { pintarPedido(d); cargarPedidos(); aviso('Envío y total guardados.'); })
+        .catch(function (x) { aviso(x.message, 'error'); });
+    });
+    var pendiente = null, caja = $('[data-motivo]', col);
+    var mover = function (estado, motivo) {
+      api('/pedidos/' + p.id + '/estado', { method: 'POST', body: { estado: estado, desde: p.estado, motivo: motivo || '' } })
+        .then(function (d) { pintarPedido(d); cargarPedidos(); aviso('Pedido ' + p.codigo + ': ' + (ESTADO[estado] || estado) + '.'); })
+        .catch(function (x) { aviso(x.message, 'error'); });
+    };
+    $$('[data-estado]', col).forEach(function (b) {
+      b.addEventListener('click', function () {
+        var s = b.dataset.estado;
+        var pideMotivo = s === 'cancelado' || (p.estado === 'comprobante_recibido' && s === 'por_pagar');
+        if (pideMotivo) { pendiente = s; caja.hidden = false; $('textarea', caja).focus(); return; }
+        mover(s);
+      });
+    });
+    if (caja) {
+      $('[data-confirmar]', caja).addEventListener('click', function () {
+        var t = $('textarea', caja).value.trim();
+        if (t.length < 3) { aviso('Escribe el motivo.', 'error'); return; }
+        mover(pendiente, t);
+      });
+      $('[data-cancelar-motivo]', caja).addEventListener('click', function () { caja.hidden = true; pendiente = null; });
+    }
+    $('[data-copiar]', col).addEventListener('click', function () {
+      (navigator.clipboard ? navigator.clipboard.writeText(enlace) : Promise.reject()).then(function () { aviso('Enlace copiado.'); }, function () { prompt('Copia el enlace:', enlace); });
+    });
+    var fn = $('[data-nota]', col);
+    fn.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var t = $('textarea', fn).value.trim();
+      if (t.length < 2) return;
+      api('/pedidos/' + p.id + '/nota', { method: 'POST', body: { texto: t } }).then(function (d) { pintarPedido(d); aviso('Nota agregada.'); }).catch(function (x) { aviso(x.message, 'error'); });
+    });
+  }
+
+  /* ---------- modelos ---------- */
+  function cargarModelos() {
+    api('/productos').then(function (d) {
+      $('#modelos').innerHTML = d.productos.map(function (m) {
+        return '<tr data-id="' + esc(m.id) + '">' +
+          '<td>' + (m.image ? '<img src="' + esc(urlFoto(m.image, 480)) + '" alt="" loading="lazy" width="56" height="56">' : '') + '</td>' +
+          '<td><strong>' + esc(m.name) + '</strong><br><span class="ayuda">' + esc(m.category) + '</span></td>' +
+          '<td><input type="number" min="0" step="0.01" value="' + esc(aDolares(m.price_cents)) + '" placeholder="Sin precio" aria-label="Precio de ' + esc(m.name) + '"' + (m.piezas ? ' readonly' : '') + '>' +
+          (m.piezas ? '<br><span class="ayuda">Juego de ' + m.piezas + (m.piezas === 1 ? ' pieza' : ' piezas') + (m.sold_separately ? ', también sueltas' : '') + '. Se cambia en «Fichas».</span>' : '') + '</td>' +
+          '<td><label class="check"><input type="checkbox"' + (m.active ? ' checked' : '') + '> Visible</label></td>' +
+          '<td><button class="btn btn--sec" type="button" data-guardar>Guardar</button></td></tr>';
+      }).join('');
+    }).catch(function (x) { aviso(x.message, 'error'); });
+  }
+  $('#modelos').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-guardar]');
+    if (!b) return;
+    var tr = b.closest('tr');
+    var precio = aCentavos($('input[type=number]', tr).value);
+    if (isNaN(precio)) { aviso('Revisa el precio.', 'error'); return; }
+    b.disabled = true;
+    api('/productos/' + tr.dataset.id, { method: 'PUT', body: { price_cents: precio, active: $('input[type=checkbox]', tr).checked } })
+      .then(function () { aviso('Guardado.'); })
+      .catch(function (x) { aviso(x.message, 'error'); })
+      .then(function () { b.disabled = false; });
+  });
+
+  /* ---------- fichas → tienda ---------- */
+  var CATS = [['salas', 'Salas'], ['comedores', 'Comedores'], ['dormitorios', 'Dormitorios'], ['infantil', 'Infantil'], ['armarios', 'Armarios'], ['complementos', 'Complementos'], ['otro', 'Otro']];
+  var fichasData = null;
+  function cargarFichas() {
+    $('#ficha-editor').innerHTML = '';
+    $('#fichas-lista').hidden = false;
+    return api('/fichas').then(function (d) {
+      fichasData = d;
+      if (!d.fichas.length) { $('#fichas-lista').innerHTML = '<p class="vacio">Todavía no hay fichas.</p>'; return; }
+      $('#fichas-lista').innerHTML = d.fichas.map(function (f) {
+        var precios = (f.medidas || []).filter(function (m) { return aCentavos(m.precio) > 0; }).length;
+        var estado = f.producto ? (f.cambio ? '<span class="chip chip--por_pagar">La ficha cambió</span>' : '<span class="chip chip--entregado">En la tienda</span>')
+          : '<span class="chip">No está en la tienda</span>';
+        return '<button class="fila ficha-fila" type="button" data-ficha="' + esc(f.id) + '">' +
+          (f.fotos[0] ? '<img src="/api/admin/fichas/foto/' + esc(f.fotos[0]) + '" alt="" width="56" height="56" loading="lazy">' : '<span class="sin-foto">sin foto</span>') +
+          '<span><span class="cod">' + esc(f.nombre || 'Sin nombre') + '</span> ' + estado +
+          '<span class="cli">' + (precios ? precios + (precios === 1 ? ' pieza con precio' : ' piezas con precio') : 'Sin precios todavía') +
+          (f.producto ? ' · en la tienda como «' + esc(f.producto.nombre) + '»' : f.sugerido ? ' · parece ser «' + esc(f.sugerido.nombre) + '»' : '') + '</span></span></button>';
+      }).join('');
+    }).catch(function (x) { aviso(x.message, 'error'); });
+  }
+  $('#fichas-lista').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-ficha]');
+    if (b) abrirFicha(b.dataset.ficha);
+  });
+
+  function filaPieza(x) {
+    return '<tr class="pieza">' +
+      '<td><input type="text" data-k="nombre" maxlength="80" value="' + esc(x.nombre) + '" aria-label="Pieza"></td>' +
+      '<td><input type="number" data-k="cantidad" min="0" max="50" step="1" value="' + esc(x.cantidad) + '" aria-label="Cantidad en el juego"></td>' +
+      '<td><input type="number" data-k="precio" min="0" step="0.01" value="' + esc(x.precio) + '" aria-label="Precio por pieza"></td>' +
+      '<td><input type="number" data-k="ancho" min="0" step="0.1" value="' + esc(x.ancho || '') + '" aria-label="Ancho cm"></td>' +
+      '<td><input type="number" data-k="fondo" min="0" step="0.1" value="' + esc(x.fondo || '') + '" aria-label="Fondo cm"></td>' +
+      '<td><input type="number" data-k="alto" min="0" step="0.1" value="' + esc(x.alto || '') + '" aria-label="Alto cm"></td>' +
+      '<td><button class="enlace" type="button" data-quitar-pieza>Quitar</button></td></tr>';
+  }
+
+  var nombreArchivo = function (t) {
+    return String(t || 'mueble').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'mueble';
+  };
+  // Dirección de la foto de un modelo: las «listas» tienen varios tamaños; las del catálogo, uno.
+  var urlFoto = function (imagen, ancho) {
+    imagen = String(imagen || '');
+    return imagen.indexOf('api/tienda-fotos/') === 0 ? '/' + imagen + '/' + (ancho || 480) + '.webp' : '/' + imagen.replace(/^\/+/, '');
+  };
+
+  // Prepara la foto retocada en los tamaños de la web (WEBP 480, 800, 1200 y 1600, y JPG 1600 de respaldo) y los sube.
+  var aBlob = function (lienzo, tipo, calidad) {
+    return new Promise(function (ok, mal) {
+      lienzo.toBlob(function (b) { b && b.type === tipo ? ok(b) : mal(new Error('Este navegador no puede preparar la foto. Usa Chrome o Edge.')); }, tipo, calidad);
+    });
+  };
+  function subirFotoLista(archivo) {
+    if (archivo.size > 40000000) return Promise.reject(new Error('La foto pesa demasiado (más de 40 MB).'));
+    var id = Array.prototype.map.call(crypto.getRandomValues(new Uint8Array(20)), function (n) { return 'abcdefghijklmnopqrstuvwxyz0123456789'[n % 36]; }).join('');
+    return createImageBitmap(archivo).then(function (img) {
+      if (Math.max(img.width, img.height) < 800) throw new Error('La foto es muy pequeña: usa una de al menos 1200 px de ancho.');
+      var tamanos = [480, 800, 1200, 1600];
+      var trabajos = tamanos.map(function (w) { return { w: w, tipo: 'image/webp', nombre: w + '.webp', calidad: 0.8 }; }).concat([{ w: 1600, tipo: 'image/jpeg', nombre: '1600.jpg', calidad: 0.85 }]);
+      return trabajos.reduce(function (cadena, t) {
+        return cadena.then(function () {
+          var k = Math.min(1, t.w / img.width);
+          var c = document.createElement('canvas');
+          c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
+          var x = c.getContext('2d');
+          x.fillStyle = '#fff'; x.fillRect(0, 0, c.width, c.height);
+          x.imageSmoothingQuality = 'high';
+          x.drawImage(img, 0, 0, c.width, c.height);
+          return aBlob(c, t.tipo, t.calidad).then(function (blob) {
+            return fetch('/api/admin/tienda-fotos/' + id + '/' + t.nombre, { method: 'PUT', credentials: 'same-origin', headers: { 'Content-Type': t.tipo, 'X-Requested-With': 'admin' }, body: blob });
+          }).then(function (r) {
+            if (r.status === 401) { mostrarEntrada(); throw new Error('Tu sesión terminó.'); }
+            if (!r.ok) return r.json().catch(function () { return {}; }).then(function (d) { throw new Error(d.error || 'No se pudo subir la foto.'); });
+          });
+        });
+      }, Promise.resolve());
+    }).then(function () { return id; });
+  }
+
+  function abrirFicha(id) {
+    var f = fichasData.fichas.filter(function (x) { return x.id === id; })[0];
+    if (!f) return;
+    var destino = f.producto ? f.producto.id : f.sugerido ? f.sugerido.id : 'nuevo';
+    // Si ya está en la tienda, se conservan las decisiones del panel (cantidades, visible, venta suelta); el resto viene de la ficha.
+    var previas = f.producto ? api('/modelos/' + f.producto.id) : Promise.resolve({ piezas: [], modelo: null });
+    previas.then(function (prev) {
+      var antes = prev.piezas, actual = prev.modelo;
+      var cant = {};
+      antes.forEach(function (x) { cant[String(x.nombre).toLowerCase()] = x.cantidad; });
+      var piezas = (f.medidas || []).map(function (m, i) {
+        var n = String(m.nombre || '').trim() || 'Pieza ' + (i + 1);
+        return { nombre: n, cantidad: cant[n.toLowerCase()] != null ? cant[n.toLowerCase()] : 1, precio: aCentavos(m.precio) > 0 ? (aCentavos(m.precio) / 100).toFixed(2) : '', ancho: m.ancho, fondo: m.fondo, alto: m.alto };
+      });
+      var opciones = '<option value="nuevo">Modelo nuevo</option>' + fichasData.productos.filter(function (p) { return !p.ficha_id || p.ficha_id === f.id; }).map(function (p) {
+        return '<option value="' + esc(p.id) + '"' + (p.id === destino ? ' selected' : '') + '>' + esc(p.nombre) + '</option>';
+      }).join('');
+      $('#fichas-lista').hidden = true;
+      var ed = $('#ficha-editor');
+      ed.innerHTML =
+        '<form class="detalle" id="f-ficha" novalidate>' +
+        '<div><button class="enlace" type="button" data-volver-fichas>← Volver a las fichas</button>' +
+        '<h2>Pasar a la tienda: ' + esc(f.nombre) + '</h2>' +
+        '<p class="ayuda">Revisa lo que llenó el dueño. Nada se cambia en su ficha; esto solo arma el modelo de la tienda.</p></div>' +
+        (f.cambio ? '<p class="msg msg--error">El dueño cambió esta ficha después de la última vez. Revisa los precios y guarda para actualizar la tienda.</p>' : '') +
+        '<section class="dos"><label>¿En la tienda es…<select name="producto">' + opciones + '</select></label>' +
+        '<label>Tipo de mueble<select name="categoria">' + CATS.map(function (c) { return '<option value="' + c[0] + '"' + (c[0] === f.categoria ? ' selected' : '') + '>' + c[1] + '</option>'; }).join('') + '</select></label>' +
+        '<label>Nombre en la tienda<input type="text" name="nombre" maxlength="120" value="' + esc(f.nombre) + '"></label>' +
+        '<label>Descripción<input type="text" name="descripcion" maxlength="400" value="' + esc(f.descripcion) + '"></label></section>' +
+        (f.incluye.length ? '<section><h3>Lo que el dueño dice que incluye</h3><ul class="incluye">' + f.incluye.map(function (t) { return '<li>' + esc(t) + '</li>'; }).join('') + '</ul></section>' : '') +
+        '<section><h3>Piezas</h3><p class="ayuda">«Cantidad en el juego» es cuántas lleva el juego completo (por ejemplo, 6 sillas). Pon 0 si la pieza solo se vende suelta.</p>' +
+        '<div class="tabla-scroll"><table class="tabla piezas"><thead><tr><th>Pieza</th><th>Cantidad en el juego</th><th>Precio por pieza (USD)</th><th>Ancho cm</th><th>Fondo cm</th><th>Alto cm</th><th></th></tr></thead>' +
+        '<tbody id="piezas">' + piezas.map(filaPieza).join('') + '</tbody></table></div>' +
+        '<div class="acciones" style="margin-top:.5rem"><button class="btn btn--claro" type="button" data-agregar-pieza>Agregar pieza</button></div>' +
+        '<p class="juego">Precio del juego completo: <strong id="juego-total" class="num">—</strong></p></section>' +
+        '<section><label class="check"><input type="checkbox" name="separado"' + ((actual ? actual.sold_separately === 1 : f.separado) ? ' checked' : '') + '> También se venden piezas sueltas</label>' +
+        '<p class="ayuda">En la ficha el dueño marcó: ' + (f.separado ? 'sí se vende por separado.' : 'no se vende por separado.') + '</p>' +
+        '</section><section><h3>Fotos</h3>' +
+        '<div class="fotos-dos"><div><p class="fotos-tit">Fotos de Milton <span class="chip">Originales</span></p>' +
+        '<p class="ayuda">Tal como las subió en su ficha. Descárgalas para retocarlas.</p>' +
+        (f.fotos.length ? '<div class="fotos-milton">' + f.fotos.map(function (id, i) {
+          return '<figure><img src="/api/admin/fichas/foto/' + esc(id) + '" alt="Foto ' + (i + 1) + ' de Milton" width="120" height="120" loading="lazy">' +
+            '<a class="enlace" href="/api/admin/fichas/foto/' + esc(id) + '" download="' + esc(nombreArchivo(f.nombre)) + '-milton-' + (i + 1) + '.jpg">Descargar</a></figure>';
+        }).join('') + '</div>' : '<p class="ayuda">Esta ficha todavía no tiene fotos.</p>') + '</div>' +
+        '<div><p class="fotos-tit">Foto lista para la tienda <span class="chip chip--entregado">Lista</span></p>' +
+        '<p class="ayuda">La foto ya retocada. Es la que ven los clientes en la tienda y en el catálogo.</p>' +
+        '<div class="foto-lista" id="foto-lista">' + (actual && actual.image ? '<img src="' + esc(urlFoto(actual.image, 480)) + '" alt="Foto actual en la tienda" width="200" height="200"><span class="ayuda">Foto actual en la tienda</span>' : '<span class="ayuda">Todavía no hay foto lista.</span>') + '</div>' +
+        '<label class="btn btn--claro subir-lista">Subir foto lista<input type="file" accept="image/jpeg,image/png,image/webp" id="foto-lista-archivo" hidden></label>' +
+        '<input type="hidden" name="foto_lista" value=""></div></div>' +
+        '<label class="check"><input type="checkbox" name="activo"' + (actual && actual.active === 1 ? ' checked' : '') + '> Visible en la tienda</label>' +
+        '<p class="ayuda">Si no lo marcas, queda guardado pero oculto, para revisarlo antes.</p></section>' +
+        '<div class="acciones"><button class="btn" type="submit">Guardar en la tienda</button></div></form>';
+
+      var form = $('#f-ficha');
+      var total = function () {
+        var t = 0, ok = true;
+        $$('#piezas .pieza').forEach(function (tr) {
+          var c = Number($('[data-k=cantidad]', tr).value), pr = aCentavos($('[data-k=precio]', tr).value);
+          if (isNaN(pr) || pr == null) { ok = false; return; }
+          t += (isFinite(c) ? c : 0) * pr;
+        });
+        $('#juego-total').textContent = ok && t > 0 ? dinero(t) : 'falta algún precio';
+      };
+      total();
+      form.addEventListener('input', total);
+      form.addEventListener('click', function (e) {
+        if (e.target.closest('[data-quitar-pieza]')) { e.target.closest('tr').remove(); total(); }
+        if (e.target.closest('[data-agregar-pieza]')) { $('#piezas').insertAdjacentHTML('beforeend', filaPieza({ nombre: '', cantidad: 1, precio: '' })); total(); }
+        if (e.target.closest('[data-volver-fichas]')) cargarFichas();
+      });
+      $('#foto-lista-archivo').addEventListener('change', function () {
+        var a = this.files && this.files[0];
+        this.value = '';
+        if (!a) return;
+        var caja = $('#foto-lista'), b = $('button[type=submit]', form);
+        caja.innerHTML = '<span class="ayuda">Preparando y subiendo la foto…</span>';
+        b.disabled = true;
+        subirFotoLista(a).then(function (id) {
+          form.elements.foto_lista.value = id;
+          caja.innerHTML = '<img src="/api/tienda-fotos/' + id + '/480.webp" alt="Foto lista nueva" width="200" height="200"><span class="ayuda">Foto nueva. Se usará al tocar «Guardar en la tienda».</span>';
+        }).catch(function (x) {
+          caja.innerHTML = '<span class="ayuda">' + esc(x.message) + '</span>';
+          aviso(x.message, 'error');
+        }).then(function () { b.disabled = false; });
+      });
+      form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        var piezasOut = $$('#piezas .pieza').map(function (tr) {
+          var v = function (k) { return $('[data-k=' + k + ']', tr).value; };
+          return { nombre: v('nombre').trim(), cantidad: Number(v('cantidad')), precio_cents: aCentavos(v('precio')), ancho: v('ancho'), fondo: v('fondo'), alto: v('alto') };
+        });
+        if (piezasOut.some(function (x) { return x.precio_cents == null || isNaN(x.precio_cents); })) { aviso('Falta el precio de alguna pieza.', 'error'); return; }
+        var b = $('button[type=submit]', form);
+        b.disabled = true;
+        api('/fichas/' + f.id + '/publicar', { method: 'POST', body: {
+          producto: form.elements.producto.value, nombre: form.elements.nombre.value, categoria: form.elements.categoria.value,
+          descripcion: form.elements.descripcion.value, piezas: piezasOut, separado: form.elements.separado.checked,
+          foto_lista: form.elements.foto_lista.value, activo: form.elements.activo.checked,
+        } })
+          .then(function (r) { aviso('Guardado en la tienda. Juego completo: ' + dinero(r.juego_cents) + (form.elements.activo.checked ? '.' : ' (oculto).')); cargarFichas(); })
+          .catch(function (x) { aviso(x.message, 'error'); })
+          .then(function () { b.disabled = false; });
+      });
+      window.scrollTo(0, 0);
+    }).catch(function (x) { aviso(x.message, 'error'); });
+  }
+
+  /* ---------- ajustes ---------- */
+  function cargarAjustes() {
+    api('/ajustes').then(function (a) {
+      var f = $('#f-ajustes'), c = a.pago_banco || {};
+      f.elements.tienda_activa.checked = a.tienda_activa === true;
+      ['banco', 'tipo', 'numero', 'titular', 'identificacion'].forEach(function (k) { f.elements[k].value = c[k] || ''; });
+      f.elements.pago_instrucciones.value = a.pago_instrucciones || '';
+    }).catch(function (x) { aviso(x.message, 'error'); });
+  }
+  $('#f-ajustes').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var f = e.target, v = function (k) { return f.elements[k].value.trim(); };
+    var activa = f.elements.tienda_activa.checked;
+    api('/ajustes', { method: 'PUT', body: {
+      tienda_activa: activa,
+      pago_banco: { banco: v('banco'), tipo: v('tipo'), numero: v('numero'), titular: v('titular'), identificacion: v('identificacion') },
+      pago_instrucciones: v('pago_instrucciones'),
+    } }).then(function () { aviso(activa ? 'Guardado. La tienda recibe pedidos.' : 'Guardado. La tienda está apagada.'); })
+      .catch(function (x) { aviso(x.message, 'error'); });
+  });
+
+  /* ---------- arranque ---------- */
+  api('/yo').then(mostrarApp).catch(function () { mostrarEntrada(); });
+})();
+</script>
+</body>
+</html>

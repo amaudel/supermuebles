@@ -1,0 +1,40 @@
+
+<section class="page-head" aria-labelledby="pg-title">
+  <h1 class="display" id="pg-title">Tu pedido <span id="seg-codigo"></span></h1>
+  <p class="lead" id="seg-lead">Aquí ves en qué va tu pedido.</p>
+</section>
+
+<section class="pedido seguimiento" id="seguimiento" aria-label="Estado del pedido">
+  <div class="pedido-estado" id="seg-cargando" role="status">Buscando tu pedido…</div>
+
+  <div class="pedido-vacio" id="seg-error" hidden>
+    <p class="lead" id="seg-error-texto">No encontramos ese pedido. Revisa que el enlace esté completo.</p>
+    <a class="btn" href="[[wa:Hola Supermuebles Cuenca, no puedo abrir el enlace de mi pedido.]]" target="_blank" rel="noopener noreferrer"><svg class="i" aria-hidden="true"><use href="#i-wa"/></svg><span>Escribir por WhatsApp</span></a>
+  </div>
+
+  <div class="pedido-cuerpo" id="seg-cuerpo" hidden>
+    <div class="pedido-lineas">
+      <ol class="pasos" id="seg-pasos" aria-label="Estado"></ol>
+      <h2 class="h3">Muebles</h2>
+      <ul class="lineas" id="seg-lineas"></ul>
+      <dl class="pedido-totales" id="seg-totales"></dl>
+      <div class="seg-pago" id="seg-pago" hidden>
+        <h2 class="h3">Cómo pagar</h2>
+        <dl class="pedido-totales" id="seg-cuenta"></dl>
+        <p class="pedido-nota" id="seg-instrucciones"></p>
+        <p class="pedido-error" id="seg-rechazo" hidden>No pudimos verificar tu comprobante anterior. Revisa el valor y la cuenta, y vuelve a subirlo. Si tienes dudas, escríbenos.</p>
+        <form class="seg-subir" id="seg-subir" novalidate>
+          <label class="seg-archivo" for="seg-file"><span>Comprobante de la transferencia (foto o PDF, hasta 5 MB)</span>
+            <input id="seg-file" name="archivo" type="file" accept="image/jpeg,image/png,image/webp,application/pdf"></label>
+          <p class="pedido-error" id="seg-subir-error" role="alert" hidden></p>
+          <button class="btn" id="seg-subir-btn" type="submit">Subir comprobante</button>
+        </form>
+      </div>
+    </div>
+    <div class="pedido-datos seg-ayuda">
+      <h2 class="h3">¿Dudas sobre tu pedido?</h2>
+      <p>Escríbenos con tu número de pedido y te ayudamos.</p>
+      <a class="btn" id="seg-wa" href="#" target="_blank" rel="noopener noreferrer"><svg class="i" aria-hidden="true"><use href="#i-wa"/></svg><span>Escribir por WhatsApp</span></a>
+    </div>
+  </div>
+</section>
