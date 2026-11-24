@@ -11,7 +11,31 @@
     "run_worker_first": ["/fichas-api/*", "/api/*", "/admin*", "/pedido*", "/seguimiento*"]
   },
   "r2_buckets": [
-    { "binding": "FOTOS", "bucket_name": "supermuebles-fichas-fotos" }
+    // Fichas y fotos del dueño; la tienda guarda aquí las fotos listas, bajo el prefijo tienda/.
+    { "binding": "FOTOS", "bucket_name": "supermuebles-fichas-fotos" },
+    // Comprobantes de pago de los clientes: privado, sin URL pública. Se borran a los 90 días de entregado o cancelado.
+    { "binding": "COMPROBANTES", "bucket_name": "supermuebles-comprobantes" }
   ],
+  // Base de la tienda. Es la misma que usa la tienda de pruebas (wrangler.tienda.jsonc); desde el 23 nov 2026
+  // es la base de producción. Esquema: tienda/migrations. La tienda nace apagada (settings.tienda_activa = false).
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "supermuebles-tienda-pruebas",
+      "database_id": "c3e2a088-7bb4-4f17-842b-c9071797ed66",
+      "migrations_dir": "tienda/migrations"
+    }
+  ],
+  // Panel de reseñas (carpeta resenas/): al entregar un pedido, tienda/worker/resenas.ts le avisa por aquí.
+  // Necesita el secreto RESENAS_CLAVE (el mismo valor que INTEGRACION_CLAVE en el Worker de reseñas).
+  "services": [{ "binding": "RESENAS", "service": "supermuebles-resenas" }],
+  // Hasta 10 envíos de pedido y 10 comprobantes por minuto desde la misma IP.
+  "ratelimits": [
+    { "name": "LIMITE_PEDIDOS", "namespace_id": "1001", "simple": { "limit": 10, "period": 60 } },
+    { "name": "LIMITE_COMPROBANTES", "namespace_id": "1002", "simple": { "limit": 10, "period": 60 } }
+  ],
+  // La cuenta gratuita ya usa sus 5 tareas programadas: la limpieza de comprobantes corre al abrir el panel
+  // (como máximo una vez cada 24 horas), no con cron.
+  "triggers": { "crons": [] },
   "observability": { "enabled": true }
 }
