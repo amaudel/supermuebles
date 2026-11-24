@@ -719,27 +719,50 @@
   var amb = document.getElementById('amb-stack');
   if (amb && !reduce) {
     var ambCards = $$('.amb-card', amb);
-    var ambClamp = function (v) { return Math.min(Math.max(v, 0), 1); };
-    var ambQueued = false;
     amb.classList.add('is-on');
-    var ambDraw = function () {
-      ambQueued = false;
-      var r = amb.getBoundingClientRect();
-      var p = ambClamp(-r.top / (r.height - window.innerHeight)) * (ambCards.length - 1);
-      ambCards.forEach(function (c, i) {
-        var entrada = ambClamp(p - (i - 1));   // cuánto ha subido esta tarjeta
-        var tapada = ambClamp(p - i);          // cuánto la tapa la siguiente
-        var fuera = window.innerHeight / 2 + c.offsetHeight / 2 + 24;
-        var y = i === 0 ? 0 : (1 - entrada) * fuera;
-        var giro = (1 - entrada) * (i % 2 ? 3 : -3);
-        c.style.transform = 'translateY(' + y.toFixed(1) + 'px) scale(' + (1 - tapada * 0.08).toFixed(4) + ') rotate(' + giro.toFixed(2) + 'deg)';
-        c.querySelector('.amb-shade').style.opacity = (tapada * 0.55).toFixed(3);
-      });
-    };
-    var ambQueue = function () { if (!ambQueued) { ambQueued = true; requestAnimationFrame(ambDraw); } };
-    window.addEventListener('scroll', ambQueue, { passive: true });
-    window.addEventListener('resize', ambQueue);
-    ambDraw();
+    /* Mientras se hace scroll con la pila a la vista, las tarjetas no reciben el cursor (evita que el :hover
+       cambie en cada cuadro). Se quita 150 ms después del último movimiento. */
+    var ambSeen = false, ambScrollT = 0;
+    if ('IntersectionObserver' in window) {
+      new IntersectionObserver(function (en) { ambSeen = en[0].isIntersecting; }).observe(amb);
+      window.addEventListener('scroll', function () {
+        if (!ambSeen) return;
+        if (!amb.classList.contains('is-scrolling')) amb.classList.add('is-scrolling');
+        clearTimeout(ambScrollT);
+        ambScrollT = setTimeout(function () { amb.classList.remove('is-scrolling'); }, 150);
+      }, { passive: true });
+    }
+    /* Si el navegador soporta animation-timeline, la animación la hace el CSS (.is-native) enlazada
+       al scroll, y no se traba. El JavaScript de abajo es solo el respaldo para los demás. */
+    if (window.CSS && CSS.supports && CSS.supports('animation-timeline: view()')) {
+      amb.classList.add('is-native');
+    } else {
+      var ambClamp = function (v) { return Math.min(Math.max(v, 0), 1); };
+      var ambShades = ambCards.map(function (c) { return c.querySelector('.amb-shade'); });
+      var ambOut = [];
+      var ambQueued = false;
+      var ambMeasure = function () {   // el alto de las tarjetas solo cambia al redimensionar: no se lee en cada scroll
+        ambCards.forEach(function (c, i) { ambOut[i] = window.innerHeight / 2 + c.offsetHeight / 2 + 24; });
+      };
+      var ambDraw = function () {
+        ambQueued = false;
+        var r = amb.getBoundingClientRect();
+        var p = ambClamp(-r.top / (r.height - window.innerHeight)) * (ambCards.length - 1);
+        ambCards.forEach(function (c, i) {
+          var entrada = ambClamp(p - (i - 1));   // cuánto ha subido esta tarjeta
+          var tapada = ambClamp(p - i);          // cuánto la tapa la siguiente
+          var y = i === 0 ? 0 : (1 - entrada) * ambOut[i];
+          var giro = (1 - entrada) * (i % 2 ? 3 : -3);
+          c.style.transform = 'translateY(' + y.toFixed(1) + 'px) scale(' + (1 - tapada * 0.08).toFixed(4) + ') rotate(' + giro.toFixed(2) + 'deg)';
+          ambShades[i].style.opacity = (tapada * 0.55).toFixed(3);
+        });
+      };
+      var ambQueue = function () { if (!ambQueued) { ambQueued = true; requestAnimationFrame(ambDraw); } };
+      window.addEventListener('scroll', ambQueue, { passive: true });
+      window.addEventListener('resize', function () { ambMeasure(); ambQueue(); });
+      ambMeasure();
+      ambDraw();
+    }
   }
 
 })();

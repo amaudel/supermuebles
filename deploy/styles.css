@@ -1154,9 +1154,14 @@ input, textarea { caret-color: var(--accent); }
 .amb-go .i { width: 1.1em; height: 1.1em; transition: transform 0.2s var(--ease-out); }
 .amb-shade { position: absolute; inset: 0; background: #101820; opacity: 0; pointer-events: none; }
 @media (hover: hover) and (pointer: fine) {
-  .amb-card:hover img { transform: scale(1.03); }
+  /* Con la pila fija (.is-on) no hay zoom: las tarjetas se mueven bajo el cursor y cada una dispararía
+     recálculo de estilos y repintado de la foto mientras se hace scroll con la rueda del mouse. */
+  .amb-stack:not(.is-on) .amb-card:hover img { transform: scale(1.03); }
   .amb-card:hover .amb-go .i { transform: translateX(4px); }
 }
+/* Mientras se hace scroll, las tarjetas no reciben el cursor (main.js pone .is-scrolling): sin eso, el :hover
+   cambia en cada cuadro y el navegador recalcula estilos sin parar. Al parar el scroll vuelve todo. */
+.amb-stack.is-scrolling .amb-card { pointer-events: none; }
 .amb-card:focus-visible { outline: 3px solid var(--accent); outline-offset: 4px; }
 
 /* Con JS: el escenario queda fijo y las tarjetas suben una sobre otra */
@@ -1166,7 +1171,33 @@ input, textarea { caret-color: var(--accent); }
   position: absolute; inset: 0; margin: auto; aspect-ratio: auto;
   width: min(80vw, 64rem); height: min(76svh, 40rem); will-change: transform;
 }
-.amb-stack.is-on .amb-card:nth-child(n+2) { transform: translateY(110svh); }
+.amb-stack.is-on:not(.is-native) .amb-card:nth-child(n+2) { transform: translateY(110svh); }
+
+/* Con navegadores que soportan animation-timeline (Chrome, Edge, Safari reciente) la animación la
+   hace el CSS enlazada al scroll, en el mismo hilo que el scroll, y no se traba. main.js agrega
+   .is-native y entonces no mueve nada por JavaScript. Es la misma animación de siempre:
+   cada tarjeta sube girada un poco y tapa a la anterior, que se achica y se oscurece.
+   El rango «cover» de una pila de 300vh va de 25 % a 75 % mientras el escenario está fijo. */
+.amb-stack.is-native {
+  --amb-a0: 25%; --amb-a1: 50%; --amb-a2: 75%;
+  --amb-out: calc(50svh + min(76svh, 40rem) / 2 + 24px);
+  view-timeline: --amb block;
+  view-timeline-inset: 0px; /* sin esto el rango descuenta el scroll-padding-top de la página (88 px) y se adelanta */
+}
+@keyframes amb-in-odd  { from { translate: 0 var(--amb-out); rotate: 3deg; }  to { translate: 0 0; rotate: 0deg; } }
+@keyframes amb-in-even { from { translate: 0 var(--amb-out); rotate: -3deg; } to { translate: 0 0; rotate: 0deg; } }
+@keyframes amb-cover   { from { scale: 1; } to { scale: 0.92; } }
+@keyframes amb-shade   { from { opacity: 0; } to { opacity: 0.55; } }
+.amb-stack.is-native .amb-card,
+.amb-stack.is-native .amb-shade { animation-timing-function: linear; animation-fill-mode: both; animation-timeline: --amb; }
+.amb-stack.is-native .amb-card:nth-child(1) { animation-name: amb-cover; animation-range: cover var(--amb-a0) cover var(--amb-a1); }
+.amb-stack.is-native .amb-card:nth-child(2) {
+  animation-name: amb-in-odd, amb-cover; animation-timeline: --amb, --amb;
+  animation-range: cover var(--amb-a0) cover var(--amb-a1), cover var(--amb-a1) cover var(--amb-a2);
+}
+.amb-stack.is-native .amb-card:nth-child(3) { animation-name: amb-in-even; animation-range: cover var(--amb-a1) cover var(--amb-a2); }
+.amb-stack.is-native .amb-card:nth-child(1) .amb-shade { animation-name: amb-shade; animation-range: cover var(--amb-a0) cover var(--amb-a1); }
+.amb-stack.is-native .amb-card:nth-child(2) .amb-shade { animation-name: amb-shade; animation-range: cover var(--amb-a1) cover var(--amb-a2); }
 
 /* Los demás ambientes, en una fila de enlaces con ícono */
 .amb-more { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--gap); padding: clamp(1.5rem, 3vw, 2.5rem) var(--m) 0; }
@@ -1186,3 +1217,7 @@ input, textarea { caret-color: var(--accent); }
 }
 @media (max-width: 479px) { .amb-more { grid-template-columns: 1fr; } }
 .amb-stack.is-on + .amb-more { padding-top: 0; }
+/* En celular la pila mide 270vh y la tarjeta es más alta: el rango «cover» va de 27 % a 73 % */
+@media (max-width: 859px) {
+  .amb-stack.is-native { --amb-a0: 27.03%; --amb-a2: 72.97%; --amb-out: calc(50svh + min(68svh, 36rem) / 2 + 24px); }
+}
